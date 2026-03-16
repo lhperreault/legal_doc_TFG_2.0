@@ -1,0 +1,13 @@
+pandas
+numpy
+fastapi
+pymupdf
+paddleocr
+layoutparser
+supabase
+llama-parse
+pytesseract
+lxml
+openai
+pydantic
+charset_normalizer 

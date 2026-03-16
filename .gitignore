@@ -1,0 +1,13 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+
+# Source documents (large files — managed outside git)
+backend/data_storage/documents/
+
+# Temp pipeline output
+backend/zz_temp_chunks/
+
+# Environment variables
+.env
