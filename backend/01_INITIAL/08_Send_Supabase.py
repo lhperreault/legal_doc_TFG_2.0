@@ -201,7 +201,6 @@ def main():
         "tagged_xhtml_url": tagged_xhtml_url,
         "has_native_toc":   has_native_toc,
         "total_pages":      total_pages,
-        "updated_at":       "now()",
     }
     # Remove None values — let DB defaults handle them
     doc_payload = {k: v for k, v in doc_payload.items() if v is not None}
@@ -235,8 +234,8 @@ def main():
                 "level":         _safe_int(row.get("level")),
                 "section_title": str(row.get("section", "")) or None,
                 "page_range":    str(row.get("page_range", "")) if not pd.isna(row.get("page_range", float("nan"))) else None,
-                "start_page":    _safe_float(row.get("start_page")),
-                "end_page":      _safe_float(row.get("end_page")),
+                "start_page":    _safe_int(row.get("start_page")),
+                "end_page":      _safe_int(row.get("end_page")),
                 "anchor_id":     str(row.get("anchor_id", "")) if "anchor_id" in row and not pd.isna(row.get("anchor_id", float("nan"))) else None,
                 "is_synthetic":  _safe_bool(row.get("is_synthetic", False)) if "is_synthetic" in row else False,
                 "section_text":  str(row.get("section_text", "")) or None,

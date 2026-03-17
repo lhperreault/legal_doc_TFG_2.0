@@ -1011,8 +1011,13 @@ def main():
         toc_markdown = _split_merged_toc_entries(toc_markdown)
         print(f"    TOC markdown extracted ({len(toc_markdown):,} chars).")
     else:
-        print("    ERROR: Could not locate TOC content by any method.")
-        sys.exit(1)
+        print("    WARNING: Could not locate TOC content by any method.")
+        print("    Falling back to synthetic TOC mode (07_No_TOC.py)...")
+        import subprocess
+        result = subprocess.run(
+            [sys.executable, os.path.join(_THIS_DIR, "07_No_TOC.py"), text_md]
+        )
+        sys.exit(result.returncode)
 
     # ── [3/7] Calibrate body-page offset, then stamp [Page N] markers ────────
     print("\n[3/7] Calibrating body-page offset and adding [Page N] markers...")

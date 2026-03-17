@@ -1,23 +1,18 @@
 """
 07_No_TOC.py — Smart synthetic TOC generator for documents without a native TOC.
 
-Two-stage pipeline:
-  1. Pattern Pre-scan  — finds high-confidence headers using ONLY explicit numbered/named
-                         patterns (1., 1.1, Article I, Section 5, etc.).  ALL CAPS lines
-                         and "short isolated line" heuristics are intentionally excluded
-                         because they produce too many false positives (letter salutations,
-                         dates, party labels, address blocks, etc.).
-                         If ≥ MIN_EXPLICIT headers are found, the GPT stage is skipped.
+Pipeline:
+  Stage 1 — GPT Primary
+    ≤ 20 pages: GPT reads the full text and builds the complete TOC.
+    > 20 pages: GPT reads the first 20 pages, builds a partial TOC, and
+                reports the heading styles it observed (e.g. "I.", "A.", "1.").
+                Python then uses those learned styles to scan the remaining pages.
 
-  2. GPT Smart Pass    — triggered when explicit patterns find < MIN_EXPLICIT headers.
-                         A single GPT-4o-mini call:
-                           a) Decides if the document actually needs a TOC.
-                              Short letters, memos, forms, single-topic docs → needs_toc=false.
-                           b) Identifies real section headers present in the text that
-                              patterns missed (ALL CAPS headings, etc.) — these require
-                              AI judgment to distinguish from noise.
-                           c) Inserts SYNTHETIC headers (AI-invented 2-6 word titles)
-                              for large topic-shift gaps that have no explicit heading.
+  Stage 2 — GPT Validation
+    Runs always when headers exist. Removes false positives with conservative bias.
+
+  Stage 3 — Build Section Tree
+  Stage 4 — Exhibit Detection and Splitting
 
 Synthetic headers are flagged with is_synthetic=True in the output CSV.
 Documents where needs_toc=false get a single "Document Content" section.
@@ -40,8 +35,8 @@ _BACKEND_DIR  = os.path.dirname(_THIS_DIR)
 _PROJECT_ROOT = os.path.dirname(_BACKEND_DIR)
 load_dotenv(os.path.join(_PROJECT_ROOT, ".env"))
 
-# When this many numbered/named headers are found, skip the GPT stage entirely
-MIN_EXPLICIT = 3
+# How many pages GPT reads in the initial pass for long documents
+GPT_PAGE_LIMIT = 20
 
 # ── Page marker regex (same as all other 07_ scripts) ────────────────────────
 _MD_PAGE_RE = re.compile(
@@ -53,92 +48,7 @@ def _page_num(m) -> int:
 
 
 # ════════════════════════════════════════════════════════════════════════════
-# STEP 1 — High-confidence Pattern Classification
-#
-# DESIGN CHOICE: Only numbered/named patterns are used here.
-# ALL CAPS lines and "short isolated line" heuristics are EXCLUDED.
-# Reason: those heuristics produce too many false positives on real documents
-# (letter salutations, dates, party labels, addresses, "Sincerely,", etc.).
-# The GPT stage handles ambiguous cases with full context.
-# ════════════════════════════════════════════════════════════════════════════
-
-_H3_RE = re.compile(
-    r"^("
-    r"\d+\.\d+\.\d+[\s\.\:]"   # 1.1.1  /  1.1.1.  /  1.1.1:
-    r"|\([ivxlc]+\)\s"          # (i)  (ii)
-    r"|\([A-Z]\)\s"             # (A)  (B)
-    r")"
-)
-
-_H2_RE = re.compile(
-    r"^("
-    r"\d+\.\d+[\s\.\:]"                # 1.1  /  1.1.  /  1.1:
-    r"|\([a-z]\)\s+[A-Z0-9\"]"         # (a) Text
-    r"|Section\s+\d+\.\d+"             # Section 2.3
-    r")",
-    re.IGNORECASE,
-)
-
-# H1 is split into two patterns to avoid a IGNORECASE side-effect:
-# With re.IGNORECASE, [IVX]+\. would match lowercase roman numerals like "iii."
-# which are list items, not section headings.  Named keywords need IGNORECASE;
-# roman numerals and numbered sections must stay case-sensitive.
-_H1_NAMED_RE = re.compile(
-    r"^(Article|Chapter|Part|Schedule|Annex|Exhibit|Appendix)\s+[IVX\d]"
-    r"|^Section\s+\d+(?!\.\d)",
-    re.IGNORECASE,
-)
-_H1_NUMBERED_RE = re.compile(
-    r"^\d{1,3}\.\s+[A-Z]"    # 1-3 digit number (prevents matching years like "2015.")
-                               # requires capital letter after — avoids sentence fragments
-    r"|^[IVX]+\.\s+[A-Z]"    # uppercase roman numerals only (case-sensitive, so "iii." won't match)
-)
-
-
-def _level_int(tag: str) -> int:
-    return {"Header_1": 1, "Header_2": 2, "Header_3": 3}.get(tag, 99)
-
-
-def find_explicit_headers(full_text: str) -> list:
-    """
-    Find high-confidence headers using numbered/named patterns only.
-    Returns list of dicts: { type, level, text, page, synthetic }.
-    """
-    headers = []
-    lines = full_text.splitlines()
-    current_page = 1
-
-    for line in lines:
-        stripped = line.strip()
-        m = _MD_PAGE_RE.match(stripped)
-        if m:
-            current_page = _page_num(m)
-            continue
-        if not stripped:
-            continue
-
-        if _H3_RE.match(stripped):
-            tag = "Header_3"
-        elif _H2_RE.match(stripped):
-            tag = "Header_2"
-        elif _H1_NUMBERED_RE.match(stripped) or _H1_NAMED_RE.match(stripped):
-            tag = "Header_1"
-        else:
-            continue
-
-        headers.append({
-            "type":      tag,
-            "level":     _level_int(tag),
-            "text":      stripped,
-            "page":      current_page,
-            "synthetic": False,
-        })
-
-    return headers
-
-
-# ════════════════════════════════════════════════════════════════════════════
-# STEP 2 — GPT Smart Pass
+# STAGE 1 — GPT-Primary Header Detection
 # ════════════════════════════════════════════════════════════════════════════
 
 def _count_pages(full_text: str) -> int:
@@ -148,150 +58,302 @@ def _count_pages(full_text: str) -> int:
     return max(_page_num(m) for m in matches)
 
 
-def _build_skeleton(full_text: str, max_chars: int = 16_000) -> str:
-    """
-    Two-tier document skeleton for the GPT prompt.
+def _extract_pages(full_text: str, start_page: int, end_page: int) -> str:
+    """Return only the text for pages start_page..end_page inclusive."""
+    lines = full_text.splitlines(keepends=True)
+    result = []
+    current_page = 0
+    in_range = False
 
-    Tier 1 — ALL short lines (≤ 70 chars) from the entire document.
-      Section headers are almost always short (e.g. "VI. STATEMENT OF PROBABLE
-      CAUSE" = 29 chars, "VIII. CONCLUSION" = 16 chars).  By including every
-      short line we guarantee no header is ever cut off mid-document regardless
-      of how long the file is.
-
-    Tier 2 — Sampled prose context (lines > 70 chars) from the first and last
-      portions of the document only, filling remaining space up to max_chars.
-      This gives GPT enough narrative context to understand the document type
-      without repeating the full body text.
-    """
-    short_lines = []   # tier 1: every short line from the whole document
-    prose_start = []   # tier 2a: long lines from first ~25% of document
-    prose_end   = []   # tier 2b: long lines from last ~25% of document
-
-    all_lines   = full_text.splitlines()
-    n           = len(all_lines)
-    quarter     = max(1, n // 4)
-
-    current_page = 1
-    for i, line in enumerate(all_lines):
-        s = line.strip()
-        m = _MD_PAGE_RE.match(s)
+    for line in lines:
+        m = _MD_PAGE_RE.match(line.strip())
         if m:
             current_page = _page_num(m)
-            short_lines.append(f"[Page {current_page}]")
-            continue
-        if not s:
-            continue
-        if len(s) <= 70:
-            short_lines.append(s)
-        else:
-            if i < quarter:
-                prose_start.append(s[:120])
-            elif i >= n - quarter:
-                prose_end.append(s[:120])
+            in_range = start_page <= current_page <= end_page
+        if current_page == 0 and start_page == 1:
+            result.append(line)
+        elif in_range:
+            result.append(line)
+        elif current_page > end_page:
+            break
 
-    tier1 = "\n".join(short_lines)
-    remaining = max_chars - len(tier1) - 200   # 200 char buffer for separators
-    if remaining > 0:
-        prose = "\n".join(prose_start) + "\n...\n" + "\n".join(prose_end)
-        tier2 = prose[:remaining]
-    else:
-        tier2 = ""
-
-    parts = [tier1]
-    if tier2.strip():
-        parts.append("--- prose context (sampled) ---")
-        parts.append(tier2)
-    return "\n".join(parts)
+    return "".join(result)
 
 
-def gpt_smart_pass(full_text: str, candidate_headers: list) -> dict:
+# ── Heading style → regex mapping ────────────────────────────────────────────
+# GPT returns style descriptors like "I.", "A.", "1." — these map to (pattern, level).
+_STYLE_PATTERNS: dict[str, tuple[str, int]] = {
+    "I.":      (r"^[IVX]+\.\s+[A-Z]",          1),
+    "1.":      (r"^\d{1,3}\.\s+[A-Z]",          1),
+    "A.":      (r"^[A-Z]\.\s+[A-Z]",            2),
+    "a.":      (r"^[a-z]\.\s+[A-Za-z]",         3),
+    "1)":      (r"^\d+\)\s+[A-Za-z]",           2),
+    "a)":      (r"^[a-z]\)\s+[A-Za-z]",         3),
+    "A)":      (r"^[A-Z]\)\s+[A-Za-z]",         2),
+    "(a)":     (r"^\([a-z]\)\s+[A-Za-z]",       3),
+    "(A)":     (r"^\([A-Z]\)\s+[A-Za-z]",       2),
+    "(i)":     (r"^\([ivx]+\)\s+[A-Za-z]",      3),
+    "1.1":     (r"^\d+\.\d+[\s\.\:]",           2),
+    "1.1.1":   (r"^\d+\.\d+\.\d+[\s\.\:]",      3),
+    "Article": (r"^Article\s+[IVX\d]",          1),
+    "Chapter": (r"^Chapter\s+[IVX\d]",          1),
+    "Section": (r"^Section\s+\d+(?!\.\d)",      1),
+    "Part":    (r"^Part\s+[IVX\d]",             1),
+}
+
+
+def _styles_to_patterns(styles: list) -> list:
+    """Convert GPT's style descriptors to compiled (re.Pattern, level) tuples."""
+    result = []
+    seen = set()
+    for style in styles:
+        key = style.strip()
+        if key in _STYLE_PATTERNS and key not in seen:
+            pattern_str, level = _STYLE_PATTERNS[key]
+            result.append((re.compile(pattern_str), level))
+            seen.add(key)
+    return result
+
+
+def _find_original_doc(doc_stem: str, backend_dir: str) -> str | None:
+    """Find the original document file in data_storage/documents/."""
+    docs_dir = os.path.join(backend_dir, "data_storage", "documents")
+    if not os.path.isdir(docs_dir):
+        return None
+    for ext in (".pdf", ".PDF", ".docx", ".DOCX"):
+        candidate = os.path.join(docs_dir, doc_stem + ext)
+        if os.path.isfile(candidate):
+            return candidate
+    return None
+
+
+def _render_pages_as_images(doc_path: str, max_pages: int) -> list:
     """
-    Single GPT-4o-mini call that:
-      - decides if the document is complex enough to need a TOC
-      - validates and extends the candidate header list
-      - inserts synthetic headers for large topic-shift gaps
+    Render the first max_pages of a PDF as base64-encoded PNG strings.
+    Returns a list of base64 strings (one per page).
+    """
+    import base64
+    try:
+        import fitz
+    except ImportError:
+        return []
+
+    images = []
+    try:
+        doc = fitz.open(doc_path)
+        n   = min(max_pages, len(doc))
+        mat = fitz.Matrix(1.5, 1.5)   # 1.5× zoom — readable but not huge
+        for i in range(n):
+            pix       = doc[i].get_pixmap(matrix=mat)
+            img_bytes = pix.tobytes("png")
+            images.append(base64.b64encode(img_bytes).decode())
+        doc.close()
+    except Exception as e:
+        print(f"  [Visual] Could not render pages: {e}")
+    return images
+
+
+def gpt_build_toc_visual(doc_path: str, total_pages: int, is_partial: bool) -> dict:
+    """
+    Gemini Flash reads the actual rendered PDF pages as images and builds a TOC.
+    Same return shape as gpt_build_toc().
+    Falls back to empty result on any error — caller falls back to text mode.
+    """
+    try:
+        from google import genai
+        from google.genai import types as genai_types
+    except Exception:
+        return {"needs_toc": False, "reason": "google-genai unavailable",
+                "headers": [], "heading_formats": []}
+
+    api_key = os.environ.get("GEMINI_API_KEY")
+    if not api_key:
+        return {"needs_toc": False, "reason": "no GEMINI_API_KEY",
+                "headers": [], "heading_formats": []}
+
+    pages_to_render = GPT_PAGE_LIMIT if is_partial else total_pages
+    print(f"  [Visual] Rendering {pages_to_render} page(s) from PDF...")
+    images = _render_pages_as_images(doc_path, pages_to_render)
+    if not images:
+        return {"needs_toc": False, "reason": "could not render pages",
+                "headers": [], "heading_formats": []}
+    print(f"  [Visual] Rendered {len(images)} page image(s) — sending to Gemini Flash...")
+
+    scope = (
+        f"the first {len(images)} pages of a {total_pages}-page document"
+        if is_partial else
+        f"a {total_pages}-page document"
+    )
+
+    partial_task = (
+        "\n5. HEADING_FORMATS — because this is only the first portion of a longer "
+        "document, identify which heading styles you observed. Return them as a JSON "
+        "array using ONLY descriptors from this list:\n"
+        "   I.  1.  A.  a.  1)  a)  A)  (a)  (A)  (i)  1.1  1.1.1  "
+        "Article  Chapter  Section  Part\n"
+        "   Only include styles you actually saw.\n"
+    ) if is_partial else ""
+
+    partial_json_example = '\n  "heading_formats": ["I.", "A."],' if is_partial else ""
+
+    text_prompt = (
+        f"You are building a Table of Contents for {scope} that has no pre-existing TOC.\n"
+        "The pages are provided as images — use the visual layout, font sizes, "
+        "bold text, and indentation to identify section headings.\n\n"
+        "YOUR TASKS:\n\n"
+        "1. NEEDS_TOC — decide if this document is complex enough to need a TOC.\n"
+        "   Set needs_toc=FALSE for letters, memos, single-topic docs, forms.\n"
+        "   Set needs_toc=TRUE for multi-section reports, contracts, filings.\n\n"
+        "2. HEADERS — list every real section heading you can see.\n"
+        "   - Use visual cues: larger font, bold, ALL CAPS, centered, numbered.\n"
+        "   - EXCLUDE: dates, salutations, addresses, signatures, body sentences.\n"
+        "   - For page number: ALWAYS use the image sequence number (image 1 = page 1,\n"
+        "     image 2 = page 2, etc.). Never use the printed page number on the page.\n\n"
+        "3. SYNTHETIC headers — for large topic-shift gaps with no heading,\n"
+        "   insert a 2-6 word title. Mark with \"synthetic\": true.\n\n"
+        "4. LEVELS: level 1 = major, level 2 = subsection, level 3 = sub-subsection.\n\n"
+        f"{partial_task}"
+        "Return ONLY valid JSON (no markdown fences):\n"
+        "{\n"
+        '  "needs_toc": true,\n'
+        '  "reason": "multi-section contract",'
+        f"{partial_json_example}\n"
+        '  "headers": [\n'
+        '    {"level": 1, "title": "DEFINITIONS", "page": 2, "synthetic": false},\n'
+        '    {"level": 1, "title": "OBLIGATIONS", "page": 8, "synthetic": false}\n'
+        "  ]\n"
+        "}"
+    )
+
+    # Build content parts: text prompt + one inline image per page
+    import base64
+    parts = [genai_types.Part.from_text(text=text_prompt)]
+    for img_b64 in images:
+        img_bytes = base64.b64decode(img_b64)
+        parts.append(genai_types.Part.from_bytes(data=img_bytes, mime_type="image/png"))
+
+    client = genai.Client(api_key=api_key)
+    try:
+        resp = client.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=parts,
+            config=genai_types.GenerateContentConfig(
+                system_instruction=(
+                    "You are a precise document structure analyst reading PDF page images. "
+                    "Output only valid JSON with no markdown fences."
+                ),
+                temperature=0,
+            ),
+        )
+        raw = resp.text.strip()
+        raw = re.sub(r"^```[a-z]*\n?", "", raw)
+        raw = re.sub(r"\n?```$",       "", raw)
+        result = json.loads(raw)
+    except Exception as e:
+        print(f"  [Visual] Gemini error: {e}")
+        return {"needs_toc": False, "reason": f"visual Gemini error: {e}",
+                "headers": [], "heading_formats": []}
+
+    _TAG = {1: "Header_1", 2: "Header_2", 3: "Header_3"}
+    headers = []
+    for e in result.get("headers", []):
+        lvl = max(1, min(3, int(e.get("level", 1))))
+        headers.append({
+            "type":      _TAG[lvl],
+            "level":     lvl,
+            "text":      str(e.get("title", "")).strip(),
+            "page":      int(e.get("page", 1)),
+            "synthetic": bool(e.get("synthetic", False)),
+        })
+
+    print(f"  [Visual] needs_toc={result.get('needs_toc')}  |  headers returned: {len(headers)}")
+    return {
+        "needs_toc":       bool(result.get("needs_toc", True)),
+        "reason":          str(result.get("reason", "")),
+        "headers":         headers,
+        "heading_formats": result.get("heading_formats", []),
+    }
+
+
+def gpt_build_toc(page_text: str, total_pages: int, is_partial: bool) -> dict:
+    """
+    GPT-4o-mini reads page_text and builds a TOC.
+
+    is_partial=True  → first GPT_PAGE_LIMIT pages of a longer doc.
+                       GPT also returns heading_formats so Python can scan the rest.
+    is_partial=False → full document text, GPT returns the complete TOC.
 
     Returns:
         {
-            "needs_toc": bool,
-            "reason":    str,
-            "headers":   [{"level": int, "title": str, "page": int, "synthetic": bool}, ...]
+            "needs_toc":       bool,
+            "reason":          str,
+            "headers":         [{"level": int, "title": str, "page": int, "synthetic": bool}],
+            "heading_formats": ["I.", "A.", ...]   # only meaningful when is_partial=True
         }
     """
     try:
         from openai import OpenAI
     except Exception:
-        print("  [GPT] openai not available")
-        return {
-            "needs_toc": bool(candidate_headers),
-            "reason":    "openai unavailable",
-            "headers":   candidate_headers,
-        }
+        return {"needs_toc": False, "reason": "openai unavailable",
+                "headers": [], "heading_formats": []}
 
     api_key = os.environ.get("OPENAI_API_KEY")
     if not api_key:
-        print("  [GPT] OPENAI_API_KEY not set")
-        return {
-            "needs_toc": bool(candidate_headers),
-            "reason":    "no API key",
-            "headers":   candidate_headers,
-        }
+        return {"needs_toc": False, "reason": "no API key",
+                "headers": [], "heading_formats": []}
 
-    client     = OpenAI(api_key=api_key)
-    skeleton   = _build_skeleton(full_text)
-    total_pgs  = _count_pages(full_text)
+    client = OpenAI(api_key=api_key)
 
-    cand_text = json.dumps(
-        [{"level": h["level"], "title": h["text"], "page": h["page"]} for h in candidate_headers],
-        indent=2,
-    ) if candidate_headers else "[]"
+    scope = (
+        f"the first {GPT_PAGE_LIMIT} pages of a {total_pages}-page document"
+        if is_partial else
+        f"a {total_pages}-page document"
+    )
+
+    partial_task = (
+        "\n5. HEADING_FORMATS — because this is only the first portion of a longer "
+        "document, identify which heading styles you observed. Return them as a JSON "
+        "array using ONLY descriptors from this list:\n"
+        "   I.  1.  A.  a.  1)  a)  A)  (a)  (A)  (i)  1.1  1.1.1  "
+        "Article  Chapter  Section  Part\n"
+        "   Only include styles you actually saw in the text.\n"
+    ) if is_partial else ""
+
+    partial_json_example = (
+        '\n  "heading_formats": ["I.", "A."],'
+    ) if is_partial else ""
 
     prompt = (
-        f"You are building a Table of Contents for a {total_pgs}-page document "
-        "that has no pre-existing TOC.\n\n"
-
-        "DOCUMENT SKELETON (only lines ≤100 chars, with [Page N] markers):\n"
-        f"{skeleton}\n\n"
-
-        "CANDIDATE HEADERS already found by pattern matching:\n"
-        f"{cand_text}\n\n"
-
+        f"You are building a Table of Contents for {scope} that has no pre-existing TOC.\n\n"
+        "DOCUMENT TEXT:\n"
+        f"{page_text[:28_000]}\n\n"
         "YOUR TASKS:\n\n"
-
         "1. NEEDS_TOC — decide if this document is complex enough to benefit from a TOC.\n"
         "   Set needs_toc=FALSE for:\n"
-        "     - Short letters, memos, or emails (even if 2-3 pages)\n"
-        "     - Single-topic documents (one continuous argument or narrative)\n"
+        "     - Short letters, memos, emails, or single-topic documents\n"
         "     - Pure data tables, forms, or certificates\n"
         "     - Any document where a reader would not need navigation\n"
         "   Set needs_toc=TRUE for:\n"
-        "     - Multi-section reports, agreements, contracts, or filings (typically 5+ pages)\n"
+        "     - Multi-section reports, agreements, contracts, or filings\n"
         "     - Any document with distinct named sections a reader might want to jump to\n\n"
-
-        "2. HEADERS — if needs_toc=true, return the definitive header list:\n"
-        "   a) REAL headers: lines that are EXPLICITLY used as section titles in the text.\n"
-        "      - Include candidates that are genuine section headings.\n"
-        "      - EXCLUDE candidates that are: the opening words of a normal sentence,\n"
-        "        dates, address lines, salutations, party labels (e.g. 'BETWEEN:'),\n"
-        "        signatures, or any other document noise.\n"
-        "   b) MISSED real headers: section headings present in the text that the pattern\n"
-        "      matcher missed (e.g. standalone ALL CAPS titles, underlined/bold headings\n"
-        "      visible as short isolated lines). Only include lines that clearly function\n"
-        "      as headings — NOT regular sentences that happen to be short.\n"
-        "   c) SYNTHETIC headers: if there is a large content gap (3+ pages) where the\n"
-        "      topic clearly shifts but there is NO heading in the text, insert a synthetic\n"
-        "      header with a concise 2-6 word title describing that section.\n"
-        "      Mark these with \"synthetic\": true.\n\n"
-
-        "3. LEVELS:\n"
+        "2. HEADERS — if needs_toc=true, list every real section heading you find.\n"
+        "   - Only include lines that clearly function as section headings.\n"
+        "   - EXCLUDE: dates, salutations, party labels, signatures, address blocks,\n"
+        "     'Sincerely,', the opening words of normal sentences.\n"
+        "   - Include the exact page number where each heading appears.\n\n"
+        "3. SYNTHETIC headers — if there is a content gap (3+ pages) with a clear\n"
+        "   topic shift but no heading in the text, insert a synthetic header with\n"
+        "   a concise 2-6 word title. Mark with \"synthetic\": true.\n\n"
+        "4. LEVELS:\n"
         "   - level 1 = major section (top-level)\n"
         "   - level 2 = subsection\n"
         "   - level 3 = sub-subsection\n\n"
-
+        f"{partial_task}"
         "Return ONLY valid JSON (no markdown fences):\n"
         "{\n"
         '  "needs_toc": true,\n'
-        '  "reason": "35-page contract with multiple distinct clauses",\n'
+        '  "reason": "35-page contract with multiple distinct clauses",'
+        f"{partial_json_example}\n"
         '  "headers": [\n'
         '    {"level": 1, "title": "DEFINITIONS", "page": 2, "synthetic": false},\n'
         '    {"level": 2, "title": "Key Financial Terms", "page": 4, "synthetic": true},\n'
@@ -321,11 +383,8 @@ def gpt_smart_pass(full_text: str, candidate_headers: list) -> dict:
         result = json.loads(raw)
     except Exception as e:
         print(f"  [GPT] Error: {e}")
-        return {
-            "needs_toc": bool(candidate_headers),
-            "reason":    f"GPT error: {e}",
-            "headers":   candidate_headers,
-        }
+        return {"needs_toc": True, "reason": f"GPT error: {e}",
+                "headers": [], "heading_formats": []}
 
     _TAG = {1: "Header_1", 2: "Header_2", 3: "Header_3"}
     headers = []
@@ -341,22 +400,101 @@ def gpt_smart_pass(full_text: str, candidate_headers: list) -> dict:
 
     print(f"  [GPT] needs_toc={result.get('needs_toc')}  |  headers returned: {len(headers)}")
     return {
-        "needs_toc": bool(result.get("needs_toc", True)),
-        "reason":    str(result.get("reason", "")),
-        "headers":   headers,
+        "needs_toc":       bool(result.get("needs_toc", True)),
+        "reason":          str(result.get("reason", "")),
+        "headers":         headers,
+        "heading_formats": result.get("heading_formats", []),
     }
+
+
+def scan_remaining_pages(full_text: str, patterns: list, from_page: int) -> list:
+    """
+    Scan pages from_page onwards using learned (pattern, level) tuples from GPT.
+    Returns list of header dicts in the same format as gpt_build_toc headers.
+    """
+    _TAG = {1: "Header_1", 2: "Header_2", 3: "Header_3"}
+    headers = []
+    current_page = 1
+
+    for line in full_text.splitlines():
+        stripped = line.strip()
+        m = _MD_PAGE_RE.match(stripped)
+        if m:
+            current_page = _page_num(m)
+            continue
+        if current_page < from_page or not stripped:
+            continue
+
+        for pattern, level in patterns:
+            if pattern.match(stripped):
+                headers.append({
+                    "type":      _TAG[level],
+                    "level":     level,
+                    "text":      stripped,
+                    "page":      current_page,
+                    "synthetic": False,
+                })
+                break  # first matching pattern wins
+
+    return headers
+
+
+# ════════════════════════════════════════════════════════════════════════════
+# STAGE 2 — GPT Validation (strip false positives)
+# ════════════════════════════════════════════════════════════════════════════
+
+def _build_skeleton(full_text: str, max_chars: int = 16_000) -> str:
+    """
+    Two-tier document skeleton for the validation prompt.
+
+    Tier 1 — ALL short lines (≤ 70 chars) from the entire document.
+    Tier 2 — Sampled prose from the first and last quarter.
+    """
+    short_lines = []
+    prose_start = []
+    prose_end   = []
+
+    all_lines = full_text.splitlines()
+    n         = len(all_lines)
+    quarter   = max(1, n // 4)
+
+    current_page = 1
+    for i, line in enumerate(all_lines):
+        s = line.strip()
+        m = _MD_PAGE_RE.match(s)
+        if m:
+            current_page = _page_num(m)
+            short_lines.append(f"[Page {current_page}]")
+            continue
+        if not s:
+            continue
+        if len(s) <= 70:
+            short_lines.append(s)
+        else:
+            if i < quarter:
+                prose_start.append(s[:120])
+            elif i >= n - quarter:
+                prose_end.append(s[:120])
+
+    tier1     = "\n".join(short_lines)
+    remaining = max_chars - len(tier1) - 200
+    if remaining > 0:
+        prose = "\n".join(prose_start) + "\n...\n" + "\n".join(prose_end)
+        tier2 = prose[:remaining]
+    else:
+        tier2 = ""
+
+    parts = [tier1]
+    if tier2.strip():
+        parts.append("--- prose context (sampled) ---")
+        parts.append(tier2)
+    return "\n".join(parts)
 
 
 def gpt_validate_headers(headers: list, skeleton: str) -> list:
     """
-    Focused GPT pass that reviews the final header list and removes false positives.
-    Runs after both the pattern stage and the smart pass, so it catches anything
-    that slipped through — garbled OCR, years parsed as section numbers, numbered
-    list items that happen to match a roman-numeral pattern, etc.
-
-    Sends the candidate list + document skeleton to GPT-4o-mini and asks it to
-    return only the indices of entries that are genuine section headings.
-    Returns the filtered list (same structure, subset of input).
+    Focused GPT pass that removes false positives from the final header list.
+    Conservative: default is to KEEP. Only removes entries it is confident are wrong.
     """
     if not headers:
         return headers
@@ -388,47 +526,57 @@ def gpt_validate_headers(headers: list, skeleton: str) -> list:
         "CANDIDATE HEADERS:\n"
         f"{candidates}\n\n"
         "RULES — remove an entry ONLY if it clearly matches one of these:\n"
-        "  - A regular sentence or running clause (e.g. '2015. I am a federal law enforcement officer within the...')\n"
+        "  - A regular sentence or running clause\n"
         "  - A bare date, year, or timestamp that is not a section title\n"
         "  - Garbled OCR output or non-Latin / mixed-character noise\n"
-        "  - A numbered sub-item deep inside a section body (e.g. 'iii. evidence of the attachment of other devices;')\n"
+        "  - A numbered sub-item deep inside a section body\n"
         "  - A partial sentence or mid-paragraph fragment\n\n"
         "IMPORTANT — always keep an entry if:\n"
         "  - It follows the same clear numbering pattern as other entries in the list\n"
-        "    (e.g. if I., II., III., IV., V. are all present, keep VI. even if you are unsure about its content)\n"
-        "  - It is a named document division (Article, Section, Schedule, Appendix, Conclusion, etc.)\n"
+        "    (e.g. if I., II., III., IV., V. are all present, keep VI. even if unsure)\n"
+        "  - It is a named document division (Article, Section, Schedule, Appendix, Conclusion)\n"
         "  - You are uncertain — when in doubt, keep it\n\n"
         "Return ONLY a JSON array of the INDEX numbers to KEEP (no markdown fences):\n"
         "[0, 1, 2, 3, 4, 5]"
     )
 
-    try:
-        resp = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[
-                {
-                    "role": "system",
-                    "content": "You are a precise document analyst. Output only a JSON array of integers.",
-                },
-                {"role": "user", "content": prompt},
-            ],
-            temperature=0,
-        )
-        raw = resp.choices[0].message.content.strip()
-        raw = re.sub(r"^```[a-z]*\n?", "", raw)
-        raw = re.sub(r"\n?```$",       "", raw)
-        keep_indices = set(json.loads(raw))
-        kept    = [h for i, h in enumerate(headers) if i in keep_indices]
-        removed = len(headers) - len(kept)
-        print(f"  [Validation] Removed {removed} false positive(s), kept {len(kept)} headers")
-        return kept
-    except Exception as e:
-        print(f"  [Validation] Error: {e} — keeping all headers unchanged")
-        return headers
+    import time
+    for attempt in range(4):
+        try:
+            resp = client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[
+                    {
+                        "role": "system",
+                        "content": "You are a precise document analyst. Output only a JSON array of integers.",
+                    },
+                    {"role": "user", "content": prompt},
+                ],
+                temperature=0,
+            )
+            raw = resp.choices[0].message.content.strip()
+            raw = re.sub(r"^```[a-z]*\n?", "", raw)
+            raw = re.sub(r"\n?```$",       "", raw)
+            keep_indices = set(json.loads(raw))
+            kept    = [h for i, h in enumerate(headers) if i in keep_indices]
+            removed = len(headers) - len(kept)
+            print(f"  [Validation] Removed {removed} false positive(s), kept {len(kept)} headers")
+            return kept
+        except Exception as e:
+            err_str = str(e)
+            is_rate_limit = "429" in err_str or "rate_limit" in err_str
+            if attempt < 3:
+                wait = (15 * (attempt + 1)) if is_rate_limit else (2 ** attempt)
+                if is_rate_limit:
+                    print(f"  [Validation] Rate limit — waiting {wait}s before retry {attempt + 1}/3...")
+                time.sleep(wait)
+            else:
+                print(f"  [Validation] Error: {e} — keeping all headers unchanged")
+                return headers
 
 
 # ════════════════════════════════════════════════════════════════════════════
-# STEP 3 — Build Section Tree
+# STAGE 3 — Build Section Tree
 # ════════════════════════════════════════════════════════════════════════════
 
 def build_page_dict(text: str) -> dict:
@@ -465,17 +613,26 @@ def get_section_text(
 ) -> str:
     """
     Extract section body text from the page dict.
-    Real headers: fuzzy-trim to the header line.
-    Synthetic headers: take from the top of the start page (no line to trim to).
+    Real headers: fuzzy-trim to start AFTER the header line.
+    Synthetic headers: take from the top of the start page.
     """
     block = "\n".join(page_dict.get(p, "") for p in range(start_page, end_page + 1))
     if not block.strip():
         return ""
     lines     = block.splitlines()
-    start_idx = 0 if synthetic else _fuzzy_line_idx(title, block)
-    end_idx   = len(lines)
+    if synthetic:
+        start_idx = 0
+    else:
+        heading_idx = next(
+            (i for i, ln in enumerate(lines) if
+             SequenceMatcher(None, ln.strip().lower(), title.lower()).ratio() >= 0.65),
+            None,
+        )
+        start_idx = (heading_idx + 1) if heading_idx is not None else 0
+
+    end_idx = len(lines)
     if next_title and not synthetic:
-        for k in range(start_idx + 1, len(lines)):
+        for k in range(start_idx, len(lines)):
             r = SequenceMatcher(None, lines[k].strip().lower(), next_title.lower()).ratio()
             if r >= 0.65:
                 end_idx = k
@@ -503,7 +660,7 @@ def build_sections_df(headers: list, page_dict: dict, total_pages: int) -> pd.Da
         "section_text": title_text,
     })
 
-    # ── Synthetic TOC preview (starred entries = AI-generated titles) ─────────
+    # ── Synthetic TOC preview ─────────────────────────────────────────────────
     toc_lines = [
         ("  " * (h["level"] - 1))
         + ("* " if h.get("synthetic") else "")
@@ -549,10 +706,7 @@ def build_sections_df(headers: list, page_dict: dict, total_pages: int) -> pd.Da
 
 
 def build_single_section_df(page_dict: dict, total_pages: int) -> pd.DataFrame:
-    """
-    Fallback for documents that don't benefit from a TOC.
-    Outputs the full content as one section.
-    """
+    """Fallback for documents that don't need a TOC. One section with full content."""
     full_text = "\n\n".join(page_dict.get(p, "") for p in range(1, total_pages + 1))
     pg_range  = f"1-{total_pages}" if total_pages > 1 else "1"
     return pd.DataFrame([{
@@ -563,16 +717,12 @@ def build_single_section_df(page_dict: dict, total_pages: int) -> pd.DataFrame:
 
 
 # ════════════════════════════════════════════════════════════════════════════
-# STEP 4 — Exhibit detection and splitting
+# STAGE 4 — Exhibit detection and splitting
 # ════════════════════════════════════════════════════════════════════════════
 
-# Matches "Exhibit A", "Exhibit 1", "Ex. 1", "EXHIBIT A" at the START of a line
-# (line-anchored so inline mentions like "as shown in Exhibit A" don't trigger it)
 _EXHIBIT_START_RE = re.compile(
     r"(?im)^(?:exhibit|attachment|schedule|appendix)\s*[A-Z0-9]"
 )
-
-# Broader inline pattern — used to scan section names / late pages
 _EXHIBIT_INLINE_RE = re.compile(
     r"(?i)\b(?:exhibit|ex\s*[-]?\s*\d+|ex\d+)\b"
 )
@@ -582,13 +732,9 @@ def detect_and_split_exhibits(
     df: pd.DataFrame, page_dict: dict, total_pages: int
 ) -> tuple:
     """
-    Scan the DataFrame section names and page content for exhibit markers.
-    Uses a line-anchored pattern so inline mentions don't trigger a false split.
-
+    Scan section names and page content for exhibit markers.
     Returns (updated_df, exhibit_text, exhibit_start_page).
-    exhibit_text is "" and exhibit_start_page is None when nothing is found.
     """
-    # 1. Check whether any section name already contains "exhibit"
     section_names = " ".join(str(r.get("section", "")) for _, r in df.iterrows())
     toc_row = df[df["section"] == "TOC (Synthetic)"]
     toc_preview = str(toc_row["section_text"].values[0]) if len(toc_row) else ""
@@ -598,19 +744,21 @@ def detect_and_split_exhibits(
         or _EXHIBIT_INLINE_RE.search(toc_preview)
     )
 
-    # 2. Find the first page where "Exhibit X" appears at the START of a line
     exhibit_start_page = None
-    # Scan all pages if mentioned in TOC; otherwise only scan the last 50%
     scan_from = 1 if exhibit_in_toc else max(1, int(total_pages * 0.5))
     for p in range(scan_from, total_pages + 1):
-        if _EXHIBIT_START_RE.search(page_dict.get(p, "")):
+        page_text = page_dict.get(p, "")
+        matches   = list(_EXHIBIT_START_RE.finditer(page_text))
+        if len(matches) >= 3:
+            # 3+ matches on one page = exhibit index/table, not the actual start
+            continue
+        if matches:
             exhibit_start_page = p
             break
 
     if not exhibit_start_page:
         return df, "", None
 
-    # 3. Collect exhibit text from that page to the end
     exhibit_text = "\n\n".join(
         page_dict.get(p, "") for p in range(exhibit_start_page, total_pages + 1)
     ).strip()
@@ -618,31 +766,28 @@ def detect_and_split_exhibits(
     if not exhibit_text:
         return df, "", None
 
-    # 4. Trim the last real section in df so it ends before the exhibit page
     updated_df = df.copy()
     non_na = updated_df[updated_df["start_page"].notna()]
     if len(non_na) > 0:
-        last_idx = non_na.index[-1]
-        new_end = min(int(updated_df.loc[last_idx, "end_page"]), exhibit_start_page - 1)
-        start_of_last = int(updated_df.loc[last_idx, "start_page"])
-        if new_end >= start_of_last:
-            updated_df.loc[last_idx, "end_page"]   = new_end
-            updated_df.loc[last_idx, "page_range"]  = f"{start_of_last}-{new_end}"
-            # Re-extract the section text for the trimmed range
+        last_idx  = non_na.index[-1]
+        new_end   = min(int(updated_df.loc[last_idx, "end_page"]), exhibit_start_page - 1)
+        start_last = int(updated_df.loc[last_idx, "start_page"])
+        if new_end >= start_last:
+            updated_df.loc[last_idx, "end_page"]    = new_end
+            updated_df.loc[last_idx, "page_range"]  = f"{start_last}-{new_end}"
             raw_title = str(updated_df.loc[last_idx, "section"]).strip().removeprefix("[AI] ")
             synth     = bool(updated_df.loc[last_idx, "is_synthetic"])
             updated_df.loc[last_idx, "section_text"] = get_section_text(
-                raw_title, start_of_last, new_end, page_dict, synthetic=synth
+                raw_title, start_last, new_end, page_dict, synthetic=synth
             )
         else:
-            # The whole last section is exhibits — drop it
             updated_df = updated_df.drop(last_idx).reset_index(drop=True)
 
     return updated_df, exhibit_text, exhibit_start_page
 
 
 # ════════════════════════════════════════════════════════════════════════════
-# Final document builder (same indented format as 07_Native_TOC.py)
+# Final document builder
 # ════════════════════════════════════════════════════════════════════════════
 
 def build_final_document(df: pd.DataFrame) -> str:
@@ -701,34 +846,79 @@ def main():
     total_pages = _count_pages(full_text)
     print(f"  Pages : {total_pages}")
 
-    # ── Stage 1: High-confidence explicit header detection ────────────────────
-    print("\nStage 1 — Pattern detection (numbered/named headers only)...")
-    explicit_headers = find_explicit_headers(full_text)
-    print(f"  Explicit headers found : {len(explicit_headers)}")
-    for h in explicit_headers[:10]:
-        indent = "  " * (h["level"] - 1)
-        print(f"    {indent}[H{h['level']}] {h['text'][:70]}  (p.{h['page']})")
-    if len(explicit_headers) > 10:
-        print(f"    ... and {len(explicit_headers) - 10} more")
+    # ── Stage 1: GPT-primary header detection ─────────────────────────────────
+    needs_toc  = True
+    headers    = []
+    is_partial = total_pages > GPT_PAGE_LIMIT
 
-    # ── Stage 2: Decide path ──────────────────────────────────────────────────
-    needs_toc = True
-    headers   = explicit_headers
-
-    if len(explicit_headers) >= MIN_EXPLICIT:
-        print(f"\nStage 2 — {len(explicit_headers)} explicit headers found; skipping GPT smart pass.")
-        for h in headers:
-            h["synthetic"] = False
-    else:
-        print(f"\nStage 2 — Fewer than {MIN_EXPLICIT} explicit headers; running GPT smart pass...")
-        result    = gpt_smart_pass(full_text, explicit_headers)
+    # Try visual mode first (original PDF pages as images)
+    orig_doc = _find_original_doc(doc_stem, _BACKEND_DIR)
+    if orig_doc:
+        print(f"\nStage 1 — Visual mode: sending PDF page images to Gemini Flash...")
+        print(f"  Source : {orig_doc}")
+        result    = gpt_build_toc_visual(orig_doc, total_pages, is_partial=is_partial)
         needs_toc = result["needs_toc"]
         headers   = result["headers"]
         print(f"  Reason : {result.get('reason', '')}")
+    else:
+        print(f"  [Visual] Original PDF not found — falling back to text mode.")
 
-    # ── Stage 2b: GPT validation — strip false positives from whatever path took ──
+    # Fall back to text mode if visual failed or no PDF found
+    if not orig_doc or (not headers and needs_toc):
+        if orig_doc:
+            print(f"  [Visual] No headers returned — falling back to text mode.")
+        if not is_partial:
+            print(f"\nStage 1 — Text mode: {total_pages} pages (≤{GPT_PAGE_LIMIT}), GPT reading full document...")
+            result    = gpt_build_toc(full_text, total_pages, is_partial=False)
+            needs_toc = result["needs_toc"]
+            headers   = result["headers"]
+            print(f"  Reason : {result.get('reason', '')}")
+        else:
+            print(
+                f"\nStage 1 — Text mode: {total_pages} pages (>{GPT_PAGE_LIMIT}), "
+                f"GPT reading first {GPT_PAGE_LIMIT} pages..."
+            )
+            first_pages = _extract_pages(full_text, 1, GPT_PAGE_LIMIT)
+            result      = gpt_build_toc(first_pages, total_pages, is_partial=True)
+            needs_toc   = result["needs_toc"]
+            headers     = result["headers"]
+            styles      = result.get("heading_formats", [])
+            print(f"  Reason          : {result.get('reason', '')}")
+            print(f"  Heading styles  : {styles if styles else '(none identified)'}")
+
+            if needs_toc and styles:
+                patterns = _styles_to_patterns(styles)
+                if patterns:
+                    print(
+                        f"\n  Scanning pages {GPT_PAGE_LIMIT + 1}–{total_pages} "
+                        f"with {len(patterns)} learned pattern(s)..."
+                    )
+                    rest = scan_remaining_pages(full_text, patterns, from_page=GPT_PAGE_LIMIT + 1)
+                    print(f"  Found {len(rest)} additional header(s) in remaining pages")
+                    headers = headers + rest
+                else:
+                    print("  No styles mapped to patterns — using GPT headers only")
+            elif needs_toc:
+                print("  No heading styles returned — using GPT headers for first 20 pages only")
+
+    # For long docs in visual mode: scan remaining pages with learned patterns
+    if orig_doc and headers and needs_toc and is_partial:
+        styles   = result.get("heading_formats", [])
+        patterns = _styles_to_patterns(styles)
+        if patterns:
+            print(
+                f"\n  Scanning pages {GPT_PAGE_LIMIT + 1}–{total_pages} "
+                f"with {len(patterns)} pattern(s) learned from visual pass..."
+            )
+            rest = scan_remaining_pages(full_text, patterns, from_page=GPT_PAGE_LIMIT + 1)
+            print(f"  Found {len(rest)} additional header(s) in remaining pages")
+            headers = headers + rest
+
+    print(f"\n  Total headers before validation : {len(headers)}")
+
+    # ── Stage 2: Validation — strip false positives ───────────────────────────
     if headers and needs_toc:
-        print(f"\nStage 2b — Validating {len(headers)} header(s) with GPT...")
+        print(f"\nStage 2 — Validating {len(headers)} header(s) with GPT...")
         skeleton = _build_skeleton(full_text)
         headers  = gpt_validate_headers(headers, skeleton)
 
@@ -755,7 +945,7 @@ def main():
 
     print(f"  Sections built : {len(df)}")
 
-    # ── Stage 4: Exhibit detection and splitting ──────────────────────────────
+    # ── Stage 4: Exhibit detection ────────────────────────────────────────────
     print("\nStage 4 — Checking for exhibits...")
     df, exhibit_text, exhibit_start_page = detect_and_split_exhibits(
         df, page_dict, total_pages
@@ -764,8 +954,8 @@ def main():
         exhibit_md_path = os.path.join(temp_dir, doc_stem + "_exhibits.md")
         with open(exhibit_md_path, "w", encoding="utf-8") as f:
             f.write(exhibit_text)
-        print(f"  EXHIBIT DETECTED — starts at page {exhibit_start_page}")
-        print(f"  Exhibit file saved : {exhibit_md_path}")
+        print(f"  Exhibit detected — starts at page {exhibit_start_page}")
+        print(f"  Exhibit file    : {exhibit_md_path}")
     else:
         print("  No exhibits detected.")
 
