@@ -18,6 +18,7 @@ Outputs (to zz_temp_chunks/):
 import sys
 import os
 import re
+import json
 import warnings
 from difflib import SequenceMatcher
 import pandas as pd
@@ -371,6 +372,117 @@ def strategy_e_ai_fallback(soup: BeautifulSoup) -> list:
     return entries
 
 
+def strategy_f_gemini_synthetic(soup: BeautifulSoup) -> list:
+    """
+    Gemini Flash fallback: when no TOC can be detected, Gemini reads the
+    document text and creates a synthetic TOC based purely on content and
+    context — even if there are no headings or structural markers at all.
+
+    Crucially, Gemini also returns a 'starts_with' field for each section:
+    the first ~25 characters of actual document text where that section begins.
+    This real text snippet is then fuzzy-matched against HTML element content
+    to find the exact anchor element — so section boundaries are accurate even
+    though the invented titles don't exist verbatim in the document.
+    """
+    try:
+        from google import genai
+        from google.genai import types as genai_types
+    except Exception:
+        print("    [F] google-genai unavailable — skipping.")
+        return []
+
+    api_key = os.getenv("GEMINI_API_KEY")
+    if not api_key:
+        print("    [F] GEMINI_API_KEY not set — skipping.")
+        return []
+
+    text_body = re.sub(r'\n{3,}', '\n\n', soup.get_text(separator="\n")).strip()
+    sample    = text_body[:28000]
+    total_chars = len(text_body)
+
+    if total_chars < 5000:
+        size_hint = "This is a short document — create a concise TOC with 3-8 sections."
+    elif total_chars < 20000:
+        size_hint = "This is a medium document — create a TOC with 5-15 sections."
+    else:
+        size_hint = "This is a long document — create a detailed TOC with up to 20 sections and subsections."
+
+    prompt = (
+        "You are analyzing an HTML document that has NO explicit table of contents or section headings.\n"
+        f"{size_hint}\n\n"
+        "Based on the CONTENT and CONTEXT of the text, create a logical Table of Contents.\n"
+        "Divide the content into meaningful sections based on topic shifts and logical flow.\n\n"
+        "For each section you must return THREE fields:\n"
+        "  - 'title': a concise 2-6 word descriptive label you invent\n"
+        "  - 'level': 0 for major section, 1 for subsection\n"
+        "  - 'starts_with': copy the FIRST 20-30 characters of actual text from the document\n"
+        "    that begins that section — this must be verbatim text from the document below,\n"
+        "    not your invented title. This is used to locate the section boundary.\n\n"
+        "Return ONLY a valid JSON array (no markdown fences):\n"
+        "[\n"
+        '  {"level": 0, "title": "Background", "starts_with": "The company was founded"},\n'
+        '  {"level": 0, "title": "Key Obligations", "starts_with": "Each party agrees to"},\n'
+        '  {"level": 1, "title": "Payment Terms", "starts_with": "Invoices shall be paid"}\n'
+        "]\n\n"
+        f"DOCUMENT TEXT:\n{sample}"
+    )
+
+    client = genai.Client(api_key=api_key)
+    try:
+        resp = client.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=prompt,
+            config=genai_types.GenerateContentConfig(
+                system_instruction=(
+                    "You are a precise document analyst. "
+                    "Output only valid JSON with no markdown fences."
+                ),
+                temperature=0,
+            ),
+        )
+        raw = resp.text.strip()
+        raw = re.sub(r"^```[a-z]*\n?", "", raw)
+        raw = re.sub(r"\n?```$", "", raw)
+        result = json.loads(raw)
+    except Exception as e:
+        print(f"    [F] Gemini error: {e}")
+        return []
+
+    # Build entries and resolve anchors via starts_with snippet matching
+    # (the invented titles don't exist in the HTML, but starts_with text does)
+    id_els = [
+        (tag["id"], tag.get_text(" ", strip=True))
+        for tag in soup.find_all(id=True)
+        if tag.get("id")
+    ]
+
+    entries = []
+    for item in result:
+        title   = str(item.get("title", "")).strip()
+        level   = int(item.get("level", 0))
+        snippet = str(item.get("starts_with", "")).strip()
+        if not title:
+            continue
+
+        anchor = ""
+        if snippet and id_els:
+            best_id, best_ratio = "", 0.0
+            for eid, etext in id_els:
+                window = etext[:len(snippet) + 20]
+                ratio  = SequenceMatcher(None, snippet.lower(), window.lower()).ratio()
+                if ratio > best_ratio:
+                    best_ratio = ratio
+                    best_id    = eid
+            if best_ratio >= 0.45:
+                anchor = best_id
+
+        entries.append({"text": title, "href": anchor, "level": level})
+
+    matched = sum(1 for e in entries if e.get("href"))
+    print(f"    [F] Gemini created {len(entries)} sections, {matched} anchored by text snippet.")
+    return entries
+
+
 def _resolve_anchors(soup: BeautifulSoup, entries: list) -> list:
     """
     For entries that have no href, fuzzy-match their title against the
@@ -415,11 +527,12 @@ def extract_toc(soup: BeautifulSoup) -> tuple:
     entries: [{text, href, level}, ...]
     """
     strategies = [
-        (strategy_a_nav_container, "A — native nav/div container"),
-        (strategy_b_anchor_links,  "B — internal anchor links"),
-        (strategy_c_headings,      "C — heading structure (synthetic)"),
-        (strategy_d_text_scan,     "D — visible text TOC scan"),
-        (strategy_e_ai_fallback,   "E — AI fallback (GPT-4o-mini)"),
+        (strategy_a_nav_container,  "A — native nav/div container"),
+        (strategy_b_anchor_links,   "B — internal anchor links"),
+        (strategy_c_headings,       "C — heading structure (synthetic)"),
+        (strategy_d_text_scan,      "D — visible text TOC scan"),
+        (strategy_e_ai_fallback,    "E — AI fallback (GPT-4o-mini)"),
+        (strategy_f_gemini_synthetic, "F — Gemini synthetic TOC from content"),
     ]
     for fn, label in strategies:
         print(f"    Trying strategy {label[0]}...")
@@ -608,7 +721,7 @@ def main():
     print(f"    TOC entries   : {len(toc_entries)}")
 
     if not toc_entries:
-        print("    ERROR: Could not extract any TOC entries by any strategy.")
+        print("    ERROR: All strategies including Gemini fallback returned no entries.")
         sys.exit(1)
 
     # Print TOC to terminal

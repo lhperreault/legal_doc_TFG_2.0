@@ -11,3 +11,5 @@ backend/zz_temp_chunks/
 
 # Environment variables
 .env
+
+zz_Mockfiles/

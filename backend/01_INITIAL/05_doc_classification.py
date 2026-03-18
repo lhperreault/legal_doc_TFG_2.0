@@ -137,6 +137,7 @@ LEGAL_DOCUMENT_LABELS = [
     "Contract - Vendor Agreement",
     "Contract - Customer Agreement",
     "Contract - License Agreement",
+    "Contract - Content License Agreement",
     "Contract - Lease Agreement",
     "Contract - Partnership Agreement",
     "Contract - Shareholder Agreement",

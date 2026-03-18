@@ -67,16 +67,16 @@ def main():
     # 4. Text extraction
     _run("04_text_extraction.py", struct_csv, doc_path)
 
+    # 5. Classification (always runs, regardless of TOC type)
+    _run("05_doc_classification.py", text_md)
+
     # Branch: native TOC?
     has_native_toc = str(df.get("has_native_toc", [False])[0]).strip().lower() == "true"
     if has_native_toc:
-        print("Native embedded TOC detected → skipping steps 5-6, running 07_Native_TOC.py")
+        print("Native embedded TOC detected → skipping step 6, running 07_Native_TOC.py")
         _run("07_Native_TOC.py", text_md)
         _run("08_Send_Supabase.py", text_md)
         return
-
-    # 5. Classification
-    _run("05_doc_classification.py", text_md)
 
     # 6. TOC detection
     _run("06_TOC_detection.py", text_md)
