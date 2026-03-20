@@ -61,12 +61,12 @@ def extract_images(pdf_path):
             # PyMuPDF uses 0-based page indexing
             page = doc[page_num - 1]
             pix = fitz.Pixmap(doc, xref)
-            
-            # Determine image extension based on colorspace
-            if pix.n < 5:
-                ext = '.png'
-            else:
-                ext = '.jpg'
+
+            # Convert CMYK or any non-RGB/grayscale colorspace to RGB so PNG save works
+            if pix.colorspace and pix.colorspace not in (fitz.csGRAY, fitz.csRGB):
+                pix = fitz.Pixmap(fitz.csRGB, pix)
+
+            ext = '.png'
                 
             # Generate a unique filename and save
             unique_name = f"img_{base_name}_p{page_num}_{uuid.uuid4().hex[:6]}{ext}"

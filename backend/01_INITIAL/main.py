@@ -6,6 +6,7 @@ Run from any directory:
     python backend/01_INITIAL/main.py <filename>
 """
 import ast
+import json
 import os
 import subprocess
 import sys
@@ -23,6 +24,37 @@ def _run(script_name: str, *args):
     )
     if result.returncode != 0:
         sys.exit(result.returncode)
+
+
+def _run_exhibit_split(text_md: str, temp_dir: str, stem: str):
+    """
+    Run 07b → 05 (per exhibit) → 08b, unless the document is itself an exhibit.
+    Documents classified as 'Exhibit - *' are already a single exhibit
+    and should not be scanned for sub-exhibits.
+    """
+    class_json = os.path.join(temp_dir, stem + "_text_extraction_classification.json")
+    if os.path.isfile(class_json):
+        with open(class_json, encoding="utf-8") as f:
+            doc_type = json.load(f).get("document_type", "")
+        if doc_type.lower().startswith("exhibit"):
+            print(f"  Document type '{doc_type}' is itself an exhibit — skipping exhibit split.")
+            return
+
+    _run("07b_exhibit_split.py", text_md)
+
+    # Run proper GPT classification on each exhibit before uploading.
+    # This overwrites the pattern-based guess 07b wrote with a real classification.
+    manifest_path = os.path.join(temp_dir, stem + "_exhibit_manifest.json")
+    if os.path.isfile(manifest_path):
+        with open(manifest_path, encoding="utf-8") as f:
+            manifest = json.load(f)
+        for exhibit in manifest:
+            exhibit_text_md = os.path.join(temp_dir, f"{exhibit['exhibit_stem']}_text_extraction.md")
+            if os.path.isfile(exhibit_text_md):
+                print(f"  [05] Classifying exhibit {exhibit['exhibit_label']}...")
+                _run("05_doc_classification.py", exhibit_text_md)
+
+    _run("08b_Send_Exhibits_Supabase.py", text_md)
 
 
 def main():
@@ -76,6 +108,7 @@ def main():
         print("Native embedded TOC detected → skipping step 6, running 07_Native_TOC.py")
         _run("07_Native_TOC.py", text_md)
         _run("08_Send_Supabase.py", text_md)
+        _run_exhibit_split(text_md, temp_dir, stem)
         return
 
     # 6. TOC detection
@@ -104,6 +137,9 @@ def main():
 
     # 8. Send to Supabase
     _run("08_Send_Supabase.py", text_md)
+
+    # 7b/8b. Exhibit separation (runs after parent is in Supabase)
+    _run_exhibit_split(text_md, temp_dir, stem)
 
 
 if __name__ == "__main__":

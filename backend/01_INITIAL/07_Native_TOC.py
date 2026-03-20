@@ -485,6 +485,20 @@ def main():
         print(f"    ... and {len(toc_entries) - 30} more entries")
     print("    ────────────────────────────────────────────────")
 
+    # ── Save exhibit bookmarks before they're filtered out ───────────────────
+    # build_toc_df calls _filter_exhibit_entries which discards exhibit TOC entries.
+    # We save them here so 07b_exhibit_split can use exact page boundaries.
+    exhibit_bookmarks = [
+        {"title": e["title"], "page": e["page"], "level": e["level"]}
+        for e in toc_entries
+        if _EXHIBIT_ENTRY_RE.match(e["title"])
+    ]
+    if exhibit_bookmarks:
+        bm_path = os.path.join(temp_dir, doc_stem + "_exhibit_bookmarks.json")
+        with open(bm_path, "w", encoding="utf-8") as f:
+            json.dump(exhibit_bookmarks, f, indent=2)
+        print(f"\n  Saved {len(exhibit_bookmarks)} exhibit bookmark(s) → {bm_path}")
+
     # ── Build section table ───────────────────────────────────────────────────
     print("\nBuilding section table...")
     df = build_toc_df(toc_entries, page_dict, total_pages, full_text)

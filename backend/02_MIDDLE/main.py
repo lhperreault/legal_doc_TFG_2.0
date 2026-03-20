@@ -69,6 +69,10 @@ def main():
     print(f"[Phase 2] Starting AST pipeline for '{file_name}' (id={document_id})")
     print("=" * 60)
 
+    # Step 0: Section refinement (split oversized sections before tree build)
+    print("[Phase 2] Step 0 — Refining section structure…")
+    _run("00_section_refine.py", "--document_id", document_id)
+
     # Step 1: Tree reconstruction
     print("[Phase 2] Step 1 — Building parent-child tree…")
     _run("01_AST_tree_build.py", "--document_id", document_id)
@@ -77,8 +81,31 @@ def main():
     print("[Phase 2] Step 2 — Assigning semantic labels…")
     _run("02_AST_semantic_label.py", "--document_id", document_id)
 
+    # Step 3: Entity extraction
+    print("[Phase 2] Step 3 — Extracting entities…")
+    _run("03_entity_extraction.py", "--document_id", document_id)
+
     print("=" * 60)
-    print(f"[Phase 2] COMPLETE — '{file_name}' AST is ready in Supabase.")
+    print(f"[Phase 2] COMPLETE — '{file_name}' AST + entities ready in Supabase.")
+
+    # Process child exhibit documents if any exist
+    from supabase import create_client
+    _url = os.environ.get("SUPABASE_URL")
+    _key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
+    if _url and _key:
+        sb = create_client(_url, _key)
+        child_resp = sb.table("documents").select("id, file_name").eq("parent_document_id", document_id).execute()
+        if child_resp.data:
+            print(f"\n[Phase 2] Processing {len(child_resp.data)} child exhibit(s)...")
+            for child in child_resp.data:
+                child_id   = child["id"]
+                child_name = child["file_name"]
+                print(f"\n[Phase 2] --- Exhibit: {child_name} ---")
+                _run("00_section_refine.py",    "--document_id", child_id)
+                _run("01_AST_tree_build.py",    "--document_id", child_id)
+                _run("02_AST_semantic_label.py","--document_id", child_id)
+                _run("03_entity_extraction.py", "--document_id", child_id)
+            print(f"\n[Phase 2] COMPLETE — all exhibits processed.")
 
 
 if __name__ == "__main__":
