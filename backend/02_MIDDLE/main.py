@@ -100,7 +100,15 @@ def main():
             for child in child_resp.data:
                 child_id   = child["id"]
                 child_name = child["file_name"]
-                print(f"\n[Phase 2] --- Exhibit: {child_name} ---")
+
+                # Skip tiny exhibits — not worth the API calls
+                section_resp = sb.table("sections").select("section_text").eq("document_id", child_id).execute()
+                total_chars  = sum(len(s.get("section_text") or "") for s in (section_resp.data or []))
+                if total_chars < 2000:
+                    print(f"\n[Phase 2] Skipping '{child_name}' — too short ({total_chars} chars)")
+                    continue
+
+                print(f"\n[Phase 2] --- Exhibit: {child_name} ({total_chars:,} chars) ---")
                 _run("00_section_refine.py",    "--document_id", child_id)
                 _run("01_AST_tree_build.py",    "--document_id", child_id)
                 _run("02_AST_semantic_label.py","--document_id", child_id)

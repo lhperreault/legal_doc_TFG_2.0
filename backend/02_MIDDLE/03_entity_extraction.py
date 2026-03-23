@@ -16,6 +16,7 @@ import json
 import os
 import sys
 import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
 from typing import Any
 
@@ -883,6 +884,7 @@ def _extract_section(
     document_type: str,
     gemini_client,
     openai_client,
+    template_override: str | None = None,
 ) -> list[dict]:
     """Extract entities from one section. Returns list of rows for extractions table."""
     sec_id      = section["id"]
@@ -902,10 +904,14 @@ def _extract_section(
     if len(text.strip()) < 50:
         return []
 
-    template    = LABEL_TO_TEMPLATE.get(label)
-    is_generic  = template is None
-    if is_generic:
-        template = "generic"
+    if template_override:
+        template   = template_override
+        is_generic = False
+    else:
+        template    = LABEL_TO_TEMPLATE.get(label)
+        is_generic  = template is None
+        if is_generic:
+            template = "generic"
 
     schema_class, list_field = TEMPLATE_TO_CLASS[template]
     use_gemini = TEMPLATE_TO_MODEL[template] == "gemini-flash" and gemini_client is not None
@@ -921,18 +927,15 @@ def _extract_section(
 
     if use_gemini:
         raw = _call_gemini(gemini_client, system_prompt, user_prompt, schema_class)
-        time.sleep(0.5)
         if raw is not None:
             extraction_method = "lexnlp+gemini" if lexnlp_used else "gemini-flash"
             result = raw
         else:
             # Fallback to GPT
             result = _call_gpt(openai_client, system_prompt, user_prompt, schema_class)
-            time.sleep(0.5)
             extraction_method = "lexnlp+gpt" if lexnlp_used else "gpt-4o-mini"
     else:
         result = _call_gpt(openai_client, system_prompt, user_prompt, schema_class)
-        time.sleep(0.5)
         extraction_method = "lexnlp+gpt" if lexnlp_used else "gpt-4o-mini"
 
     if result is None:
@@ -1151,7 +1154,16 @@ def main():
         s["parent_section_id"] for s in sections if s.get("parent_section_id")
     }
 
+    def _uses_gemini(sec: dict) -> bool:
+        lbl  = sec.get("semantic_label") or "unrecognized"
+        tmpl = LABEL_TO_TEMPLATE.get(lbl) or "generic"
+        return TEMPLATE_TO_MODEL[tmpl] == "gemini-flash" and gemini_client is not None
+
+    # First pass: apply skip guards and split into Gemini vs GPT queues
+    gemini_queue: list[tuple[int, dict]] = []
+    gpt_queue:    list[tuple[int, dict]] = []
     total = len(sections)
+
     for idx, sec in enumerate(sections, 1):
         label  = sec.get("semantic_label") or "unrecognized"
         conf   = float(sec.get("semantic_confidence") or 0.0)
@@ -1161,8 +1173,6 @@ def main():
 
         is_wrapper = label in SKIP_LABELS
         if is_wrapper and label in LEAF_WRAPPER_LABELS and sec_id not in parent_ids:
-            # Label is normally a parent wrapper, but this section has no children
-            # (refiner didn't split it) — treat as a leaf and extract from it
             is_wrapper = False
 
         if is_wrapper:
@@ -1179,11 +1189,20 @@ def main():
             skipped += 1
             continue
 
-        rows = _extract_section(sec, document_type or "Unknown", gemini_client, openai_client)
+        if _uses_gemini(sec):
+            gemini_queue.append((idx, sec))
+        else:
+            gpt_queue.append((idx, sec))
 
+    # Helper: record rows from one section into the shared accumulators.
+    # Always called from the main thread (as_completed loop or sequential GPT loop).
+    def _record(idx: int, sec: dict, rows: list[dict]) -> None:
+        nonlocal via_gemini, via_gpt
+        lbl   = sec.get("semantic_label") or "unrecognized"
+        title = (sec.get("section_title") or "untitled")[:60]
         if rows:
-            template = LABEL_TO_TEMPLATE.get(label, "generic")
-            by_template[template] = by_template.get(template, 0) + len(rows)
+            tmpl = LABEL_TO_TEMPLATE.get(lbl, "generic")
+            by_template[tmpl] = by_template.get(tmpl, 0) + len(rows)
             method = rows[0].get("extraction_method", "?")
             for r in rows:
                 if "gemini" in r.get("extraction_method", ""):
@@ -1191,9 +1210,48 @@ def main():
                 else:
                     via_gpt += 1
             all_rows.extend(rows)
-            print(f"  [{idx}/{total}] OK    '{title}' ({label}) -> {len(rows)} entities [{method}]")
+            print(f"  [{idx}/{total}] OK    '{title}' ({lbl}) -> {len(rows)} entities [{method}]")
         else:
-            print(f"  [{idx}/{total}] EMPTY '{title}' ({label}) -> no entities found")
+            print(f"  [{idx}/{total}] EMPTY '{title}' ({lbl}) -> no entities found")
+
+    doc_type = document_type or "Unknown"
+
+    # Gemini sections — 5 parallel workers (Gemini Flash handles concurrent requests well)
+    if gemini_queue:
+        with ThreadPoolExecutor(max_workers=5) as executor:
+            futures = {
+                executor.submit(_extract_section, sec, doc_type, gemini_client, openai_client): (idx, sec)
+                for idx, sec in gemini_queue
+            }
+            for f in as_completed(futures):
+                idx, sec = futures[f]
+                _record(idx, sec, f.result())
+
+    # GPT sections — sequential (tighter rate limits)
+    for idx, sec in gpt_queue:
+        _record(idx, sec, _extract_section(sec, doc_type, gemini_client, openai_client))
+
+    # Secondary template pass — run additional templates for mixed-content sections.
+    # These are always fast (Gemini-routed) so run all in parallel.
+    secondary_calls: list[tuple[int, dict, str]] = []  # (idx, sec, template)
+    for idx, sec in enumerate(sections, 1):
+        label = sec.get("semantic_label") or "unrecognized"
+        extra_templates = LABEL_TO_SECONDARY_TEMPLATES.get(label, [])
+        primary_template = LABEL_TO_TEMPLATE.get(label, "generic")
+        for tmpl in extra_templates:
+            if tmpl != primary_template:   # don't repeat the primary
+                secondary_calls.append((idx, sec, tmpl))
+
+    if secondary_calls:
+        print(f"  Running {len(secondary_calls)} secondary template extractions...")
+        with ThreadPoolExecutor(max_workers=5) as executor:
+            futures = {
+                executor.submit(_extract_section, sec, doc_type, gemini_client, openai_client, tmpl): (idx, sec)
+                for idx, sec, tmpl in secondary_calls
+            }
+            for f in as_completed(futures):
+                idx, sec = futures[f]
+                _record(idx, sec, f.result())
 
     # Normalize extraction types — drop anything not in the allowed set
     dropped_count = 0

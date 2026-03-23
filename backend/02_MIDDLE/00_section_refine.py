@@ -28,7 +28,7 @@ load_dotenv(os.path.join(os.path.dirname(__file__), '..', '..', '.env'))
 # Config
 # ---------------------------------------------------------------------------
 
-MIN_CHARS_TO_SPLIT = 4000   # sections shorter than this are never evaluated
+MIN_CHARS_TO_SPLIT = 6000   # sections shorter than this are never evaluated
 MAX_SUB_SECTIONS   = 15     # cap on splits per parent section
 MIN_CHILD_CHARS    = 300    # drop sub-sections shorter than this after splitting
 
@@ -339,7 +339,6 @@ def main():
         print(f"  Evaluating '{short_title}' ({len(text):,} chars)...")
 
         proposal = _gpt_propose_split(openai_client, title, text)
-        time.sleep(0.5)
 
         if proposal is None:
             print(f"    GPT failed — skipping")

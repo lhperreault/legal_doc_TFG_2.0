@@ -15,6 +15,7 @@ import argparse
 import os
 import sys
 import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from dotenv import load_dotenv
 from pydantic import BaseModel
@@ -1000,6 +1001,7 @@ def _gpt_label(
                     {"role": "user",   "content": user_prompt},
                 ],
                 response_format=SemanticLabel,
+                timeout=30,
             )
             result = response.choices[0].message.parsed
             label      = result.semantic_label
@@ -1121,8 +1123,11 @@ def main():
     flagged_count       = 0
     error_count         = 0
 
-    updates: list[dict] = []
+    # updates dict keyed by sec_id so parallel GPT results can be merged in
+    updates: dict[str, dict] = {}
+    gpt_queue: list[dict] = []   # sections that need GPT after pattern passes
 
+    # --- Pass 1: pattern matching (no I/O, instant) ---
     for sec in sections:
         sec_id       = sec["id"]
         title        = sec.get("section_title") or ""
@@ -1133,75 +1138,102 @@ def main():
         label      = "unrecognized"
         confidence = 0.0
         source     = "pattern"
+        matched    = False
 
-        # --- Unknown ontology: everything is unrecognized ---
         if ontology_name == "Unknown":
-            label      = "unrecognized"
-            confidence = 0.0
-            source     = "pattern"
             flagged_count += 1
-
-        # --- Known ontology: three-tier matching ---
         else:
-            matched = False
-
             # TIER 1: Title-based pattern match
             if use_patterns:
                 title_match = _pattern_match(title, ontology_name)
                 if title_match and title_match in ontology_labels:
                     label      = title_match
                     confidence = 1.0
-                    source     = "pattern"
                     title_pattern_count += 1
                     matched = True
 
-            # TIER 2: Text-content pattern match (signature phrases in body)
+            # TIER 2: Text-content pattern match
             if not matched:
                 text_match = _text_content_match(text)
                 if text_match and text_match in ontology_labels:
                     label      = text_match
-                    confidence = 0.9   # slightly lower than title match
+                    confidence = 0.9
                     source     = "pattern"
                     text_pattern_count += 1
                     matched = True
 
-            # TIER 3: GPT-4o-mini fallback
+            # TIER 3: queue for parallel GPT
             if not matched:
                 if openai_client:
-                    label, confidence = _gpt_label(
-                        openai_client, title, parent_title, text,
-                        document_type or ontology_name, ontology_labels,
-                    )
-                    source = "gpt-4o-mini"
-                    gpt_count += 1
-                    if label in ("unrecognized", "error"):
-                        error_count += 1
-                    elif confidence < 0.7:
-                        flagged_count += 1
-                    time.sleep(0.5)
+                    gpt_queue.append({
+                        "_sec_id":       sec_id,
+                        "_title":        title,
+                        "_parent_title": parent_title,
+                        "_text":         text,
+                    })
+                    continue   # result filled in after parallel pass
                 else:
-                    # No OpenAI key and patterns didn't match
-                    label      = "unrecognized"
-                    confidence = 0.0
-                    source     = "pattern"
                     flagged_count += 1
 
-        updates.append({
+        updates[sec_id] = {
             "id":                  sec_id,
             "semantic_label":      label,
             "semantic_confidence": confidence,
             "label_source":        source,
-        })
+        }
 
-    # Write back to Supabase
+    # --- Pass 2: parallel individual GPT calls for unmatched sections ---
+    if gpt_queue and openai_client:
+        doc_type = document_type or ontology_name
+
+        def _label_one(item: dict) -> tuple[str, str, float]:
+            lbl, conf = _gpt_label(
+                openai_client, item["_title"], item["_parent_title"], item["_text"],
+                doc_type, ontology_labels,
+            )
+            return item["_sec_id"], lbl, conf
+
+        with ThreadPoolExecutor(max_workers=8) as executor:
+            futures = {executor.submit(_label_one, item): item for item in gpt_queue}
+            for f in as_completed(futures):
+                sec_id, label, conf = f.result()
+                gpt_count += 1
+                if label in ("unrecognized", "error"):
+                    error_count += 1
+                elif conf < 0.7:
+                    flagged_count += 1
+                updates[sec_id] = {
+                    "id":                  sec_id,
+                    "semantic_label":      label,
+                    "semantic_confidence": conf,
+                    "label_source":        "gpt-4o-mini",
+                }
+
+    updates_list = list(updates.values())
+
+    # Write back to Supabase — 4 parallel workers with retry on connection errors
+    def _update_one(sec_id: str, payload: dict):
+        for attempt in range(3):
+            try:
+                supabase.table("sections").update(payload).eq("id", sec_id).execute()
+                return None
+            except Exception as e:
+                if attempt < 2:
+                    time.sleep(1.5 * (attempt + 1))
+                else:
+                    return f"Section {sec_id}: {e}"
+
     write_errors = 0
-    for upd in updates:
-        sec_id = upd.pop("id")
-        try:
-            supabase.table("sections").update(upd).eq("id", sec_id).execute()
-        except Exception as e:
-            print(f"  WARNING: Could not update section {sec_id} — {e}")
-            write_errors += 1
+    with ThreadPoolExecutor(max_workers=4) as executor:
+        futures = [
+            executor.submit(_update_one, upd.pop("id"), upd)
+            for upd in updates_list
+        ]
+        for f in as_completed(futures):
+            err = f.result()
+            if err:
+                print(f"  WARNING: {err}")
+                write_errors += 1
 
     if write_errors:
         print(
