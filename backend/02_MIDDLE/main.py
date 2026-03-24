@@ -15,7 +15,8 @@ from dotenv import load_dotenv
 # Load .env from project root
 load_dotenv(os.path.join(os.path.dirname(__file__), '..', '..', '.env'))
 
-PHASE_DIR = os.path.dirname(os.path.abspath(__file__))
+PHASE_DIR   = os.path.dirname(os.path.abspath(__file__))
+SEARCH_DIR  = os.path.join(PHASE_DIR, '..', '03_SEARCH')
 
 
 def _run(script_name: str, *args) -> str:
@@ -42,8 +43,8 @@ def _run(script_name: str, *args) -> str:
     return output
 
 
-def _lookup_document_id(file_name: str) -> str:
-    """Resolve file_name → document_id from Supabase."""
+def _lookup_document(file_name: str) -> tuple[str, str | None]:
+    """Resolve file_name → (document_id, case_id) from Supabase."""
     from supabase import create_client
     url = os.environ.get("SUPABASE_URL")
     key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
@@ -51,11 +52,12 @@ def _lookup_document_id(file_name: str) -> str:
         print("ERROR: SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY not set in .env")
         sys.exit(1)
     sb   = create_client(url, key)
-    resp = sb.table("documents").select("id").eq("file_name", file_name).execute()
+    resp = sb.table("documents").select("id, case_id").eq("file_name", file_name).execute()
     if not resp.data:
         print(f"ERROR: No document found with file_name='{file_name}'")
         sys.exit(1)
-    return resp.data[0]["id"]
+    row = resp.data[0]
+    return row["id"], row.get("case_id")
 
 
 def main():
@@ -63,8 +65,8 @@ def main():
     parser.add_argument("--file_name", required=True, help="Document stem (file_name in Supabase)")
     args = parser.parse_args()
 
-    file_name   = args.file_name
-    document_id = _lookup_document_id(file_name)
+    file_name             = args.file_name
+    document_id, case_id  = _lookup_document(file_name)
 
     print(f"[Phase 2] Starting AST pipeline for '{file_name}' (id={document_id})")
     print("=" * 60)
@@ -85,8 +87,12 @@ def main():
     print("[Phase 2] Step 3 — Extracting entities…")
     _run("03_entity_extraction.py", "--document_id", document_id)
 
+    # Step 4A: Knowledge graph (intra-document)
+    print("[Phase 2] Step 4A — Building knowledge graph…")
+    _run("04A_kg_inner_build.py", "--document_id", document_id)
+
     print("=" * 60)
-    print(f"[Phase 2] COMPLETE — '{file_name}' AST + entities ready in Supabase.")
+    print(f"[Phase 2] COMPLETE — '{file_name}' AST + entities + KG ready in Supabase.")
 
     # Process child exhibit documents if any exist
     from supabase import create_client
@@ -113,7 +119,33 @@ def main():
                 _run("01_AST_tree_build.py",    "--document_id", child_id)
                 _run("02_AST_semantic_label.py","--document_id", child_id)
                 _run("03_entity_extraction.py", "--document_id", child_id)
+                _run("04A_kg_inner_build.py",   "--document_id", child_id)
             print(f"\n[Phase 2] COMPLETE — all exhibits processed.")
+
+    # Phase 3: Embed all sections for the case into the vector store
+    if case_id:
+        print(f"\n[Phase 3] Starting embedding for case {case_id}...")
+        result = subprocess.run(
+            [sys.executable, os.path.join(SEARCH_DIR, "main.py"), "--case_id", case_id],
+            capture_output=True,
+            text=True,
+        )
+        if result.stdout.strip():
+            print(result.stdout.strip())
+        if result.stderr.strip():
+            print(result.stderr.strip(), file=sys.stderr)
+        if result.returncode != 0:
+            print(f"[Phase 3] WARNING: Embedding step failed (exit {result.returncode}). "
+                  "Pipeline data is intact — re-run: "
+                  f"python backend/03_SEARCH/main.py --case_id {case_id}")
+        else:
+            print(f"[Phase 3] COMPLETE — case {case_id} is search-ready.")
+    else:
+        print(
+            "\n[Phase 3] SKIPPED — document has no case_id set. "
+            "Assign a case_id in Supabase, then run: "
+            f"python backend/03_SEARCH/main.py --case_id <case_uuid>"
+        )
 
 
 if __name__ == "__main__":
