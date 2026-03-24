@@ -339,6 +339,145 @@ def _build_same_as_edges(
 
 
 # ---------------------------------------------------------------------------
+# Exhibit reference helpers
+# ---------------------------------------------------------------------------
+
+_EXHIBIT_LABEL_RE = re.compile(
+    r'(?i)^(?:exhibit|appendix|attachment|schedule)\s+([A-Z0-9](?:[-\u2013]?[A-Z0-9])*)',
+)
+
+
+def _extract_exhibit_label(node_label: str) -> str | None:
+    """Extract exhibit label from an evidence node's label. 'Exhibit A' → 'A'."""
+    m = _EXHIBIT_LABEL_RE.match(node_label.strip())
+    return m.group(1).upper() if m else None
+
+
+def _match_exhibit_document(label: str, doc_file_names: dict[str, str]) -> str | None:
+    """Find document_id whose file_name contains _exhibit_{label} (case-insensitive)."""
+    target = f"_exhibit_{label}".lower()
+    for doc_id, fname in doc_file_names.items():
+        if target in fname.lower():
+            return doc_id
+    return None
+
+
+def _build_exhibit_reference_edges(
+    all_nodes:      list[dict],
+    doc_file_names: dict[str, str],   # document_id → file_name
+    doc_type_map:   dict[str, str],   # document_id → document_type
+    doc_category:   dict[str, str],   # document_id → category
+    canonical_map:  dict[str, str],
+    case_id:        str,
+) -> list[dict]:
+    """
+    Build exhibit_of edges: complaint evidence_node → party/obligation nodes
+    in the matching exhibit document.
+
+    Two matching strategies:
+      A) Label match: "Exhibit A" → file_name contains _exhibit_A
+      B) Fuzzy title match: evidence label vs exhibit document_type (threshold 0.6)
+    """
+    edges: list[dict] = []
+    seen_edges: set[tuple[str, str]] = set()
+
+    def _add(source_id: str, target_id: str, sec_id: str | None,
+             doc_id: str, confidence: float) -> None:
+        key = (source_id, target_id)
+        if key in seen_edges:
+            return
+        seen_edges.add(key)
+        edges.append({
+            "id":                 str(uuid.uuid4()),
+            "source_node_id":     source_id,
+            "target_node_id":     target_id,
+            "edge_type":          "exhibit_of",
+            "edge_scope":         "cross_document",
+            "properties":         {},
+            "confidence":         round(confidence, 3),
+            "source_section_id":  sec_id,
+            "source_document_id": doc_id,
+        })
+
+    # Identify exhibit documents (file_name contains _exhibit_)
+    exhibit_doc_ids = {
+        doc_id for doc_id, fname in doc_file_names.items()
+        if "_exhibit_" in fname.lower()
+    }
+    if not exhibit_doc_ids:
+        return []
+
+    # Map exhibit doc_id → its important target nodes (parties + obligations, capped at 10)
+    def _exhibit_targets(doc_id: str) -> list[dict]:
+        targets = []
+        for n in all_nodes:
+            if n["document_id"] != doc_id:
+                continue
+            if n["node_type"] in ("party", "obligation"):
+                targets.append(n)
+        # Sort: parties first, then obligations; cap at 10 to avoid edge explosion
+        targets.sort(key=lambda n: (0 if n["node_type"] == "party" else 1))
+        return targets[:10]
+
+    exhibit_targets_cache: dict[str, list[dict]] = {
+        doc_id: _exhibit_targets(doc_id) for doc_id in exhibit_doc_ids
+    }
+
+    # Build fuzzy fallback: exhibit doc_id → normalised type string
+    exhibit_type_norm: dict[str, str] = {
+        doc_id: _normalize_party(doc_type_map.get(doc_id, ""))
+        for doc_id in exhibit_doc_ids
+    }
+
+    # Process evidence nodes from complaint/litigation documents
+    for node in all_nodes:
+        if node["node_type"] != "evidence":
+            continue
+        if doc_category.get(node["document_id"]) not in ("complaint", "brief", "other"):
+            continue
+
+        label_raw = node["node_label"]
+        matched_doc_id: str | None = None
+        confidence = CROSS_DOC_CONFIDENCE_BASE
+
+        # Strategy A: label match
+        label = _extract_exhibit_label(label_raw)
+        if label:
+            matched_doc_id = _match_exhibit_document(label, doc_file_names)
+            if matched_doc_id:
+                confidence = 0.85
+
+        # Strategy B: fuzzy title match (fallback)
+        if not matched_doc_id:
+            norm_label = _normalize_party(label_raw)
+            best_doc_id, best_score = None, 0.0
+            for ex_doc_id, norm_type in exhibit_type_norm.items():
+                score = _similarity(norm_label, norm_type)
+                if score > best_score:
+                    best_score, best_doc_id = score, ex_doc_id
+            if best_score >= 0.6 and best_doc_id:
+                matched_doc_id = best_doc_id
+                confidence = 0.65
+
+        if not matched_doc_id:
+            continue
+
+        # Create exhibit_of edges to the top nodes from the matched exhibit document
+        targets = exhibit_targets_cache.get(matched_doc_id, [])
+        if not targets:
+            continue
+
+        for target_node in targets:
+            _add(
+                node["id"], target_node["id"],
+                node.get("source_section_id"), node["document_id"],
+                confidence,
+            )
+
+    return edges
+
+
+# ---------------------------------------------------------------------------
 # Pass 2: Cross-document edge creation
 # ---------------------------------------------------------------------------
 
@@ -419,8 +558,13 @@ def _build_cross_edges(
 
         for claim in complaint_claims:
             claim_props = claim.get("properties") or {}
-            claim_type  = (claim_props.get("claim_type") or "").lower()
-            if "breach" not in claim_type:
+            claim_text  = (
+                (claim_props.get("claim_type") or "") + " " +
+                claim.get("node_label", "")
+            ).lower()
+            if not any(kw in claim_text for kw in (
+                "breach", "violat", "fail to perform", "non-performance", "default"
+            )):
                 continue
             defendant  = claim_props.get("defendant") or ""
             def_canonical = _find_party_canonical(defendant, all_party_nodes, canonical_map)
@@ -643,6 +787,9 @@ def main():
     doc_type_map: dict[str, str] = {
         d["id"]: d.get("document_type") or "" for d in (docs_resp.data or [])
     }
+    doc_file_names: dict[str, str] = {
+        d["id"]: d.get("file_name") or "" for d in (docs_resp.data or [])
+    }
     doc_category: dict[str, str] = {
         doc_id: _classify_doc(dt) for doc_id, dt in doc_type_map.items()
     }
@@ -723,7 +870,11 @@ def main():
     cross_edges = _build_cross_edges(
         all_nodes, doc_category, section_labels, master_canonical, case_id
     )
-    print(f"  Pass 2 — {len(cross_edges)} cross-document edges")
+    exhibit_edges = _build_exhibit_reference_edges(
+        all_nodes, doc_file_names, doc_type_map, doc_category, master_canonical, case_id
+    )
+    cross_edges.extend(exhibit_edges)
+    print(f"  Pass 2 — {len(cross_edges)} cross-document edges ({len(exhibit_edges)} exhibit_of)")
 
     all_new_edges = all_same_as_edges + cross_edges
 

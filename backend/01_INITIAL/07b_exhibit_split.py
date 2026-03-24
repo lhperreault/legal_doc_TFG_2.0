@@ -38,15 +38,20 @@ import uuid
 
 TEMP_DIR = os.path.join(os.path.dirname(__file__), '..', 'zz_temp_chunks')
 
-# Patterns that mark exhibit boundaries in legal documents
-EXHIBIT_PATTERNS = [
+# Patterns for ALL strategies (Strategies 0, 1, 1.5 use their own logic;
+# these are only used by the Strategy 2 fallback — reduced to top-level markers only)
+EXHIBIT_PATTERNS_S2 = [
     # "EXHIBIT A", "Exhibit 1", "Exhibit 13", "EXHIBIT A-1", etc.
     r'^(?:EXHIBIT|Exhibit|exhibit)\s+([A-Z][A-Z0-9]*|[0-9]+(?:[-–][A-Z0-9]+)?)\b',
     # "Appendix A", "APPENDIX 1", "Appendix 13"
     r'^(?:APPENDIX|Appendix|appendix)\s+([A-Z][A-Z0-9]*|[0-9]+)\b',
-    # "Attachment A", "ATTACHMENT 1", "Attachment 13"
+    # NOTE: Schedule and Attachment are intentionally excluded — they appear
+    # frequently as internal sub-structure within exhibits and cause over-splitting.
+]
+
+# Full pattern list kept for _extract_exhibit_title guard (don't consume sub-headers)
+_ALL_EXHIBIT_PATTERNS = EXHIBIT_PATTERNS_S2 + [
     r'^(?:ATTACHMENT|Attachment|attachment)\s+([A-Z][A-Z0-9]*|[0-9]+)\b',
-    # "Schedule A", "SCHEDULE 1", "Schedule 13"
     r'^(?:SCHEDULE|Schedule|schedule)\s+([A-Z][A-Z0-9]*|[0-9]+)\b',
 ]
 
@@ -80,22 +85,14 @@ def _split_by_bookmarks(text_path: str, bookmarks: list[dict]) -> list[dict]:
     """
     Slice the text extraction markdown into per-exhibit chunks using the
     exact page numbers from native TOC bookmarks.
-
-    Steps:
-      1. Build a map of page_number → char position from ## Page N markers.
-      2. Deduplicate bookmarks with the same page (keep first occurrence).
-      3. For each bookmark, slice from its page's char position to the next
-         bookmark's page start.
-      4. Return exhibit dicts compatible with _write_exhibit_files.
     """
     with open(text_path, 'r', encoding='utf-8') as f:
         full_text = f.read()
 
-    # Map: page number → char position of the "## Page N" marker in the text
     page_positions: dict[int, int] = {}
     for m in _PAGE_POS_RE.finditer(full_text):
         pg = int(m.group(1) or m.group(2))
-        if pg not in page_positions:          # keep first occurrence per page
+        if pg not in page_positions:
             page_positions[pg] = m.start()
 
     if not page_positions:
@@ -103,7 +100,6 @@ def _split_by_bookmarks(text_path: str, bookmarks: list[dict]) -> list[dict]:
 
     max_page = max(page_positions.keys())
 
-    # Deduplicate bookmarks by page — keep first occurrence per unique page
     seen_pages: set = set()
     deduped = []
     for bm in bookmarks:
@@ -130,7 +126,6 @@ def _split_by_bookmarks(text_path: str, bookmarks: list[dict]) -> list[dict]:
         if len(text) < 100:
             continue
 
-        # Derive a clean label from the bookmark title (e.g. "Ex 13" → "13")
         num_match = re.search(r'(\d+)$', bm['title'].strip())
         label = num_match.group(1) if num_match else re.sub(r'[^\w\-]', '_', bm['title'])
 
@@ -146,98 +141,7 @@ def _split_by_bookmarks(text_path: str, bookmarks: list[dict]) -> list[dict]:
 
 
 # ---------------------------------------------------------------------------
-# Exhibit detection from text
-# ---------------------------------------------------------------------------
-
-def _detect_exhibits_from_text(text: str) -> list[dict]:
-    """
-    Scan the text extraction markdown for exhibit boundaries.
-    Returns a list of dicts: {label, title, start_char, end_char, start_page, end_page, text}
-    """
-    lines = text.split('\n')
-    exhibits: list[dict] = []
-    current_exhibit = None
-    current_page = None
-    char_offset = 0
-
-    for line in lines:
-        # Track page numbers
-        page_match = PAGE_MARKER_RE.match(line)
-        if page_match:
-            current_page = int(page_match.group(1) or page_match.group(2))
-            char_offset += len(line) + 1
-            continue
-
-        # Check for exhibit boundary
-        is_exhibit_start = False
-        for pattern in EXHIBIT_PATTERNS:
-            match = re.match(pattern, line.strip())
-            if match:
-                # Close previous exhibit
-                if current_exhibit:
-                    current_exhibit['end_char'] = char_offset
-                    current_exhibit['end_page'] = current_page
-                    current_exhibit['text'] = text[current_exhibit['start_char']:current_exhibit['end_char']].strip()
-                    if len(current_exhibit['text']) > 100:  # skip tiny fragments
-                        exhibits.append(current_exhibit)
-
-                label = match.group(1)
-                # Try to get a descriptive title from the next few lines
-                title = _extract_exhibit_title(lines, lines.index(line) if line in lines else 0)
-
-                current_exhibit = {
-                    'label': label,
-                    'title': title or f"Exhibit {label}",
-                    'start_char': char_offset,
-                    'end_char': None,
-                    'start_page': current_page,
-                    'end_page': None,
-                    'text': None,
-                }
-                is_exhibit_start = True
-                break
-
-        char_offset += len(line) + 1
-
-    # Close last exhibit
-    if current_exhibit:
-        current_exhibit['end_char'] = len(text)
-        current_exhibit['end_page'] = current_page
-        current_exhibit['text'] = text[current_exhibit['start_char']:current_exhibit['end_char']].strip()
-        if len(current_exhibit['text']) > 100:
-            exhibits.append(current_exhibit)
-
-    return exhibits
-
-
-def _extract_exhibit_title(lines: list[str], start_idx: int) -> str | None:
-    """
-    Look at the lines immediately following an exhibit marker to find
-    a descriptive title. Exhibits often have a title line like:
-    "EXHIBIT A"
-    "Declaration of Eric A. Tate in Support of..."
-    """
-    title_parts = []
-    for i in range(start_idx + 1, min(start_idx + 5, len(lines))):
-        line = lines[i].strip()
-        if not line:
-            continue
-        # Stop if we hit another exhibit marker, page marker, or body text
-        if PAGE_MARKER_RE.match(line):
-            break
-        if any(re.match(p, line) for p in EXHIBIT_PATTERNS):
-            break
-        if len(line) > 200:  # probably body text, not a title
-            break
-        title_parts.append(line)
-        if len(' '.join(title_parts)) > 150:
-            break
-
-    return ' '.join(title_parts).strip() if title_parts else None
-
-
-# ---------------------------------------------------------------------------
-# Read exhibits from Phase 1's exhibits.md file
+# Strategy 1: Read from _exhibits.md (pre-split by 07_* TOC scripts)
 # ---------------------------------------------------------------------------
 
 def _read_exhibits_md(doc_stem: str) -> list[dict] | None:
@@ -266,7 +170,6 @@ def _read_exhibits_md(doc_stem: str) -> list[dict] | None:
         lines = section.strip().split('\n')
         header = lines[0].strip()
 
-        # Extract label from header
         label_match = re.match(r'(?:Exhibit|EXHIBIT|Appendix|Schedule|Attachment)\s+([A-Z0-9](?:[-–][A-Z0-9])?)', header)
         if label_match:
             label = label_match.group(1)
@@ -277,7 +180,6 @@ def _read_exhibits_md(doc_stem: str) -> list[dict] | None:
         if len(text) < 100:
             continue
 
-        # Try to extract page numbers from the text
         pages = PAGE_MARKER_RE.findall(text)
         start_page = int(pages[0][0] or pages[0][1]) if pages else None
         end_page = int(pages[-1][0] or pages[-1][1]) if pages else None
@@ -291,6 +193,233 @@ def _read_exhibits_md(doc_stem: str) -> list[dict] | None:
         })
 
     return exhibits if exhibits else None
+
+
+# ---------------------------------------------------------------------------
+# Strategy 1.5: Split using exhibit_references from classification JSON
+# ---------------------------------------------------------------------------
+
+def _load_exhibit_reference_labels(doc_stem: str) -> list[str] | None:
+    """
+    Read exhibit_references from the classification JSON produced by 05_doc_classification.py.
+    Returns a list of uppercase labels (e.g. ["1", "2", "A", "B"]) or None if unavailable.
+    """
+    class_path = os.path.join(TEMP_DIR, f"{doc_stem}_text_extraction_classification.json")
+    if not os.path.exists(class_path):
+        return None
+    try:
+        with open(class_path, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+    except Exception:
+        return None
+
+    refs = data.get('exhibit_references') or []
+    if not refs:
+        return None
+
+    labels = []
+    seen = set()
+    for ref in refs:
+        # Parse the trailing label from strings like "Exhibit A", "Exhibit 1"
+        m = re.search(r'\b([A-Z0-9]+)\s*$', ref.strip(), re.IGNORECASE)
+        if m:
+            lbl = m.group(1).upper()
+            if lbl not in seen:
+                seen.add(lbl)
+                labels.append(lbl)
+
+    return labels if labels else None
+
+
+def _split_by_exhibit_references(doc_stem: str, text_path: str) -> list[dict] | None:
+    """
+    Strategy 1.5: Use exhibit_references from classification JSON as ground truth.
+
+    Only splits on the known top-level exhibit labels (e.g. A, B, 1, 2).
+    This prevents internal sub-structure ("Schedule 1", "Attachment 3") from
+    creating spurious splits.
+
+    Scans _exhibits.md when available (already filtered to exhibit content),
+    otherwise scans the full text but locates the exhibit start boundary first.
+    """
+    labels = _load_exhibit_reference_labels(doc_stem)
+    if not labels:
+        return None
+
+    # Prefer scanning _exhibits.md — it contains ONLY exhibit content
+    exhibits_md_path = os.path.join(TEMP_DIR, f"{doc_stem}_exhibits.md")
+    if os.path.exists(exhibits_md_path):
+        with open(exhibits_md_path, 'r', encoding='utf-8') as f:
+            scan_text = f.read()
+        scan_from = 0
+    else:
+        with open(text_path, 'r', encoding='utf-8') as f:
+            scan_text = f.read()
+        # Find exhibit boundary = earliest line-start occurrence of any known label
+        scan_from = len(scan_text)
+        for label in labels:
+            pat = re.compile(
+                r'(?im)^[ \t]*exhibit\s+' + re.escape(label) + r'\b'
+            )
+            m = pat.search(scan_text)
+            if m and m.start() < scan_from:
+                scan_from = m.start()
+        if scan_from == len(scan_text):
+            return None  # no known exhibit label found anywhere
+
+    # Build per-label pattern: line-start match, case-insensitive
+    label_patterns = {
+        label: re.compile(r'(?im)^[ \t]*exhibit\s+' + re.escape(label) + r'\b')
+        for label in labels
+    }
+
+    # Find first occurrence of each label after the exhibit boundary
+    label_positions: dict[str, int] = {}
+    for label, pattern in label_patterns.items():
+        m = pattern.search(scan_text, scan_from)
+        if m:
+            label_positions[label] = m.start()
+
+    if not label_positions:
+        return None
+
+    # Sort by position in text
+    ordered = sorted(label_positions.items(), key=lambda x: x[1])
+
+    exhibits = []
+    for i, (label, start_pos) in enumerate(ordered):
+        end_pos = ordered[i + 1][1] if i + 1 < len(ordered) else len(scan_text)
+        chunk = scan_text[start_pos:end_pos].strip()
+
+        if len(chunk) < 100:
+            continue
+
+        pages = PAGE_MARKER_RE.findall(chunk)
+        start_page = int(pages[0][0] or pages[0][1]) if pages else None
+        end_page   = int(pages[-1][0] or pages[-1][1]) if pages else None
+
+        chunk_lines = chunk.split('\n')
+        title = _extract_exhibit_title(chunk_lines, 0)
+
+        exhibits.append({
+            'label':      label,
+            'title':      title or f"Exhibit {label}",
+            'text':       chunk,
+            'start_page': start_page,
+            'end_page':   end_page,
+        })
+
+    return exhibits if exhibits else None
+
+
+# ---------------------------------------------------------------------------
+# Strategy 2 (fallback): Scan text for exhibit boundary markers
+# ---------------------------------------------------------------------------
+
+def _detect_exhibits_from_text(text: str) -> list[dict]:
+    """
+    Fallback strategy: scan the text extraction markdown for exhibit boundaries.
+
+    Uses reduced pattern set (Exhibit/Appendix only — no Schedule/Attachment).
+    Requires boundary-like positioning: match must be near a page marker OR
+    preceded by 2+ blank lines.
+
+    Returns a list of dicts: {label, title, start_char, end_char, start_page, end_page, text}
+    """
+    lines = text.split('\n')
+    exhibits: list[dict] = []
+    current_exhibit = None
+    current_page = None
+    char_offset = 0
+    consecutive_blanks = 0
+    lines_since_page_marker = 999  # large initial value
+
+    for line in lines:
+        # Track page numbers
+        page_match = PAGE_MARKER_RE.match(line)
+        if page_match:
+            current_page = int(page_match.group(1) or page_match.group(2))
+            lines_since_page_marker = 0
+            char_offset += len(line) + 1
+            consecutive_blanks = 0
+            continue
+
+        # Track blank lines
+        if not line.strip():
+            consecutive_blanks += 1
+            char_offset += len(line) + 1
+            continue
+
+        lines_since_page_marker += 1
+
+        # Check for exhibit boundary — only EXHIBIT_PATTERNS_S2 (no Schedule/Attachment)
+        for pattern in EXHIBIT_PATTERNS_S2:
+            match = re.match(pattern, line.strip())
+            if match:
+                # Require boundary-like positioning to filter inline references
+                near_page_boundary = lines_since_page_marker <= 3
+                preceded_by_blanks = consecutive_blanks >= 2
+                if not (near_page_boundary or preceded_by_blanks):
+                    break  # skip — likely an inline reference
+
+                # Close previous exhibit
+                if current_exhibit:
+                    current_exhibit['end_char'] = char_offset
+                    current_exhibit['end_page'] = current_page
+                    current_exhibit['text'] = text[current_exhibit['start_char']:current_exhibit['end_char']].strip()
+                    if len(current_exhibit['text']) > 100:
+                        exhibits.append(current_exhibit)
+
+                label = match.group(1)
+                line_idx = lines.index(line) if line in lines else 0
+                title = _extract_exhibit_title(lines, line_idx)
+
+                current_exhibit = {
+                    'label':      label,
+                    'title':      title or f"Exhibit {label}",
+                    'start_char': char_offset,
+                    'end_char':   None,
+                    'start_page': current_page,
+                    'end_page':   None,
+                    'text':       None,
+                }
+                break
+
+        char_offset += len(line) + 1
+        consecutive_blanks = 0
+
+    # Close last exhibit
+    if current_exhibit:
+        current_exhibit['end_char'] = len(text)
+        current_exhibit['end_page'] = current_page
+        current_exhibit['text'] = text[current_exhibit['start_char']:current_exhibit['end_char']].strip()
+        if len(current_exhibit['text']) > 100:
+            exhibits.append(current_exhibit)
+
+    return exhibits
+
+
+def _extract_exhibit_title(lines: list[str], start_idx: int) -> str | None:
+    """
+    Look at the lines immediately following an exhibit marker to find
+    a descriptive title.
+    """
+    title_parts = []
+    for i in range(start_idx + 1, min(start_idx + 5, len(lines))):
+        line = lines[i].strip()
+        if not line:
+            continue
+        if PAGE_MARKER_RE.match(line):
+            break
+        if any(re.match(p, line) for p in _ALL_EXHIBIT_PATTERNS):
+            break
+        if len(line) > 200:
+            break
+        title_parts.append(line)
+        if len(' '.join(title_parts)) > 150:
+            break
+
+    return ' '.join(title_parts).strip() if title_parts else None
 
 
 # ---------------------------------------------------------------------------
@@ -325,7 +454,7 @@ def _classify_exhibit(title: str, text_snippet: str) -> str:
         return 'Contract'
     if any(k in t for k in ['privilege log']):
         return 'Discovery'
-    return 'Exhibit'  # generic fallback
+    return 'Exhibit'
 
 
 # ---------------------------------------------------------------------------
@@ -336,30 +465,41 @@ def _write_exhibit_files(doc_stem: str, exhibits: list[dict]):
     """
     Write each exhibit's text to a separate file in zz_temp_chunks/ and
     write a manifest JSON that 08_Send_Supabase.py will read.
+
+    Deduplicates labels: if two exhibits share a label, later ones get a
+    numeric suffix (_2, _3, …) so they don't overwrite each other.
     """
     manifest = []
+    seen_labels: dict[str, int] = {}
 
-    for i, ex in enumerate(exhibits):
+    for ex in exhibits:
         label = ex['label']
-        safe_label = re.sub(r'[^\w\-]', '_', label)
+
+        # Deduplicate: if label already used, add suffix
+        if label in seen_labels:
+            seen_labels[label] += 1
+            unique_label = f"{label}_{seen_labels[label]}"
+        else:
+            seen_labels[label] = 1
+            unique_label = label
+
+        safe_label   = re.sub(r'[^\w\-]', '_', unique_label)
         exhibit_stem = f"{doc_stem}_exhibit_{safe_label}"
 
-        # Write the exhibit text as its own markdown file
+        # Write exhibit text as its own markdown file
         text_path = os.path.join(TEMP_DIR, f"{exhibit_stem}_text_extraction.md")
         with open(text_path, 'w', encoding='utf-8') as f:
             f.write(ex['text'])
 
-        # Write a simple sections CSV (one section per exhibit for now —
-        # Phase 2's 00_section_refine will split it further if needed)
+        # Write a simple sections CSV
         sections_path = os.path.join(TEMP_DIR, f"{exhibit_stem}_07_toc_sections.csv")
         with open(sections_path, 'w', encoding='utf-8') as f:
             f.write("level,section,start_page,end_page,page_range,section_text,is_synthetic\n")
             page_range = ""
             if ex.get('start_page') and ex.get('end_page'):
                 page_range = f"{ex['start_page']}-{ex['end_page']}"
-            # Escape CSV fields
             escaped_title = ex['title'].replace('"', '""')
-            escaped_text = ex['text'].replace('"', '""')
+            escaped_text  = ex['text'].replace('"', '""')
             f.write(f'0,"{escaped_title}",{ex.get("start_page", "")},{ex.get("end_page", "")},"{page_range}","{escaped_text}",False\n')
 
         # Write classification
@@ -367,21 +507,21 @@ def _write_exhibit_files(doc_stem: str, exhibits: list[dict]):
         classification_path = os.path.join(TEMP_DIR, f"{exhibit_stem}_text_extraction_classification.json")
         with open(classification_path, 'w', encoding='utf-8') as f:
             json.dump({
-                'document_type': doc_type,
-                'confidence_score': 0.6,  # low confidence — pattern-based guess
-                'is_exhibit': True,
-                'exhibit_label': label,
-                'parent_document': doc_stem,
+                'document_type':    doc_type,
+                'confidence_score': 0.6,
+                'is_exhibit':       True,
+                'exhibit_label':    label,
+                'parent_document':  doc_stem,
             }, f, indent=2)
 
         manifest.append({
-            'exhibit_label': label,
-            'exhibit_title': ex['title'],
-            'exhibit_stem': exhibit_stem,
-            'document_type': doc_type,
-            'start_page': ex.get('start_page'),
-            'end_page': ex.get('end_page'),
-            'text_length': len(ex['text']),
+            'exhibit_label':  label,
+            'exhibit_title':  ex['title'],
+            'exhibit_stem':   exhibit_stem,
+            'document_type':  doc_type,
+            'start_page':     ex.get('start_page'),
+            'end_page':       ex.get('end_page'),
+            'text_length':    len(ex['text']),
         })
 
     # Write manifest
@@ -406,7 +546,6 @@ def main():
         print(f"ERROR: File not found: {text_path}")
         sys.exit(1)
 
-    # Derive doc_stem from filename
     basename = os.path.basename(text_path)
     doc_stem = basename.replace('_text_extraction.md', '')
 
@@ -428,13 +567,32 @@ def main():
         if exhibits:
             print(f"  [Strategy 1] Found {len(exhibits)} exhibit(s) in exhibits.md.")
 
-    # Strategy 2: Scan text for exhibit boundary markers (fallback)
-    # Also re-runs if strategy 1 returned one giant blob (>50k chars = unsplit)
-    if not exhibits or (len(exhibits) == 1 and len(exhibits[0].get('text', '')) > 50000):
-        print("  [Strategy 2] Scanning text extraction for exhibit markers...")
-        with open(text_path, 'r', encoding='utf-8') as f:
-            full_text = f.read()
-        exhibits = _detect_exhibits_from_text(full_text)
+    # Strategy 1.5: Use exhibit_references from classification JSON as ground truth.
+    # Fires when Strategy 1 produced nothing OR a single unsplit blob (>50k chars).
+    # Uses only the known top-level labels so internal sub-structure is ignored.
+    is_unsplit_blob = len(exhibits) == 1 and len(exhibits[0].get('text', '')) > 50000
+    if not exhibits or is_unsplit_blob:
+        refs_result = _split_by_exhibit_references(doc_stem, text_path)
+        if refs_result:
+            exhibits = refs_result
+            print(f"  [Strategy 1.5] Split into {len(exhibits)} exhibit(s) using known exhibit references.")
+
+    # Strategy 2: Scan text for exhibit boundary markers (last resort).
+    # Uses reduced pattern set (Exhibit/Appendix only) with boundary-context gating.
+    is_unsplit_blob = len(exhibits) == 1 and len(exhibits[0].get('text', '')) > 50000
+    if not exhibits or is_unsplit_blob:
+        print("  [Strategy 2] Scanning text extraction for exhibit markers (fallback)...")
+        # Prefer scanning _exhibits.md — it contains only exhibit content
+        exhibits_md_path = os.path.join(TEMP_DIR, f"{doc_stem}_exhibits.md")
+        if os.path.exists(exhibits_md_path):
+            with open(exhibits_md_path, 'r', encoding='utf-8') as f:
+                scan_text = f.read()
+            print("  [Strategy 2] Scanning _exhibits.md (exhibit content only).")
+        else:
+            with open(text_path, 'r', encoding='utf-8') as f:
+                scan_text = f.read()
+            print("  [Strategy 2] Scanning full text extraction.")
+        exhibits = _detect_exhibits_from_text(scan_text)
 
     if not exhibits:
         print(f"SUCCESS: No exhibits found in '{doc_stem}'. Nothing to split.")
@@ -444,9 +602,8 @@ def main():
     for ex in exhibits:
         doc_type = _classify_exhibit(ex['title'], ex.get('text', '')[:500])
         pages = f"pages {ex.get('start_page', '?')}-{ex.get('end_page', '?')}"
-        print(f"    Exhibit {ex['label']}: {ex['title'][:60]}... ({doc_type}, {pages}, {len(ex.get('text', ''))} chars)")
+        print(f"    Exhibit {ex['label']}: {ex['title'][:60]} ({doc_type}, {pages}, {len(ex.get('text', ''))} chars)")
 
-    # Write exhibit files
     manifest_path = _write_exhibit_files(doc_stem, exhibits)
 
     print(
