@@ -1,0 +1,262 @@
+{
+  "template_name": "Universal Commercial Litigation",
+  "template_id": "universal_commercial",
+  "tier": 1,
+  "description": "Base template for all commercial litigation cases. Covers all Layer 1 extractions and Layer 2 derived insights. Subtype add-on modules stack on top of this.",
+
+  "tasks": [
+
+    {
+      "id": "L1_3.1_case_metadata",
+      "label": "Case metadata and classification",
+      "layer": 1,
+      "section_ref": "3.1",
+      "query": "Identify the case metadata: matter name (from caption or correspondence), claim categories (contract, tort, statutory, or hybrid), all jurisdictions implicated, and the intake/filing date. Classify whether this is primarily a contract dispute, tort action, statutory claim, or hybrid.",
+      "agent": "general",
+      "required": true
+    },
+
+    {
+      "id": "L1_3.2_parties",
+      "label": "Parties and roles",
+      "layer": 1,
+      "section_ref": "3.2",
+      "query": "List every party in this case with: their exact legal entity name as stated in the documents, entity type (Corporation, LLC, Individual, etc.), jurisdiction of formation if stated, their role (Plaintiff, Defendant, Third-Party, Contractor, Licensor, etc.), and any explicitly described relationships between parties (parent, affiliate, guarantor, subsidiary). Flag any party that appears under different names across documents.",
+      "agent": "general",
+      "required": true
+    },
+
+    {
+      "id": "L1_3.3_governing_docs",
+      "label": "Governing documents inventory",
+      "layer": 1,
+      "section_ref": "3.3",
+      "query": "Inventory all governing documents: for each, identify the document type (Contract, Amendment, Addendum, etc.), execution status (signed/unsigned/partially signed), signature blocks with names and dates, effective date, term and expiration date, any amendments and version numbers, and any incorporated or referenced documents. Map the document hierarchy (which documents amend or supersede which).",
+      "agent": "contract",
+      "required": true
+    },
+
+    {
+      "id": "L1_3.4_clauses",
+      "label": "Key contractual provisions",
+      "layer": 1,
+      "section_ref": "3.4",
+      "query": "Extract these specific clauses from each contract in the case (quote the relevant text for each): governing law clause, venue/forum clause, arbitration/ADR clause, notice clause, cure period clause, limitation of liability clause, confidentiality clause, termination clause, indemnification clause, force majeure clause, assignment clause, and data privacy clause. For each, state which contract it comes from and the section number.",
+      "agent": "contract",
+      "required": true
+    },
+
+    {
+      "id": "L1_3.5_obligations",
+      "label": "Obligations and duties",
+      "layer": 1,
+      "section_ref": "3.5",
+      "query": "Extract all contractual obligations and duties: for each, identify the clause reference (section number), the party obligated, the action required, any deadlines or triggers, and whether it is one-time or recurring. Organize by obligated party.",
+      "agent": "contract",
+      "required": true
+    },
+
+    {
+      "id": "L1_3.6_timeline",
+      "label": "Events and timeline",
+      "layer": 1,
+      "section_ref": "3.6",
+      "query": "Build a comprehensive chronological timeline of all events: performance events (deliverables completed, payments made), non-performance events (missed deadlines, failures to deliver), payment and non-payment events, notices sent, communications referencing breach, and all dates explicitly stated or inferable from document metadata. For each event, identify the date, the actor, the action, and the source document.",
+      "agent": "general",
+      "required": true
+    },
+
+    {
+      "id": "L1_3.7_notice_cure",
+      "label": "Notice and cure mechanics",
+      "layer": 1,
+      "section_ref": "3.7",
+      "query": "Extract all notice and cure requirements from the contracts: required notice method (written, email, certified mail, etc.), required recipient (title, name, address), required timing (within X days of event), cure period length, and calculate the cure deadline if a notice date is known. Identify whether the notice requirements were actually followed based on the case documents.",
+      "agent": "contract",
+      "required": true
+    },
+
+    {
+      "id": "L1_3.8_jurisdiction",
+      "label": "Jurisdiction and forum provisions",
+      "layer": 1,
+      "section_ref": "3.8",
+      "query": "Extract all jurisdiction and forum provisions: governing law clause (quote the text), venue or forum clause, arbitration forum if specified (AAA, JAMS, ICC, etc.), and any choice-of-law provisions. Identify which contract each provision comes from.",
+      "agent": "contract",
+      "required": true
+    },
+
+    {
+      "id": "L1_3.9_claims",
+      "label": "Claims and causes of action",
+      "layer": 1,
+      "section_ref": "3.9",
+      "query": "List every claim or cause of action alleged in the complaint: the legal theory (breach of contract, negligence, fraud, statutory violation, etc.), the specific statutes cited if any, the factual basis for each claim, and the parties involved in each claim. Do NOT evaluate the strength of any claim — only document what is alleged.",
+      "agent": "complaint",
+      "required": true
+    },
+
+    {
+      "id": "L1_3.10_damages",
+      "label": "Damages documented",
+      "layer": 1,
+      "section_ref": "3.10",
+      "query": "Document all damages sought or referenced: specific amounts claimed, damage categories (compensatory, consequential, punitive, statutory, liquidated), any invoices or calculations referenced, any damage caps stated in the contracts, and the legal basis for each damage category. Report only what the documents state — do not calculate or evaluate.",
+      "agent": "complaint",
+      "required": true
+    },
+
+    {
+      "id": "L1_3.11_evidence",
+      "label": "Evidence inventory",
+      "layer": 1,
+      "section_ref": "3.11",
+      "query": "Create an evidence inventory: for each document in the case, identify its type, date, author or sender, source classification (internal/external, original/copy), and what facts or claims it is relevant to. Flag any evidence gaps — claims that lack documentary support.",
+      "agent": "cross_doc",
+      "required": true
+    },
+
+    {
+      "id": "L1_3.12_sol_inputs",
+      "label": "Statute of limitations inputs",
+      "layer": 1,
+      "section_ref": "3.12",
+      "query": "Identify all statute of limitations inputs: the governing law for each claim, any accrual date references (when did the cause of action arise), discovery date references (when was the injury discovered), any tolling language in the documents, and the applicable limitation periods under the governing law if stated. Do not calculate deadlines — just extract the inputs.",
+      "agent": "complaint",
+      "required": false
+    },
+
+
+    {
+      "id": "L2_4.1_case_classification",
+      "label": "Case type classification confidence",
+      "layer": 2,
+      "section_ref": "4.1",
+      "depends_on": ["L1_3.1_case_metadata", "L1_3.11_evidence"],
+      "query": "Based on the document mix and claims in this case, classify the dispute: is it contract-heavy, tort-heavy, statutory, or hybrid? Assess document completeness — are there expected documents that appear to be missing (e.g., a contract dispute with no contract attached, or a complaint referencing exhibits that aren't in the case)? Flag if multiple jurisdictions are implicated.",
+      "agent": "cross_doc",
+      "required": true
+    },
+
+    {
+      "id": "L2_4.2_party_mismatches",
+      "label": "Party and entity analysis",
+      "layer": 2,
+      "section_ref": "4.2",
+      "depends_on": ["L1_3.2_parties", "L1_3.3_governing_docs"],
+      "query": "Analyze the parties for potential issues: Are there contracting party mismatches (the entity named in the contract differs from the entity that signed)? Any parent/subsidiary exposure? Missing guarantors? Authority gaps (no officer title on a signature block)? Flag any entity that appears under different names or roles across documents.",
+      "agent": "cross_doc",
+      "required": true
+    },
+
+    {
+      "id": "L2_4.3_doc_hierarchy",
+      "label": "Document version and hierarchy issues",
+      "layer": 2,
+      "section_ref": "4.3",
+      "depends_on": ["L1_3.3_governing_docs"],
+      "query": "Analyze the document hierarchy: Are there version control issues (amendments referencing wrong versions)? Missing amendments that are referenced but not in the case? Expired-but-relied-upon agreements? Documents that claim to supersede each other in conflicting ways?",
+      "agent": "contract",
+      "required": false
+    },
+
+    {
+      "id": "L2_4.4_provision_analysis",
+      "label": "Contractual provision pathway analysis",
+      "layer": 2,
+      "section_ref": "4.4",
+      "depends_on": ["L1_3.4_clauses", "L1_3.8_jurisdiction"],
+      "query": "Analyze the contractual provisions: Does the dispute resolution pathway lead to arbitration or litigation? Are there venue conflicts (forum clause points to one place, parties are in another)? What is the liability ceiling if a limitation clause exists? How strict are the notice requirements (exact form required vs reasonable notice)?",
+      "agent": "contract",
+      "required": true
+    },
+
+    {
+      "id": "L2_4.5_obligation_chains",
+      "label": "Obligation dependency and performance analysis",
+      "layer": 2,
+      "section_ref": "4.5",
+      "depends_on": ["L1_3.5_obligations", "L1_3.6_timeline"],
+      "query": "Analyze the obligations: Are there obligation dependency chains (B's duty only triggers after A performs)? Are there missed obligations (deadline has passed, no evidence of performance)? Classify obligations as one-time vs recurring. Flag any obligations where performance evidence is missing from the case documents.",
+      "agent": "cross_doc",
+      "required": true
+    },
+
+    {
+      "id": "L2_4.6_breach_sequencing",
+      "label": "Breach sequencing and attribution",
+      "layer": 2,
+      "section_ref": "4.6",
+      "depends_on": ["L1_3.6_timeline", "L1_3.9_claims"],
+      "query": "Analyze the timeline for breach patterns: Who acted first — was there a prior breach that may have excused the other party's performance? Are there delays attributable to a specific party? Any latent breaches (breach occurred but wasn't discovered until later)? Any pattern of repeated failures (event clustering)?",
+      "agent": "cross_doc",
+      "required": true
+    },
+
+    {
+      "id": "L2_4.7_notice_compliance",
+      "label": "Notice and cure compliance check",
+      "layer": 2,
+      "section_ref": "4.7",
+      "depends_on": ["L1_3.7_notice_cure", "L1_3.6_timeline"],
+      "query": "Check notice and cure compliance: Was the required notice actually sent in the required form? Was it sent to the right recipient? Was it sent within the required timing? Is the cure window still open or has it expired? Was there a premature termination (terminated before cure period expired)? Any waiver risk (continued performance after knowledge of breach)?",
+      "agent": "cross_doc",
+      "required": true
+    },
+
+    {
+      "id": "L2_4.8_jurisdiction_complexity",
+      "label": "Jurisdiction and forum complexity",
+      "layer": 2,
+      "section_ref": "4.8",
+      "depends_on": ["L1_3.8_jurisdiction", "L1_3.2_parties"],
+      "query": "Assess jurisdictional complexity: Is this cross-border? Are there parallel forum risks (same dispute could be litigated in multiple places)? Any conflict-of-law issues (contract says one law, parties are in a different jurisdiction)? If arbitration is required, what is the enforcement pathway?",
+      "agent": "general",
+      "required": false
+    },
+
+    {
+      "id": "L2_4.9_claim_analysis",
+      "label": "Claim clustering and gap detection",
+      "layer": 2,
+      "section_ref": "4.9",
+      "depends_on": ["L1_3.9_claims"],
+      "query": "Analyze the claims: Are there claim clusters (contract + tort arising from same facts = hybrid)? Is there a statutory vs common law split? Are any statutory citations missing or incorrect? Are there redundant claims (multiple theories for the same injury)? Any claims that appear unsupported by the factual allegations?",
+      "agent": "complaint",
+      "required": true
+    },
+
+    {
+      "id": "L2_4.10_damages_analysis",
+      "label": "Damages consistency analysis",
+      "layer": 2,
+      "section_ref": "4.10",
+      "depends_on": ["L1_3.10_damages", "L1_3.4_clauses"],
+      "query": "Analyze damages consistency: Do the damage types requested match what the contract allows (e.g., seeking consequential damages when the contract excludes them)? If there are liquidated damages, how do they compare to actual claimed damages? What is the damages-to-liability-cap ratio? Are damages accumulating over time?",
+      "agent": "cross_doc",
+      "required": false
+    },
+
+    {
+      "id": "L2_4.11_evidence_gaps",
+      "label": "Evidence density and gap analysis",
+      "layer": 2,
+      "section_ref": "4.11",
+      "depends_on": ["L1_3.11_evidence", "L1_3.6_timeline"],
+      "query": "Analyze evidence completeness: What is the evidence density by time period (are there gaps in the documentary record)? Is there a source balance (mostly from one side)? Are documents contemporaneous with the events they describe? Are there evidence gaps for specific obligations or claims?",
+      "agent": "cross_doc",
+      "required": true
+    },
+
+    {
+      "id": "L2_4.12_sol_analysis",
+      "label": "Statute of limitations assessment",
+      "layer": 2,
+      "section_ref": "4.12",
+      "depends_on": ["L1_3.12_sol_inputs", "L1_3.6_timeline"],
+      "query": "Assess statute of limitations exposure: Based on the governing law and accrual dates identified, how much time has elapsed since accrual for each claim? Is there any tolling language that might extend the period? Do different claims have different limitation periods (SOL divergence)? Flag any claims where the limitations period may be close to expiring or already expired.",
+      "agent": "complaint",
+      "required": false
+    }
+  ]
+}

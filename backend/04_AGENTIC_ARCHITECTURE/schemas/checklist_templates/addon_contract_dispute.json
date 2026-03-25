@@ -1,0 +1,87 @@
+
+{
+  "template_name": "Contract Dispute Add-on",
+  "template_id": "addon_contract_dispute",
+  "tier": 2,
+  "stacks_on": "universal_commercial",
+  "description": "Add-on module for contract-centric disputes. Runs after the universal template completes. Focuses on breach mechanics, performance analysis, and remedy pathways.",
+  "detection_rules": {
+    "requires_any_doc_type": ["Contract"],
+    "requires_any_claim_keyword": ["breach", "performance", "non-performance", "termination", "indemnif"]
+  },
+
+  "tasks": [
+
+    {
+      "id": "CD_breach_elements",
+      "label": "Breach elements mapping",
+      "query": "For each breach of contract claim, map the four elements: (1) existence of a valid contract — identify the specific contract, (2) performance by the plaintiff — what did the plaintiff do or was ready to do, (3) breach by the defendant — what specific contractual provision was violated and how, (4) damages — what injury resulted from the breach. Cite specific sections and pages for each element.",
+      "agent": "cross_doc",
+      "required": true,
+      "depends_on_universal": ["L1_3.9_claims", "L1_3.4_clauses", "L1_3.5_obligations"]
+    },
+
+    {
+      "id": "CD_material_vs_minor",
+      "label": "Material vs minor breach assessment",
+      "query": "For each alleged breach, assess whether the facts as alleged suggest a material breach or a minor breach. Consider: the importance of the breached term to the overall contract purpose, the extent of non-performance, the likelihood of cure, and whether the non-breaching party received substantially what they bargained for. Do not make legal conclusions — identify the factual indicators.",
+      "agent": "cross_doc",
+      "required": true,
+      "depends_on_universal": ["L1_3.5_obligations", "L2_4.5_obligation_chains"]
+    },
+
+    {
+      "id": "CD_anticipatory_breach",
+      "label": "Anticipatory breach indicators",
+      "query": "Are there any indicators of anticipatory breach in the case documents? Look for: express repudiation (a party stating they will not perform), conduct making performance impossible, communications showing intent not to perform future obligations. Cite specific documents and dates.",
+      "agent": "complaint",
+      "required": false,
+      "depends_on_universal": ["L1_3.6_timeline"]
+    },
+
+    {
+      "id": "CD_condition_precedent",
+      "label": "Conditions precedent analysis",
+      "query": "Identify all conditions precedent in the contracts. For each: what must happen before the obligation triggers, has the condition been satisfied (based on the case documents), and if not, does that excuse non-performance? This is critical for determining whether an obligation was actually due.",
+      "agent": "contract",
+      "required": true,
+      "depends_on_universal": ["L1_3.5_obligations", "L1_3.4_clauses"]
+    },
+
+    {
+      "id": "CD_termination_validity",
+      "label": "Termination validity checklist",
+      "query": "If termination occurred or is alleged: (1) What termination provision was invoked (for cause, for convenience, expiration)? (2) Was the triggering event actually a valid trigger under the contract? (3) Were notice requirements followed exactly? (4) Was the cure period respected? (5) Were any post-termination obligations identified (survival clauses, wind-down, return of materials)? Map each step to specific contract language and case facts.",
+      "agent": "cross_doc",
+      "required": true,
+      "depends_on_universal": ["L1_3.7_notice_cure", "L2_4.7_notice_compliance"]
+    },
+
+    {
+      "id": "CD_remedy_pathway",
+      "label": "Available remedy pathways",
+      "query": "Based on the contract terms and claims: What remedies are contractually available (liquidated damages, indemnification, limitation of liability)? What remedies are sought in the complaint? Are any sought remedies excluded by the contract (e.g., consequential damages waiver)? Is specific performance potentially available? Is there an ADR requirement that must be exhausted before litigation?",
+      "agent": "cross_doc",
+      "required": true,
+      "depends_on_universal": ["L1_3.10_damages", "L2_4.10_damages_analysis", "L2_4.4_provision_analysis"]
+    },
+
+    {
+      "id": "CD_affirmative_defenses",
+      "label": "Potential affirmative defense indicators",
+      "query": "Based on the case documents, identify factual indicators that could support common contract defenses: waiver (continued performance after knowledge of breach), estoppel (reliance on representations), laches (unreasonable delay in asserting rights), failure of consideration, impossibility or impracticability, frustration of purpose, prior material breach by the other party. Only flag defenses where there is documentary evidence — do not speculate.",
+      "agent": "cross_doc",
+      "required": false,
+      "depends_on_universal": ["L2_4.6_breach_sequencing", "L2_4.7_notice_compliance"]
+    },
+
+    {
+      "id": "CD_third_party_exposure",
+      "label": "Third-party and indemnification exposure",
+      "query": "Are there indemnification obligations that could bring in third parties? Any guarantor obligations? Assignment clauses that affect who can enforce the contract? Insurance coverage requirements? Map the web of parties who could be drawn into this dispute beyond the named plaintiff and defendant.",
+      "agent": "contract",
+      "required": false,
+      "depends_on_universal": ["L1_3.4_clauses", "L2_4.2_party_mismatches"]
+    }
+  ]
+}

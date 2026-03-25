@@ -1,0 +1,92 @@
+{
+  "registry_version": "1.0",
+  "description": "Two-tier checklist template system for commercial litigation. Tier 1 (universal) always runs. Tier 2 (add-ons) stack automatically based on detection rules.",
+
+  "tier_1": {
+    "universal_commercial": {
+      "file": "universal_commercial.json",
+      "tasks_count": 24,
+      "layer_1_tasks": 12,
+      "layer_2_tasks": 12,
+      "always_runs": true
+    }
+  },
+
+  "tier_2": {
+    "addon_contract_dispute": {
+      "file": "addon_contract_dispute.json",
+      "tasks_count": 8,
+      "status": "built",
+      "detection_rules": {
+        "requires_any_doc_type": ["Contract"],
+        "requires_any_claim_keyword": ["breach", "performance", "non-performance", "termination", "indemnif"]
+      },
+      "focus": "Breach mechanics, performance analysis, remedy pathways, termination validity"
+    },
+
+    "addon_shareholder_conflict": {
+      "file": "addon_shareholder_conflict.json",
+      "tasks_count": null,
+      "status": "planned",
+      "detection_rules": {
+        "requires_any_doc_type": ["Corporate", "Shareholder Agreement", "Operating Agreement", "Bylaws"],
+        "requires_any_claim_keyword": ["fiduciary", "shareholder", "derivative", "oppression", "dilution", "buyout", "valuation"]
+      },
+      "focus": "Fiduciary duties, corporate governance, buyout/valuation triggers, derivative vs direct claims, minority rights"
+    },
+
+    "addon_employment_dispute": {
+      "file": "addon_employment_dispute.json",
+      "tasks_count": null,
+      "status": "planned",
+      "detection_rules": {
+        "requires_any_doc_type": ["Employment Agreement", "Non-Compete", "Severance"],
+        "requires_any_claim_keyword": ["wrongful termination", "discrimination", "non-compete", "trade secret", "whistleblower", "retaliation", "severance"]
+      },
+      "focus": "Employment terms, restrictive covenants, severance, whistleblower protections, discrimination claims"
+    },
+
+    "addon_professional_negligence": {
+      "file": "addon_professional_negligence.json",
+      "tasks_count": null,
+      "status": "planned",
+      "detection_rules": {
+        "requires_any_doc_type": ["Engagement Letter", "Retainer Agreement"],
+        "requires_any_claim_keyword": ["negligence", "malpractice", "standard of care", "duty of care", "professional liability"]
+      },
+      "focus": "Duty and standard of care, engagement scope, causation chain, damages vs fee analysis"
+    },
+
+    "addon_cross_border": {
+      "file": "addon_cross_border.json",
+      "tasks_count": null,
+      "status": "planned",
+      "detection_rules": {
+        "requires_multi_jurisdiction": true,
+        "requires_any_claim_keyword": ["foreign", "international", "cross-border", "arbitration", "CISG", "Hague", "enforcement"]
+      },
+      "focus": "Conflict of laws, treaty applicability, international arbitration, enforcement of foreign judgments, CISG"
+    },
+
+    "addon_property_dispute": {
+      "file": "addon_property_dispute.json",
+      "tasks_count": null,
+      "status": "planned",
+      "detection_rules": {
+        "requires_any_doc_type": ["Lease", "Real Estate", "Property"],
+        "requires_any_claim_keyword": ["lease", "tenant", "landlord", "eviction", "rent", "property", "easement", "zoning"]
+      },
+      "focus": "Lease terms, rent obligations, maintenance duties, use restrictions, renewal/termination"
+    },
+
+    "addon_debt_recovery": {
+      "file": "addon_debt_recovery.json",
+      "tasks_count": null,
+      "status": "planned",
+      "detection_rules": {
+        "requires_any_claim_keyword": ["debt", "collection", "default", "acceleration", "promissory note", "guarantee", "security interest", "lien"]
+      },
+      "focus": "Debt instruments, default events, acceleration clauses, guarantor obligations, security interests, priority"
+    }
+  }
+}

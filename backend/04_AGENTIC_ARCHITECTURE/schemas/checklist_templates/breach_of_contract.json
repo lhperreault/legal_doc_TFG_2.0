@@ -1,0 +1,55 @@
+{
+  "template_name": "Breach of Contract",
+  "template_id": "breach_of_contract",
+  "tasks": [
+    {
+      "id": "parties",
+      "label": "Identify all parties and their roles",
+      "query": "List all parties in this case with their roles (plaintiff, defendant, third-party, etc.) and the documents they appear in.",
+      "agent": "general",
+      "required": true
+    },
+    {
+      "id": "claims",
+      "label": "List all causes of action",
+      "query": "What are all the causes of action or claims asserted in the complaint? For each, identify the legal basis and the parties involved.",
+      "agent": "complaint",
+      "required": true
+    },
+    {
+      "id": "contract_terms",
+      "label": "Extract key contract obligations",
+      "query": "What are the key obligations in each contract? Identify who is obligated, what they must do, and any deadlines or conditions.",
+      "agent": "contract",
+      "required": true
+    },
+    {
+      "id": "evidence_map",
+      "label": "Map claims to supporting evidence",
+      "query": "For each claim in the complaint, what evidence supports it? Flag any claims that have no evidence trail.",
+      "agent": "cross_doc",
+      "required": true
+    },
+    {
+      "id": "timeline",
+      "label": "Build case timeline",
+      "query": "Build a chronological timeline of all events in this case, including contract dates, alleged breach dates, filing dates, and any other significant events.",
+      "agent": "general",
+      "required": true
+    },
+    {
+      "id": "conflicts",
+      "label": "Detect obligation conflicts",
+      "query": "Are there any conflicting obligations across the contracts in this case? Identify any terms that contradict each other.",
+      "agent": "cross_doc",
+      "required": false
+    },
+    {
+      "id": "damages",
+      "label": "Summarize damages sought",
+      "query": "What damages are sought in the complaint? Include specific amounts, types of damages (compensatory, punitive, statutory), and the basis for each.",
+      "agent": "complaint",
+      "required": false
+    }
+  ]
+}

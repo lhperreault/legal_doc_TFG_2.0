@@ -1,0 +1,48 @@
+{
+  "template_name": "General Case Overview",
+  "template_id": "general_case",
+  "tasks": [
+    {
+      "id": "overview",
+      "label": "Case summary",
+      "query": "What is this case about? Provide a brief overview including the nature of the dispute, the parties involved, and the key issues.",
+      "agent": "general",
+      "required": true
+    },
+    {
+      "id": "parties",
+      "label": "Identify all parties",
+      "query": "Who are all the parties in this case? List their names, roles, and how they are related to each other.",
+      "agent": "general",
+      "required": true
+    },
+    {
+      "id": "documents",
+      "label": "Inventory case documents",
+      "query": "What documents are in this case? List each document with its type, key content, and relevance to the case.",
+      "agent": "general",
+      "required": true
+    },
+    {
+      "id": "timeline",
+      "label": "Build case timeline",
+      "query": "Build a chronological timeline of all significant events in this case, from earliest to most recent.",
+      "agent": "general",
+      "required": true
+    },
+    {
+      "id": "key_issues",
+      "label": "Identify key legal issues",
+      "query": "What are the main legal issues or questions in this case? What must be decided or resolved?",
+      "agent": "general",
+      "required": true
+    },
+    {
+      "id": "evidence_overview",
+      "label": "Summarize available evidence",
+      "query": "What evidence is available in this case? Summarize the types and strength of evidence supporting each side.",
+      "agent": "cross_doc",
+      "required": false
+    }
+  ]
+}

@@ -19,7 +19,7 @@ _CLASSIFY_PROMPT_PATH = os.path.join(
 with open(_CLASSIFY_PROMPT_PATH, encoding='utf-8') as _f:
     _CLASSIFY_SYSTEM_PROMPT = _f.read()
 
-_VALID_TYPES = {"complaint", "contract", "general", "clarification"}
+_VALID_TYPES = {"complaint", "contract", "cross_doc", "general", "clarification"}
 
 _model = ChatGoogleGenerativeAI(
     model="gemini-2.5-flash",
@@ -55,6 +55,8 @@ def route_by_type(state: dict) -> str:
     if qt == "complaint":
         return "complaint_agent"
     elif qt == "contract":
-        return "complaint_agent"   # reuse complaint agent; contract agent is a future node
+        return "contract_agent"
+    elif qt == "cross_doc":
+        return "cross_doc_agent"
     else:
-        return "complaint_agent"   # general + clarification also use complaint agent for now
+        return "general_agent"   # general + clarification

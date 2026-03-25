@@ -1,721 +1,615 @@
-# Phase 4: Agentic Workflows — Complete Planning Document
+# Phase 4B: Remaining Agents & Checklist System — Planning Document
 
-## 1. Scope of First Build
+## 1. What You Have (Built in Phase 4A)
 
-This document covers the MVP agent layer:
-- **Query handler** (router) — classifies intent, routes to the right agent
-- **Complaint agent** — answers questions about claims, evidence, parties, and cross-document relationships
-- **HITL layers 1+2** — confidence flagging in agent responses + a reviews table for lawyer corrections
-- **Multi-turn support** — agents can do follow-up searches and ask clarifying questions
-- **LangGraph** as the orchestration framework
-
-Future agents (contract, cross-doc, checklist, case law) follow the same pattern and reuse the shared tools and state schema.
-
-
----
-
-## 2. What You Have (Input from Phases 1-3)
-
-### 2.1 Shared Tools (already built)
-
-| Tool | Location | What It Does |
+### 1.1 Working Infrastructure
+| Component | Status | Location |
 |---|---|---|
-| `hybrid_search()` | `backend/03_SEARCH/02_search.py` | Semantic + keyword + structural search over section embeddings. Returns ranked sections with provenance. |
-| `build_timeline()` | `backend/02_MIDDLE/05_graph_analytics.py` | Chronological timeline from KG event nodes. |
-| `find_claim_evidence_paths()` | `backend/02_MIDDLE/05_graph_analytics.py` | BFS from claim nodes to evidence/legal_authority nodes. Returns paths with hop count and confidence. |
-| Supabase tables | `sections`, `extractions`, `kg_nodes`, `kg_edges`, `documents`, `section_embeddings` | Structured data for SQL queries. |
+| LangGraph state machine | Working | `04_AGENTIC_ARCHITECTURE/graph.py` |
+| AgentState schema | Working | `state.py` — messages, context accumulators, HITL fields |
+| Query classifier | Working | `nodes/classify.py` — routes to complaint/contract/general |
+| Complaint agent | Working | `nodes/complaint_agent.py` — Gemini + tools, multi-turn |
+| Response formatter + HITL | Working | `nodes/respond.py` — provenance, confidence, flagging |
+| Tool: search_sections | Working | `tools/search.py` — wraps Phase 3 hybrid_search |
+| Tool: get_claim_evidence | Working | `tools/kg_query.py` — KG claim→evidence paths |
+| Tool: get_timeline | Working | `tools/kg_query.py` — chronological event ordering |
+| Tool: query_extractions | Working | `tools/extractions.py` — structured entity lookup |
+| Tool: query_kg | Working | `tools/kg_query.py` — general KG traversal |
+| Persistence | Working | `persistence.py` — agent_responses + reviews tables |
+| CLI runner | Working | `run.py` — single query + interactive multi-turn |
 
-### 2.2 Data Available Per Case
-
-After Phases 1-3 complete for a case, you have:
-- **Sections** with text, AST hierarchy (parent_section_id, level), semantic labels, page ranges
-- **Extractions** with typed entities (parties, claims, obligations, dates, amounts, evidence_refs, case_citations) linked to sections
-- **KG nodes + edges** with intra-document relationships (alleged_by, supported_by, obligated_to, etc.) and cross-document relationships (same_as, exhibit_of, breached_by)
-- **Vector embeddings** for semantic search over sections
-- **Graph analytics** functions for timeline and claim-evidence analysis
-
-### 2.3 What You Do NOT Have Yet
-- A query classification/routing layer
-- An LLM reasoning step that synthesizes search results into answers
-- Conversation state management (multi-turn)
-- A reviews/corrections table for HITL
-- Agent response persistence (storing what the AI said for audit trail)
-
-
----
-
-## 3. LangGraph Concepts (Quick Primer)
-
-LangGraph models agent workflows as **state machines** (directed graphs). The key concepts:
-
-### 3.1 State
-A TypedDict or Pydantic model that holds everything the agent knows at any point in the conversation. Every node in the graph reads from and writes to this state. For our system, state includes: the user's query, conversation history, retrieved sections, KG context, the draft answer, confidence score, and provenance links.
-
-### 3.2 Nodes
-Functions that do one thing: classify the query, call a tool, reason with the LLM, format the response. Each node takes the current state, does work, and returns updated state fields.
-
-### 3.3 Edges
-Connections between nodes. Can be unconditional (always go from A to B) or conditional (go to B if the query is about claims, go to C if it's about parties). This is how routing works.
-
-### 3.4 Graph
-The compiled state machine. You define nodes, edges, and an entry point. LangGraph handles execution, state passing, and checkpointing (for multi-turn).
-
-### 3.5 Checkpointer
-Persists state between turns of a conversation. When the user sends a follow-up message, the checkpointer loads the previous state so the agent has context. We'll use `MemorySaver` for development (in-memory) and can switch to a Supabase-backed checkpointer for production.
-
-### 3.6 Tool Calling
-LangGraph integrates with LLM tool calling. You define tools (Python functions with docstrings), the LLM decides which tools to call, LangGraph executes the tool and feeds the result back to the LLM. This is how the agent decides to search, query the KG, or ask the user a clarifying question.
+### 1.2 What's Missing
+- Contract agent (specialized system prompt + contract-specific tool usage patterns)
+- Cross-doc agent (multi-document reasoning, exhibit linking, conflict detection)
+- Checklist agent (iterates a template, dispatches sub-queries to other agents)
+- Case law agent (external precedent search — future, not in this doc)
+- Graph routing to multiple agents (currently everything routes to complaint_agent)
+- Agent-to-agent delegation (checklist agent calling complaint/contract agents)
 
 
 ---
 
-## 4. Architecture
+## 2. What We're Building
 
-### 4.1 The Graph (State Machine)
+### 2.1 Phase 4B Scope
 
-```
-                    ┌─────────────┐
-     User query ──→ │  classify   │
-                    └──────┬──────┘
-                           │
-              ┌────────────┼────────────┐
-              ↓            ↓            ↓
-        ┌──────────┐ ┌──────────┐ ┌──────────┐
-        │complaint │ │ contract │ │ general  │
-        │  agent   │ │  agent   │ │  agent   │
-        └────┬─────┘ └────┬─────┘ └────┬─────┘
-             │             │             │
-             ↓             ↓             ↓
-        ┌─────────────────────────────────────┐
-        │           tool execution            │
-        │  (search, KG, analytics, SQL)       │
-        └──────────────────┬──────────────────┘
-                           │
-                           ↓
-                    ┌──────────────┐
-                    │   reason     │
-                    │  (Gemini)    │
-                    └──────┬───── ┘
-                           │
-                    ┌──────┴──────┐
-                    │  needs more │──→ (loop back to tool execution)
-                    │   info?     │
-                    └──────┬──────┘
-                           │ no
-                           ↓
-                    ┌──────────────┐
-                    │   respond    │
-                    │  (format +   │
-                    │   HITL flag) │
-                    └──────────────┘
-```
+| Agent | Purpose | Complexity |
+|---|---|---|
+| **Contract agent** | Contract terms, obligations, clauses, rights, conditions | Low — same pattern as complaint agent, different system prompt |
+| **Cross-doc agent** | Multi-document reasoning, exhibit references, conflicts, comparisons | Medium — needs to combine results across documents |
+| **Checklist agent** | Iterates a case-type template, dispatches tasks to other agents, tracks completion | Medium — orchestrates other agents, manages template state |
+| **General agent** | Catch-all for timeline, overview, cross-cutting questions | Low — reuses existing tools with a general-purpose prompt |
 
-### 4.2 State Schema
-
-```python
-from typing import TypedDict, Annotated
-from langgraph.graph.message import add_messages
-
-class AgentState(TypedDict):
-    # Conversation
-    messages: Annotated[list, add_messages]  # full conversation history (HumanMessage, AIMessage, ToolMessage)
-    
-    # Routing
-    case_id: str
-    query_type: str | None          # "complaint", "contract", "general", "clarification"
-    
-    # Retrieved context (accumulated across tool calls)
-    search_results: list[dict]      # from hybrid_search()
-    kg_context: list[dict]          # from KG traversal / graph analytics
-    extractions_context: list[dict] # from structured SQL queries
-    
-    # Agent output
-    answer: str | None
-    confidence: float | None
-    provenance_links: list[dict]    # [{section_id, page_range, quote_snippet, file_name}]
-    needs_review: bool
-    reasoning_steps: list[str]
-    
-    # Control flow
-    tool_call_count: int            # prevent infinite loops (max ~5 tool rounds)
-    agent_name: str | None          # which specialized agent is active
-```
-
-### 4.3 Why This State Design
-
-The `messages` field uses LangGraph's `add_messages` annotation — this automatically appends new messages instead of overwriting, preserving the full conversation history. This is what enables multi-turn: when the user sends a follow-up, the previous messages are still there.
-
-The context fields (`search_results`, `kg_context`, `extractions_context`) accumulate across multiple tool calls within a single turn. If the agent searches, reads results, decides it needs more specific data, and searches again — all results are preserved.
-
-The output fields (`answer`, `confidence`, `provenance_links`, etc.) match the HITL response schema from the architecture doc. Every agent populates these same fields.
+### 2.2 What We're NOT Building Yet
+- Case law agent (requires external data source integration)
+- Frontend API endpoints (Phase 5)
+- Review queue UI (Phase 5)
+- Proactive case briefing automation (runs after Phase 5 frontend exists)
 
 
 ---
 
-## 5. Nodes (The Functions)
+## 3. Contract Agent
 
-### 5.1 `classify` — Query Router
+### 3.1 Design
 
-**Purpose:** Determine what type of question this is and route to the right agent.
+The contract agent follows the exact same LangGraph pattern as the complaint agent. It uses the same tools, same state schema, same response format. The only differences are:
 
-**Implementation:** A lightweight Gemini call with a classification prompt. No tools needed — just read the query and return a category.
+1. **System prompt** — focused on contract analysis (clauses, obligations, rights, conditions, termination, indemnification)
+2. **Default search filters** — when searching, it biases toward `document_type LIKE 'Contract%'` and `semantic_labels` in the contract ontology
+3. **Tool usage patterns** — more likely to use `query_extractions(extraction_type="obligation")` and less likely to use `get_claim_evidence()`
 
-```python
-def classify(state: AgentState) -> dict:
-    """Classify the user's query and decide which agent handles it."""
-    last_message = state["messages"][-1].content
-    
-    # Use Gemini to classify
-    response = gemini_model.generate_content(
-        f"""Classify this legal question into one category:
-        - "complaint" — about claims, allegations, causes of action, evidence, parties in a complaint
-        - "contract" — about contract terms, obligations, clauses, conditions
-        - "general" — general case questions, timeline, cross-document
-        - "clarification" — the question is unclear, need more info
-        
-        Question: {last_message}
-        
-        Return ONLY the category name, nothing else."""
-    )
-    
-    return {"query_type": response.text.strip().lower()}
-```
+### 3.2 System Prompt (`prompts/contract_system.md`)
 
-**Conditional edge after classify:**
-```python
-def route_by_type(state: AgentState) -> str:
-    qt = state.get("query_type", "general")
-    if qt == "complaint":
-        return "complaint_agent"
-    elif qt == "contract":
-        return "contract_agent"
-    else:
-        return "general_agent"
-```
-
-### 5.2 `complaint_agent` — The Specialized Agent Node
-
-**Purpose:** Handle complaint-related queries using the shared tools. This is where the LLM decides what tools to call.
-
-**Implementation:** A Gemini call with tools bound. The LLM sees the query, the conversation history, and the tool descriptions. It decides whether to search, query the KG, check extractions, or respond directly.
-
-```python
-# Tools available to the complaint agent
-complaint_tools = [
-    search_sections_tool,       # wraps hybrid_search()
-    get_claim_evidence_tool,    # wraps find_claim_evidence_paths()
-    get_timeline_tool,          # wraps build_timeline()
-    query_extractions_tool,     # structured SQL on extractions table
-    query_kg_tool,              # KG node/edge traversal
-]
-```
-
-**System prompt for complaint agent:**
 ```markdown
-You are a legal document analysis agent specializing in complaints and litigation documents.
+You are a legal document analysis agent specializing in contracts and commercial agreements.
 
-You have access to a case document database with the following tools:
-- search_sections: Find relevant document sections by meaning or keyword
-- get_claim_evidence: Trace paths from claims to supporting evidence
-- get_timeline: Build chronological timeline of events
-- query_extractions: Look up specific extracted entities (parties, claims, dates, amounts)
-- query_kg: Traverse the knowledge graph for entity relationships
+You have access to a case database (case ID: {case_id}) through the following tools:
 
-RULES:
-1. Always ground your answers in specific document sections. Never speculate.
-2. When citing a fact, include the section title, document name, and page range.
-3. If you cannot find evidence for a claim, say so explicitly.
-4. If the question is ambiguous, ask the user for clarification.
-5. After using tools, synthesize the results into a clear answer.
-6. Rate your confidence 0.0-1.0 based on how well the evidence supports your answer.
-7. If confidence < 0.7, flag the answer for human review.
+- **search_sections** — Find relevant contract sections by meaning or keyword. 
+  TIP: Filter with document_types=["Contract"] and use semantic_labels like 
+  "obligation.payment", "termination.for_cause", "indemnification.scope" for precise results.
+- **query_extractions** — Look up extracted contract entities: obligations, conditions, amounts, parties, dates.
+- **query_kg** — Find relationships between contract parties, obligations, and conditions.
+- **get_timeline** — Build timeline of contractual events and deadlines.
+- **get_claim_evidence** — Check if contract terms are referenced in complaint claims.
 
-You are analyzing case: {case_id}
+## Rules
+
+1. Always cite the specific contract clause: article/section number, title, and page range.
+2. When analyzing obligations, identify: who is obligated, what they must do, by when, and what happens if they don't.
+3. When analyzing rights, identify: who holds the right, what they can do, and under what conditions.
+4. For termination questions, trace the full chain: trigger event → notice requirement → cure period → termination effect.
+5. If multiple contracts exist in the case, always specify WHICH contract you're referencing.
+6. Cross-reference contract terms with complaint allegations when relevant — flag where a complaint claim maps to a specific clause.
+
+[Confidence: X.XX | Sources: N sections cited]
 ```
 
-### 5.3 `tool_executor` — Run Tools
+### 3.3 Implementation
 
-**Purpose:** LangGraph's built-in `ToolNode` executes whatever tools the LLM requested. It calls the Python functions, captures results, and adds them as `ToolMessage`s to the conversation.
-
-```python
-from langgraph.prebuilt import ToolNode
-
-tool_node = ToolNode(tools=complaint_tools)
-```
-
-### 5.4 `should_continue` — Loop or Respond
-
-**Purpose:** After tool execution, decide whether the agent needs another round of tool calls or is ready to respond.
+Create `nodes/contract_agent.py` — it's nearly identical to `complaint_agent.py`:
 
 ```python
-def should_continue(state: AgentState) -> str:
-    last_message = state["messages"][-1]
-    
-    # If the LLM made tool calls, execute them
-    if hasattr(last_message, "tool_calls") and last_message.tool_calls:
-        if state.get("tool_call_count", 0) >= 5:
-            return "respond"  # safety limit
-        return "tools"
-    
-    # No tool calls — the LLM is ready to respond
-    return "respond"
-```
+# nodes/contract_agent.py
+_SYSTEM_PROMPT_PATH = os.path.join(
+    os.path.dirname(__file__), '..', 'prompts', 'contract_system.md'
+)
 
-### 5.5 `respond` — Format Output + HITL Flagging
+# Same model, same tools, same pattern
+_model_with_tools = _base_model.bind_tools(contract_tools)
 
-**Purpose:** Take the LLM's final answer and structure it into the standard response schema with provenance and HITL flags.
-
-```python
-def respond(state: AgentState) -> dict:
-    """Extract structured output from the conversation and apply HITL rules."""
-    last_ai_message = state["messages"][-1].content
-    
-    # Parse provenance from the LLM's response (it should cite sections)
-    provenance_links = _extract_provenance_from_response(last_ai_message, state["search_results"])
-    
-    # Calculate confidence based on evidence quality
-    confidence = _calculate_confidence(provenance_links, state["search_results"])
-    
-    # HITL flagging
-    needs_review = confidence < 0.7
-    
-    return {
-        "answer": last_ai_message,
-        "confidence": confidence,
-        "provenance_links": provenance_links,
-        "needs_review": needs_review,
-        "reasoning_steps": _extract_reasoning_steps(state["messages"]),
-    }
-```
-
-
----
-
-## 6. Tool Definitions
-
-Each tool is a Python function with a docstring that the LLM reads to decide when/how to use it. LangGraph + Gemini handle the tool calling protocol.
-
-### 6.1 `search_sections`
-
-```python
-from langchain_core.tools import tool
-
-@tool
-def search_sections(
-    query: str,
-    document_types: list[str] | None = None,
-    semantic_labels: list[str] | None = None,
-    limit: int = 5,
-) -> str:
-    """Search for relevant document sections in the case.
-    
-    Use this to find sections that discuss a topic, contain specific language,
-    or match structural criteria. Returns section text with provenance.
-    
-    Args:
-        query: What to search for (natural language or exact terms)
-        document_types: Optional filter, e.g. ["Pleading - Complaint", "Contract - Agreement"]
-        semantic_labels: Optional filter, e.g. ["causes_of_action.breach_of_contract", "factual_allegations"]
-        limit: Max results (default 5)
-    """
-    # case_id comes from the graph state, injected at runtime
-    results = hybrid_search(
-        query=query,
-        case_id=_get_case_id(),  # pulled from state
-        document_types=document_types,
-        semantic_labels=semantic_labels,
-        limit=limit,
+def contract_agent_node(state: dict) -> dict:
+    """Contract agent: same pattern as complaint agent."""
+    case_id = state.get("case_id", "")
+    system_message = SystemMessage(
+        content=_SYSTEM_PROMPT_TEMPLATE.format(case_id=case_id)
     )
-    # Format for LLM consumption
-    return _format_search_results(results)
-```
-
-### 6.2 `get_claim_evidence`
-
-```python
-@tool
-def get_claim_evidence(claim_filter: str | None = None) -> str:
-    """Find evidence paths for claims in the complaint.
-    
-    Traces paths from claim nodes to evidence and legal authority nodes
-    in the knowledge graph. Shows which claims are supported and which are not.
-    
-    Args:
-        claim_filter: Optional substring to filter claims (e.g. "breach", "antitrust")
-    """
-    nodes, edges = _fetch_kg_graph(case_id=_get_case_id())
-    results = find_claim_evidence_paths(nodes, edges, claim_filter=claim_filter)
-    return _format_claim_evidence(results)
-```
-
-### 6.3 `get_timeline`
-
-```python
-@tool
-def get_timeline(party_filter: str | None = None) -> str:
-    """Build a chronological timeline of events in the case.
-    
-    Args:
-        party_filter: Optional party name to filter events (e.g. "Apple", "Epic")
-    """
-    nodes, edges = _fetch_kg_graph(case_id=_get_case_id())
-    timeline = build_timeline(nodes, edges, party_filter=party_filter)
-    return _format_timeline(timeline)
-```
-
-### 6.4 `query_extractions`
-
-```python
-@tool
-def query_extractions(
-    extraction_type: str,
-    entity_name_contains: str | None = None,
-    document_type: str | None = None,
-) -> str:
-    """Look up specific extracted entities from case documents.
-    
-    Use this for structured lookups like 'find all parties' or 'find all dates'.
-    
-    Args:
-        extraction_type: One of: party, date, amount, obligation, claim, condition, evidence_ref, case_citation
-        entity_name_contains: Optional substring filter on entity_name
-        document_type: Optional filter on document type (e.g. "Pleading - Complaint")
-    """
-    # Direct SQL query on extractions table
-    query = supabase.table("extractions").select("*").eq("extraction_type", extraction_type)
-    if entity_name_contains:
-        query = query.ilike("entity_name", f"%{entity_name_contains}%")
-    # ... execute and format
-```
-
-### 6.5 `query_kg`
-
-```python
-@tool
-def query_kg(
-    node_type: str | None = None,
-    edge_type: str | None = None,
-    node_label_contains: str | None = None,
-) -> str:
-    """Traverse the knowledge graph for entity relationships.
-    
-    Use this to find how entities relate to each other across documents.
-    
-    Args:
-        node_type: Filter nodes by type (party, claim, obligation, evidence, event, etc.)
-        edge_type: Filter edges by type (alleged_by, supported_by, breached_by, exhibit_of, etc.)
-        node_label_contains: Optional substring filter on node label
-    """
-    # Query kg_nodes and kg_edges with filters
-    # Return formatted node-edge-node triples
-```
-
-
----
-
-## 7. The Compiled Graph
-
-```python
-from langgraph.graph import StateGraph, START, END
-from langgraph.prebuilt import ToolNode
-from langgraph.checkpoint.memory import MemorySaver
-
-# Build the graph
-workflow = StateGraph(AgentState)
-
-# Add nodes
-workflow.add_node("classify", classify)
-workflow.add_node("complaint_agent", complaint_agent_node)
-workflow.add_node("tools", ToolNode(tools=complaint_tools))
-workflow.add_node("respond", respond)
-
-# Add edges
-workflow.add_edge(START, "classify")
-workflow.add_conditional_edges("classify", route_by_type, {
-    "complaint_agent": "complaint_agent",
-    "contract_agent": "complaint_agent",  # TODO: add contract agent later
-    "general_agent": "complaint_agent",   # TODO: add general agent later
-})
-workflow.add_conditional_edges("complaint_agent", should_continue, {
-    "tools": "tools",
-    "respond": "respond",
-})
-workflow.add_edge("tools", "complaint_agent")  # after tools, go back to agent for reasoning
-workflow.add_edge("respond", END)
-
-# Compile with checkpointer for multi-turn
-memory = MemorySaver()
-graph = workflow.compile(checkpointer=memory)
-```
-
-### 7.1 Running a Query
-
-```python
-# First turn
-config = {"configurable": {"thread_id": "case-7d178a8c-session-1"}}
-result = graph.invoke(
-    {
-        "messages": [HumanMessage(content="What are the main claims in the complaint?")],
-        "case_id": "7d178a8c-eecb-42f6-b607-a3b847e4ec1e",
-        "tool_call_count": 0,
-        "search_results": [],
-        "kg_context": [],
-        "extractions_context": [],
-        "provenance_links": [],
-        "reasoning_steps": [],
-        "needs_review": False,
-    },
-    config=config,
-)
-
-# Follow-up turn (state is preserved via thread_id)
-result = graph.invoke(
-    {"messages": [HumanMessage(content="Which of those claims has the weakest evidence?")]},
-    config=config,
-)
-```
-
-### 7.2 Multi-Turn Flow
-
-The `thread_id` in the config ties turns together. The `MemorySaver` checkpointer stores the full state after each turn. On the second turn, the agent sees the full conversation history (previous query + answer + tool results) and can build on it without re-searching.
-
-For production, replace `MemorySaver` with a Supabase-backed checkpointer that persists state across server restarts. LangGraph supports custom checkpointers — you'd implement `get_tuple()` and `put()` methods that read/write to a Supabase `agent_sessions` table.
-
-
----
-
-## 8. HITL — Layers 1 and 2
-
-### 8.1 Layer 1: Flagging (Built Into Agent Response)
-
-Every agent response includes:
-
-```python
-{
-    "answer": "The complaint alleges three causes of action...",
-    "confidence": 0.82,
-    "needs_review": False,       # True if confidence < 0.7
-    "provenance_links": [...],
-    "reasoning_steps": [...]
-}
-```
-
-Confidence calculation considers:
-- Number of provenance links (more sources = higher confidence)
-- Semantic search scores of the retrieved sections (higher scores = better match)
-- Whether the KG had relevant paths (claim → evidence path found = confidence boost)
-- Whether any retrieved sections had `is_synthetic: true` (synthetic headings = slight penalty)
-
-### 8.2 Layer 2: Storage (Reviews Table)
-
-```sql
-CREATE TABLE IF NOT EXISTS agent_responses (
-    id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    case_id             UUID NOT NULL REFERENCES cases(id),
-    session_id          TEXT NOT NULL,           -- LangGraph thread_id
-    query               TEXT NOT NULL,
-    agent_name          TEXT NOT NULL,           -- "complaint_agent", "contract_agent"
-    answer              TEXT NOT NULL,
-    confidence          FLOAT NOT NULL,
-    needs_review        BOOLEAN DEFAULT FALSE,
-    provenance_links    JSONB,                   -- [{section_id, page_range, quote_snippet}]
-    reasoning_steps     JSONB,                   -- ["step 1", "step 2"]
-    tool_calls_made     JSONB,                   -- [{tool_name, args, result_summary}]
-    created_at          TIMESTAMPTZ DEFAULT NOW()
-);
-
-CREATE TABLE IF NOT EXISTS reviews (
-    id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    agent_response_id   UUID NOT NULL REFERENCES agent_responses(id),
-    reviewer_id         TEXT,                    -- user ID of the lawyer who reviewed
-    review_action       TEXT NOT NULL,           -- "approved", "corrected", "rejected"
-    correction_text     TEXT,                    -- the lawyer's corrected answer (if corrected)
-    correction_notes    TEXT,                    -- why the correction was made
-    reviewed_at         TIMESTAMPTZ DEFAULT NOW()
-);
-
-CREATE INDEX idx_agent_responses_case ON agent_responses (case_id);
-CREATE INDEX idx_agent_responses_review ON agent_responses (needs_review, case_id);
-CREATE INDEX idx_reviews_response ON reviews (agent_response_id);
-```
-
-### 8.3 How It Works End-to-End
-
-1. Agent generates response → stored in `agent_responses` with `needs_review` flag
-2. If `needs_review = true`, it appears in the review queue (frontend, Phase 5)
-3. Lawyer reviews: approves, corrects, or rejects
-4. Correction stored in `reviews` table
-5. (Future) Corrections feed back into prompt engineering — if the agent consistently gets party names wrong, adjust the extraction prompt
-
-### 8.4 Audit Trail
-
-The combination of `agent_responses` + `reviews` creates a complete audit trail:
-- What did the AI say? (`agent_responses.answer`)
-- What evidence did it use? (`agent_responses.provenance_links`)
-- How did it get there? (`agent_responses.reasoning_steps`, `tool_calls_made`)
-- Did a human verify it? (`reviews.review_action`)
-- Was it changed? (`reviews.correction_text`)
-
-This is critical for legal work — a lawyer needs to show they verified AI outputs.
-
-
----
-
-## 9. Gemini Integration
-
-### 9.1 Model Choice
-
-Use `gemini-2.5-flash` for agent reasoning (same model as entity extraction). It supports tool calling natively, has a large context window, and you already have the API key.
-
-### 9.2 LangChain + Gemini Setup
-
-```python
-from langchain_google_genai import ChatGoogleGenerativeAI
-
-model = ChatGoogleGenerativeAI(
-    model="gemini-2.5-flash",
-    temperature=0.2,            # low temperature for factual legal answers
-    google_api_key=os.getenv("GEMINI_API_KEY"),
-)
-
-# Bind tools to the model
-model_with_tools = model.bind_tools(complaint_tools)
-```
-
-### 9.3 The Agent Node
-
-```python
-def complaint_agent_node(state: AgentState) -> dict:
-    """The complaint agent: calls Gemini with tools to answer the query."""
-    system_message = SystemMessage(content=COMPLAINT_SYSTEM_PROMPT.format(
-        case_id=state["case_id"],
-    ))
-    
-    response = model_with_tools.invoke(
+    response = _model_with_tools.invoke(
         [system_message] + state["messages"]
     )
-    
     return {
         "messages": [response],
         "tool_call_count": state.get("tool_call_count", 0) + 1,
-        "agent_name": "complaint_agent",
+        "agent_name": "contract_agent",
     }
 ```
 
+### 3.4 Tool Set
+
+The contract agent uses the same 5 tools as the complaint agent. No new tools needed. The system prompt guides which tools it prefers.
+
+```python
+# tools/__init__.py
+contract_tools = complaint_tools  # same tools, different prompt guides usage
+```
+
+### 3.5 Effort
+Half a day. Copy complaint_agent.py, write the system prompt, wire into graph.py.
+
 
 ---
 
-## 10. Directory Structure
+## 4. Cross-Document Agent
+
+### 4.1 Why It's Different
+
+The complaint and contract agents work primarily within a single document type. The cross-doc agent reasons across documents: "How does the complaint's breach allegation relate to the contract's termination clause?" or "Compare the obligations in Exhibit A with the allegations in the complaint."
+
+This requires a different tool usage pattern: the agent searches multiple document types, traverses cross-document KG edges (exhibit_of, breached_by, same_as), and synthesizes information from different sources.
+
+### 4.2 System Prompt (`prompts/cross_doc_system.md`)
+
+```markdown
+You are a legal document analysis agent specializing in cross-document reasoning.
+
+You analyze relationships BETWEEN documents in a case — how a complaint references a contract, 
+how exhibits support or contradict allegations, how obligations in one document relate to claims in another.
+
+You have access to a case database (case ID: {case_id}) through the following tools:
+
+- **search_sections** — Search across ALL document types. Do NOT filter by document_type 
+  unless the user specifies one. Cast a wide net first.
+- **query_kg** — THIS IS YOUR PRIMARY TOOL. Use edge_type filters to find cross-document relationships:
+  - "exhibit_of" — links complaint exhibit references to exhibit document content
+  - "breached_by" — links contract obligations to complaint breach claims  
+  - "same_as" — links the same party/entity across different documents
+  - "supported_by" — links claims to evidence
+- **get_claim_evidence** — Trace evidence paths across documents.
+- **query_extractions** — Compare entities across documents (e.g., same party in different roles).
+- **get_timeline** — Build a unified timeline combining events from all documents.
+
+## Rules
+
+1. Always identify WHICH document each piece of information comes from.
+2. When comparing across documents, present findings side-by-side:
+   "The contract states X (Exhibit A, Section 3.2, p.45) but the complaint alleges Y (Complaint, ¶78, p.20)"
+3. Use the knowledge graph to find relationships — don't just search twice and manually compare.
+4. Flag contradictions and conflicts explicitly.
+5. When tracing an exhibit reference, follow the full chain: 
+   complaint mention → exhibit_of edge → exhibit document → specific clause.
+
+[Confidence: X.XX | Sources: N sections from M documents cited]
+```
+
+### 4.3 When the Router Sends Queries Here
+
+Update `classify.py` to route to cross_doc_agent when:
+- The query mentions multiple documents ("compare the contract with the complaint")
+- The query asks about relationships between documents ("how does Exhibit A relate to the breach claim")
+- The query asks about conflicts or contradictions
+- The query uses words like "across", "between", "compare", "cross-reference"
+
+Add to the classification prompt:
+```markdown
+- **cross_doc** — Questions that span multiple documents: comparisons, cross-references, 
+  exhibit tracing, conflict detection, or any question mentioning multiple document types.
+```
+
+### 4.4 Implementation
+
+Same pattern as complaint_agent.py and contract_agent.py. Different system prompt. Same tools.
+
+### 4.5 Effort
+Half a day. Same pattern, different prompt, update router.
+
+
+---
+
+## 5. General Agent
+
+### 5.1 Purpose
+
+Catch-all for questions that don't fit complaint, contract, or cross-doc categories. Handles:
+- "What is this case about?" (overview)
+- "Who are all the parties?" (broad extraction query)
+- "Build me a timeline" (graph analytics)
+- "How many documents are in this case?" (metadata query)
+
+### 5.2 Implementation
+
+Same pattern. System prompt is generalist. Uses all tools without bias toward any document type.
+
+### 5.3 Effort
+Half a day.
+
+
+---
+
+## 6. Checklist Agent
+
+### 6.1 How It's Different
+
+The checklist agent is NOT a reasoning agent — it's an **orchestrator**. It reads a case-type template, iterates through tasks, and dispatches each task to the appropriate specialized agent. It doesn't call tools directly — it calls other agents.
+
+### 6.2 Template Schema
+
+```json
+{
+  "template_name": "Breach of Contract",
+  "template_id": "breach_of_contract",
+  "tasks": [
+    {
+      "id": "parties",
+      "label": "Identify all parties and their roles",
+      "query": "List all parties in this case with their roles (plaintiff, defendant, third-party, etc.) and the documents they appear in.",
+      "agent": "general",
+      "required": true
+    },
+    {
+      "id": "claims",
+      "label": "List all causes of action",
+      "query": "What are all the causes of action or claims asserted in the complaint? For each, identify the legal basis and the parties involved.",
+      "agent": "complaint",
+      "required": true
+    },
+    {
+      "id": "contract_terms",
+      "label": "Extract key contract obligations",
+      "query": "What are the key obligations in each contract? Identify who is obligated, what they must do, and any deadlines or conditions.",
+      "agent": "contract",
+      "required": true
+    },
+    {
+      "id": "evidence_map",
+      "label": "Map claims to supporting evidence",
+      "query": "For each claim in the complaint, what evidence supports it? Flag any claims that have no evidence trail.",
+      "agent": "cross_doc",
+      "required": true
+    },
+    {
+      "id": "timeline",
+      "label": "Build case timeline",
+      "query": "Build a chronological timeline of all events in this case, including contract dates, alleged breach dates, filing dates, and any other significant events.",
+      "agent": "general",
+      "required": true
+    },
+    {
+      "id": "conflicts",
+      "label": "Detect obligation conflicts",
+      "query": "Are there any conflicting obligations across the contracts in this case? Identify any terms that contradict each other.",
+      "agent": "cross_doc",
+      "required": false
+    },
+    {
+      "id": "damages",
+      "label": "Summarize damages sought",
+      "query": "What damages are sought in the complaint? Include specific amounts, types of damages (compensatory, punitive, statutory), and the basis for each.",
+      "agent": "complaint",
+      "required": false
+    }
+  ]
+}
+```
+
+### 6.3 Architecture
+
+The checklist agent doesn't fit the standard classify→agent→tools→respond pattern. It's a separate LangGraph graph (or a standalone Python function) that:
+
+1. Loads the appropriate template based on case type (from `documents.document_type` — if the case has a complaint, use "Breach of Contract" template)
+2. For each task in the template:
+   a. Invokes the main agent graph with the task's query
+   b. Captures the agent response (answer, confidence, provenance)
+   c. Stores the result in a checklist state
+3. Returns the completed checklist with per-task status
+
+### 6.4 Implementation Approach
+
+```python
+# checklist_runner.py — NOT a LangGraph node, a standalone orchestrator
+
+import json
+from graph import build_graph
+from langchain_core.messages import HumanMessage
+
+TEMPLATES_DIR = "schemas/checklist_templates/"
+
+def run_checklist(case_id: str, template_id: str = None) -> dict:
+    """
+    Run a case checklist by dispatching each task to the agent graph.
+    
+    If template_id is None, auto-detect from the case's document types.
+    Returns a checklist result with per-task answers.
+    """
+    # Load template
+    template = _load_template(template_id, case_id)
+    
+    # Build graph
+    graph = build_graph()
+    session_id = f"checklist-{case_id}-{template['template_id']}"
+    
+    results = []
+    
+    for task in template["tasks"]:
+        config = {
+            "configurable": {
+                "thread_id": f"{session_id}-{task['id']}",
+                "case_id": case_id,
+            }
+        }
+        
+        state = {
+            "messages": [HumanMessage(content=task["query"])],
+            "case_id": case_id,
+            "tool_call_count": 0,
+            "search_results": [],
+            "kg_context": [],
+            "extractions_context": [],
+            "provenance_links": [],
+            "reasoning_steps": [],
+            "needs_review": False,
+            "query_type": task.get("agent"),  # hint the router
+            "agent_name": None,
+            "answer": None,
+            "confidence": None,
+        }
+        
+        try:
+            result = graph.invoke(state, config=config)
+            results.append({
+                "task_id": task["id"],
+                "task_label": task["label"],
+                "status": "completed",
+                "answer": result.get("answer", ""),
+                "confidence": result.get("confidence", 0),
+                "needs_review": result.get("needs_review", False),
+                "provenance_links": result.get("provenance_links", []),
+                "agent_used": result.get("agent_name", "unknown"),
+            })
+        except Exception as e:
+            results.append({
+                "task_id": task["id"],
+                "task_label": task["label"],
+                "status": "error",
+                "error": str(e),
+            })
+    
+    # Calculate overall completion
+    completed = sum(1 for r in results if r["status"] == "completed")
+    flagged = sum(1 for r in results if r.get("needs_review", False))
+    
+    return {
+        "case_id": case_id,
+        "template": template["template_name"],
+        "total_tasks": len(template["tasks"]),
+        "completed": completed,
+        "flagged_for_review": flagged,
+        "results": results,
+    }
+```
+
+### 6.5 Auto-Detection of Template
+
+```python
+def _detect_template(case_id: str) -> str:
+    """Detect the right checklist template based on case document types."""
+    sb = _get_supabase()
+    docs = sb.table("documents").select("document_type").eq("case_id", case_id).execute()
+    doc_types = [d["document_type"] for d in (docs.data or [])]
+    
+    has_complaint = any("Complaint" in (dt or "") for dt in doc_types)
+    has_contract = any("Contract" in (dt or "") for dt in doc_types)
+    
+    if has_complaint and has_contract:
+        return "breach_of_contract"
+    elif has_complaint:
+        return "general_litigation"
+    elif has_contract:
+        return "contract_review"
+    else:
+        return "general_case"
+```
+
+### 6.6 Effort
+1.5 days. Template schema + runner + auto-detection + CLI wrapper.
+
+
+---
+
+## 7. Updated Graph Routing
+
+### 7.1 Update `classify.py`
+
+Add `cross_doc` to valid types:
+
+```python
+_VALID_TYPES = {"complaint", "contract", "cross_doc", "general", "clarification"}
+```
+
+Update the classification prompt to include cross_doc (see section 4.3).
+
+### 7.2 Update `graph.py`
+
+Add all agent nodes and their routing:
+
+```python
+# Add nodes
+workflow.add_node("classify", classify)
+workflow.add_node("complaint_agent", complaint_agent_node)
+workflow.add_node("contract_agent", contract_agent_node)
+workflow.add_node("cross_doc_agent", cross_doc_agent_node)
+workflow.add_node("general_agent", general_agent_node)
+workflow.add_node("tools", ToolNode(tools=all_tools))
+workflow.add_node("respond", respond)
+
+# Route from classify
+workflow.add_conditional_edges("classify", route_by_type, {
+    "complaint_agent": "complaint_agent",
+    "contract_agent": "contract_agent",
+    "cross_doc_agent": "cross_doc_agent",
+    "general_agent": "general_agent",
+})
+
+# Each agent has the same tool loop
+for agent_name in ["complaint_agent", "contract_agent", "cross_doc_agent", "general_agent"]:
+    workflow.add_conditional_edges(agent_name, should_continue, {
+        "tools": "tools",
+        "respond": "respond",
+    })
+
+workflow.add_edge("tools", _route_back_to_agent)  # needs dynamic routing back
+```
+
+### 7.3 Dynamic Tool→Agent Routing
+
+After tools execute, the graph needs to route back to whichever agent made the tool call. Currently it hardcodes `workflow.add_edge("tools", "complaint_agent")`. With multiple agents, use a conditional edge:
+
+```python
+def route_tools_back(state: dict) -> str:
+    """After tools execute, route back to the agent that called them."""
+    return state.get("agent_name", "complaint_agent")
+
+workflow.add_conditional_edges("tools", route_tools_back, {
+    "complaint_agent": "complaint_agent",
+    "contract_agent": "contract_agent",
+    "cross_doc_agent": "cross_doc_agent",
+    "general_agent": "general_agent",
+})
+```
+
+
+---
+
+## 8. New Files to Create
+
+| File | Purpose | Effort |
+|---|---|---|
+| `nodes/contract_agent.py` | Contract agent node | Half day |
+| `nodes/cross_doc_agent.py` | Cross-document agent node | Half day |
+| `nodes/general_agent.py` | General/overview agent node | Half day |
+| `prompts/contract_system.md` | Contract agent system prompt | 1 hour |
+| `prompts/cross_doc_system.md` | Cross-doc agent system prompt | 1 hour |
+| `prompts/general_system.md` | General agent system prompt | 30 min |
+| `checklist_runner.py` | Checklist orchestrator | 1 day |
+| `schemas/checklist_templates/breach_of_contract.json` | Breach template | 1 hour |
+| `schemas/checklist_templates/contract_review.json` | Contract review template | 1 hour |
+| `schemas/checklist_templates/general_case.json` | General template | 30 min |
+
+### Files to Modify
+
+| File | Changes | Effort |
+|---|---|---|
+| `graph.py` | Add new agent nodes, update routing, dynamic tool→agent return | 2 hours |
+| `nodes/classify.py` | Add cross_doc type, update prompt | 30 min |
+| `prompts/classify_system.md` | Add cross_doc category description | 15 min |
+| `tools/__init__.py` | Export tool sets per agent (if different) | 15 min |
+| `run.py` | Add `--checklist` flag to CLI | 30 min |
+
+
+---
+
+## 9. Directory Structure (After Phase 4B)
 
 ```
-backend/04_AGENTIC_ARCHITECTURE
-├── graph.py                    # The compiled LangGraph state machine
-├── state.py                    # AgentState TypedDict
+backend/04_AGENTIC_ARCHITECTURE/
+├── graph.py                          # Updated: 4 agents + routing
+├── state.py                          # Unchanged
 ├── nodes/
-│   ├── classify.py             # Query classification node
-│   ├── complaint_agent.py      # Complaint agent node + system prompt
-│   ├── respond.py              # Response formatting + HITL flagging
-│   └── __init__.py
+│   ├── __init__.py                   # Updated: exports all agents
+│   ├── classify.py                   # Updated: cross_doc routing
+│   ├── complaint_agent.py            # Unchanged
+│   ├── contract_agent.py             # NEW
+│   ├── cross_doc_agent.py            # NEW
+│   ├── general_agent.py              # NEW
+│   └── respond.py                    # Unchanged
 ├── tools/
-│   ├── search.py               # search_sections tool (wraps 03_SEARCH)
-│   ├── kg_query.py             # query_kg + get_claim_evidence + get_timeline tools
-│   ├── extractions.py          # query_extractions tool
-│   └── __init__.py
+│   ├── __init__.py                   # Updated: tool sets per agent
+│   ├── search.py                     # Unchanged
+│   ├── kg_query.py                   # Unchanged
+│   └── extractions.py                # Unchanged
 ├── prompts/
-│   ├── complaint_system.md     # System prompt for complaint agent
-│   └── classify_system.md      # System prompt for query classifier
+│   ├── classify_system.md            # Updated: cross_doc category
+│   ├── complaint_system.md           # Unchanged
+│   ├── contract_system.md            # NEW
+│   ├── cross_doc_system.md           # NEW
+│   └── general_system.md             # NEW
 ├── schemas/
-│   ├── response.py             # Pydantic model for agent response
-│   └── __init__.py
-├── persistence.py              # Save agent_responses to Supabase
-├── run.py                      # CLI entry point for testing
-└── requirements.txt            # langgraph, langchain-google-genai, etc.
+│   ├── __init__.py
+│   ├── response.py                   # Unchanged
+│   └── checklist_templates/
+│       ├── breach_of_contract.json   # NEW
+│       ├── contract_review.json      # NEW
+│       └── general_case.json         # NEW
+├── checklist_runner.py               # NEW
+├── persistence.py                    # Unchanged
+├── run.py                            # Updated: --checklist flag
+└── requirements.txt
 ```
 
 
 ---
 
-## 11. Dependencies
-
-### 11.1 New Python Libraries
-
-| Library | Usage |
-|---|---|
-| `langgraph` | Agent orchestration state machine |
-| `langchain-core` | Base classes: messages, tools, prompts |
-| `langchain-google-genai` | Gemini integration for LangChain/LangGraph |
-
-### 11.2 Install
-
-```bash
-pip install langgraph langchain-core langchain-google-genai
-```
-
-### 11.3 Environment Variables
-
-No new env vars needed. Uses existing:
-- `GEMINI_API_KEY` — for agent reasoning
-- `OPENAI_API_KEY` — for query embedding (search tool)
-- `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` — for all data access
-
-
----
-
-## 12. Estimated Effort & Sequence
+## 10. Estimated Effort & Sequence
 
 | Step | What | Effort | Depends On |
 |---|---|---|---|
-| 1. SQL setup | `agent_responses` + `reviews` tables | 15 minutes | — |
-| 2. State + tools | `state.py`, tool wrapper functions in `tools/` | 1 day | Phase 3 search working |
-| 3. Classify node | `classify.py` with Gemini | Half day | Gemini key working |
-| 4. Complaint agent node | `complaint_agent.py` with system prompt | 1 day | Tools working |
-| 5. Respond node | `respond.py` with HITL flagging + persistence | Half day | Agent node working |
-| 6. Graph compilation | `graph.py` wiring everything together | Half day | All nodes working |
-| 7. CLI runner | `run.py` for testing | 2 hours | Graph compiled |
-| 8. Testing + tuning | Prompt iteration, confidence calibration | 1 day | CLI runner working |
+| 1 | Contract agent (node + prompt) | Half day | — |
+| 2 | General agent (node + prompt) | Half day | — |
+| 3 | Update graph.py routing + dynamic tool return | 2 hours | Steps 1-2 |
+| 4 | Cross-doc agent (node + prompt) | Half day | Step 3 |
+| 5 | Update classify.py for all categories | 1 hour | Steps 1-4 |
+| 6 | Checklist templates (JSON files) | 2 hours | — |
+| 7 | Checklist runner | 1 day | Steps 1-5 |
+| 8 | CLI updates (--checklist flag) | 30 min | Step 7 |
+| 9 | Testing + prompt tuning | 1 day | All above |
 
-**Total: ~5 days of implementation.**
+**Total: ~4-5 days of implementation.**
 
 
 ---
 
-## 13. Testing Plan
+## 11. Testing Plan
 
-### 13.1 Smoke Test Queries
+### 11.1 Per-Agent Smoke Tests
 
-Run these against the Epic v. Apple case and manually verify answers + provenance:
+**Contract agent:**
+- "What are the payment obligations in the Developer Agreement?"
+- "Can Apple terminate the agreement for convenience?"
+- "What happens after termination?"
 
-1. **"What are the main claims in the complaint?"** — Should list causes of action with section references. Tests: search + extraction query.
+**Cross-doc agent:**
+- "How does the complaint's breach allegation relate to the contract's Section 3.2?"
+- "Compare the obligations in Exhibit A with what the complaint says Apple violated."
+- "Which exhibit documents does the complaint reference?"
 
-2. **"Which claims have supporting evidence?"** — Should use `get_claim_evidence` tool. Tests: KG traversal.
+**General agent:**
+- "What is this case about?"
+- "Build me a timeline of events."
+- "How many documents are in this case?"
 
-3. **"What happened in August 2020?"** — Should use timeline tool filtered by date. Tests: graph analytics.
+### 11.2 Checklist Test
 
-4. **"Who are the parties?"** — Simple extraction query, no search needed. Tests: structured query tool.
-
-5. **"Did Apple have the right to remove Fortnite?"** — Complex multi-tool query. Should search contract terms + complaint allegations + cross-reference via KG. Tests: multi-tool reasoning.
-
-6. **Follow-up: "What evidence supports that conclusion?"** — Tests multi-turn: agent should reference the previous answer's context without re-searching everything.
-
-### 13.2 HITL Verification
-
-After running test queries:
-```sql
--- Check that responses were stored
-SELECT id, query, agent_name, confidence, needs_review 
-FROM agent_responses 
-WHERE case_id = '7d178a8c-eecb-42f6-b607-a3b847e4ec1e'
-ORDER BY created_at DESC;
-
--- Check provenance links are populated
-SELECT id, query, jsonb_array_length(provenance_links) as num_sources
-FROM agent_responses 
-WHERE case_id = '7d178a8c-eecb-42f6-b607-a3b847e4ec1e';
+```bash
+python run.py --case_id "7d178a8c-..." --checklist
+# or
+python checklist_runner.py --case_id "7d178a8c-..."
 ```
 
-### 13.3 Edge Cases
+Should produce a completed checklist with per-task answers, confidence scores, and provenance. Tasks flagged with `needs_review: true` should have confidence < 0.7.
 
-- **Empty search results:** Agent should say "I couldn't find relevant sections" not hallucinate.
-- **Ambiguous query:** Agent should ask for clarification ("Do you mean the Developer Agreement or the Terms of Service?").
-- **Very long context:** If search returns many results, agent should prioritize high-scoring ones, not dump everything into the prompt.
-- **Cross-document query on single-doc case:** Should gracefully handle cases with only one document.
+### 11.3 Router Accuracy Test
+
+Run 20 diverse queries and check that classify.py routes to the right agent. Log the classification decisions and manually verify:
+- Contract questions → contract_agent
+- Complaint questions → complaint_agent  
+- Cross-document questions → cross_doc_agent
+- General questions → general_agent
+
+### 11.4 Multi-Turn Test
+
+Start an interactive session. Ask a complaint question, then a contract question, then a cross-doc question. Verify that the router switches agents correctly and that conversation context persists across turns.
+
+
+---
+
+## 12. What Comes After Phase 4B
+
+With all agents + checklist working, the remaining pieces are:
+
+1. **Case law agent** (Phase 4C) — requires external data source. Defer until you decide on the source (vLex API, CourtListener, or custom scraper).
+
+2. **Proactive case briefing** — auto-run the checklist when a case finishes processing. This is just: `run_checklist(case_id)` triggered at the end of the Phase 2 pipeline. The results get stored in `agent_responses` and displayed on the case dashboard.
+
+3. **Frontend API** (Phase 5) — FastAPI endpoints that wrap the agent graph for the frontend to call. `/api/query` for search, `/api/checklist` for checklists, `/api/review` for HITL queue.
+
+4. **Frontend UI** (Phase 5) — case view, document view, search bar, checklist display, review queue, confidence heatmaps, comparative document view, interactive KG map.

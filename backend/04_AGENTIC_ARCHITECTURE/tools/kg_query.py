@@ -58,13 +58,17 @@ def _fetch_kg_graph(case_id: str) -> tuple[list[dict], list[dict]]:
     )
     nodes = nodes_resp.data or []
 
-    edges_resp = (
-        sb.table("kg_edges")
-        .select("id, source_node_id, target_node_id, edge_type, edge_scope, confidence, properties")
-        .eq("case_id", case_id)
-        .execute()
-    )
-    edges = edges_resp.data or []
+    node_ids = [n["id"] for n in nodes]
+    if node_ids:
+        edges_resp = (
+            sb.table("kg_edges")
+            .select("id, source_node_id, target_node_id, edge_type, edge_scope, confidence, properties")
+            .in_("source_node_id", node_ids)
+            .execute()
+        )
+        edges = edges_resp.data or []
+    else:
+        edges = []
 
     return nodes, edges
 
@@ -226,10 +230,10 @@ def query_kg(
     node_ids   = [n["id"] for n in nodes]
     id_to_node = {n["id"]: n for n in nodes}
 
-    # Fetch edges connecting these nodes
+    # Fetch edges where source is one of our nodes (kg_edges has no case_id column)
     edges_query = sb.table("kg_edges").select(
         "source_node_id, target_node_id, edge_type, confidence"
-    ).eq("case_id", case_id)
+    ).in_("source_node_id", node_ids)
 
     if edge_type:
         edges_query = edges_query.eq("edge_type", edge_type)

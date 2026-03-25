@@ -12,6 +12,21 @@ Usage:
         --case_id "7d178a8c-eecb-42f6-b607-a3b847e4ec1e" \\
         --interactive
 
+    # Run full checklist (Tier 1 universal + auto-detected Tier 2 add-ons)
+    python backend/04_AGENTIC_ARCHITECTURE/run.py \\
+        --case_id "7d178a8c-eecb-42f6-b607-a3b847e4ec1e" \\
+        --checklist
+
+    # Run only Tier 1 universal checklist (skip add-on detection — good for smoke testing)
+    python backend/04_AGENTIC_ARCHITECTURE/run.py \\
+        --case_id "7d178a8c-eecb-42f6-b607-a3b847e4ec1e" \\
+        --checklist_tier1_only
+
+    # Override Tier 1 template
+    python backend/04_AGENTIC_ARCHITECTURE/run.py \\
+        --case_id "7d178a8c-eecb-42f6-b607-a3b847e4ec1e" \\
+        --checklist --template universal_commercial
+
     # Show raw state output (for debugging)
     python backend/04_AGENTIC_ARCHITECTURE/run.py \\
         --case_id "7d178a8c-eecb-42f6-b607-a3b847e4ec1e" \\
@@ -183,6 +198,29 @@ def run_interactive(case_id: str, debug: bool = False) -> None:
             print(f"\nERROR: {e}\n")
 
 
+def run_checklist_cmd(
+    case_id: str,
+    template: str = None,
+    tier1_only: bool = False,
+) -> None:
+    """Run the two-tier case checklist and print results."""
+    import importlib.util as _ilu2
+    _runner_spec = _ilu2.spec_from_file_location(
+        "checklist_runner",
+        os.path.join(os.path.dirname(__file__), "checklist_runner.py"),
+    )
+    _runner_mod = _ilu2.module_from_spec(_runner_spec)
+    _runner_spec.loader.exec_module(_runner_mod)
+
+    summary = _runner_mod.run_checklist(
+        case_id=case_id,
+        template_override=template,
+        skip_addons=tier1_only,
+        verbose=True,
+    )
+    _runner_mod._print_checklist_results(summary)
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Legal AI Agent — CLI runner for testing."
@@ -200,12 +238,33 @@ def main():
         help="Start a multi-turn interactive session."
     )
     parser.add_argument(
+        "--checklist", action="store_true",
+        help="Run the full two-tier case checklist (Tier 1 universal + auto-detected Tier 2 add-ons)."
+    )
+    parser.add_argument(
+        "--checklist_tier1_only", action="store_true",
+        help="Run only the Tier 1 universal checklist (skip add-on detection). Useful for smoke testing."
+    )
+    parser.add_argument(
+        "--template", default=None,
+        help=(
+            "Override the Tier 1 template ID used with --checklist. "
+            "Default: universal_commercial."
+        ),
+    )
+    parser.add_argument(
         "--debug", action="store_true",
         help="Show reasoning steps and tool calls in output."
     )
     args = parser.parse_args()
 
-    if args.query and not args.interactive:
+    if args.checklist or args.checklist_tier1_only:
+        run_checklist_cmd(
+            args.case_id,
+            template=args.template,
+            tier1_only=args.checklist_tier1_only,
+        )
+    elif args.query and not args.interactive:
         run_single(args.case_id, args.query, debug=args.debug)
     else:
         run_interactive(args.case_id, debug=args.debug)

@@ -1,0 +1,63 @@
+{
+  "template_name": "Contract Review",
+  "template_id": "contract_review",
+  "tasks": [
+    {
+      "id": "parties",
+      "label": "Identify contracting parties",
+      "query": "Who are the parties to each contract? List their full legal names, roles (e.g. licensor, licensee, buyer, seller), and any defined terms used for them in the agreement.",
+      "agent": "contract",
+      "required": true
+    },
+    {
+      "id": "obligations",
+      "label": "Extract all obligations",
+      "query": "What are the obligations of each party under the contract(s)? For each obligation, identify who must perform it, what they must do, by when, and under what conditions.",
+      "agent": "contract",
+      "required": true
+    },
+    {
+      "id": "rights",
+      "label": "Extract all rights and permissions",
+      "query": "What rights does each party hold under the contract(s)? Include licenses granted, approval rights, audit rights, termination rights, and any other entitlements.",
+      "agent": "contract",
+      "required": true
+    },
+    {
+      "id": "payment_terms",
+      "label": "Summarize payment and financial terms",
+      "query": "What are the payment terms in the contract(s)? Include amounts, schedules, conditions for payment, late payment penalties, and any revenue sharing or royalty structures.",
+      "agent": "contract",
+      "required": true
+    },
+    {
+      "id": "termination",
+      "label": "Analyze termination provisions",
+      "query": "How can each contract be terminated? Identify termination for cause vs. convenience, notice requirements, cure periods, and the effects of termination on each party.",
+      "agent": "contract",
+      "required": true
+    },
+    {
+      "id": "indemnification",
+      "label": "Review indemnification and liability",
+      "query": "What indemnification obligations exist? Who must indemnify whom, for what events, and are there any liability caps or exclusions?",
+      "agent": "contract",
+      "required": false
+    },
+    {
+      "id": "key_dates",
+      "label": "Extract key dates and deadlines",
+      "query": "What are the key dates, deadlines, and durations in the contract(s)? Include effective dates, performance deadlines, notice periods, and renewal or expiration dates.",
+      "agent": "contract",
+      "required": false
+    },
+    {
+      "id": "risk_flags",
+      "label": "Flag high-risk or unusual clauses",
+      "query": "Are there any clauses in the contract(s) that are unusual, one-sided, or potentially problematic? Flag any provisions that deviate from standard commercial terms.",
+      "agent": "contract",
+      "required": false
+    }
+    
+  ]
+}
