@@ -105,11 +105,17 @@ def _get_total_pages(extraction_strategy_str: str) -> int | None:
 # ---------------------------------------------------------------------------
 
 def main():
-    if len(sys.argv) < 2:
-        print("Usage: python 08_Send_Supabase.py <text_extraction_md>")
-        sys.exit(1)
+    import argparse
+    parser = argparse.ArgumentParser(description="Send processed document to Supabase.")
+    parser.add_argument("text_md",   help="Path to the _text_extraction.md file")
+    parser.add_argument("--case-id", default=None, help="Supabase case UUID to attach this document to")
+    parser.add_argument("--primary", action="store_true", help="Set is_primary_filing=True on this document")
+    args = parser.parse_args()
 
-    text_md   = sys.argv[1]
+    text_md    = args.text_md
+    case_id    = args.case_id
+    is_primary = args.primary
+
     temp_dir  = os.path.dirname(text_md)                              # …/zz_temp_chunks
     stem      = os.path.splitext(os.path.basename(text_md))[0]       # {doc_stem}_text_extraction
     doc_stem  = stem.replace("_text_extraction", "")                  # {doc_stem}
@@ -194,13 +200,15 @@ def main():
     # 4. Upsert document row
     # ------------------------------------------------------------------
     doc_payload = {
-        "file_name":        file_name,
-        "document_type":    document_type,
-        "confidence_score": confidence_score,
-        "full_text_md":     full_text_md,
-        "tagged_xhtml_url": tagged_xhtml_url,
-        "has_native_toc":   has_native_toc,
-        "total_pages":      total_pages,
+        "file_name":          file_name,
+        "document_type":      document_type,
+        "confidence_score":   confidence_score,
+        "full_text_md":       full_text_md,
+        "tagged_xhtml_url":   tagged_xhtml_url,
+        "has_native_toc":     has_native_toc,
+        "total_pages":        total_pages,
+        "case_id":            case_id,          # None → not linked to a case yet
+        "is_primary_filing":  is_primary if is_primary else None,
     }
     # Remove None values — let DB defaults handle them
     doc_payload = {k: v for k, v in doc_payload.items() if v is not None}

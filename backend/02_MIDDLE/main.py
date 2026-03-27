@@ -43,21 +43,49 @@ def _run(script_name: str, *args) -> str:
     return output
 
 
-def _lookup_document(file_name: str) -> tuple[str, str | None]:
-    """Resolve file_name → (document_id, case_id) from Supabase."""
+def _sb():
     from supabase import create_client
     url = os.environ.get("SUPABASE_URL")
     key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
     if not url or not key:
         print("ERROR: SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY not set in .env")
         sys.exit(1)
-    sb   = create_client(url, key)
-    resp = sb.table("documents").select("id, case_id").eq("file_name", file_name).execute()
+    return create_client(url, key)
+
+
+def _lookup_document(file_name: str) -> tuple[str, str | None]:
+    """Resolve file_name → (document_id, case_id) from Supabase."""
+    resp = _sb().table("documents").select("id, case_id").eq("file_name", file_name).execute()
     if not resp.data:
         print(f"ERROR: No document found with file_name='{file_name}'")
         sys.exit(1)
     row = resp.data[0]
     return row["id"], row.get("case_id")
+
+
+def _fetch_doc(document_id: str) -> dict:
+    """Fetch document_type and filing_purpose after 07C may have updated them."""
+    resp = _sb().table("documents").select("document_type, filing_purpose").eq("id", document_id).single().execute()
+    return resp.data or {}
+
+
+_03B_PREFIXES = ("complaint", "brief", "motion", "appeal", "answer", "counterclaim")
+_03B_PURPOSES = {"operative_pleading", "motion", "brief"}
+
+
+def _should_run_03b(document_id: str) -> bool:
+    """Determine if 03B (legal structure extraction) should run on this document."""
+    doc = _fetch_doc(document_id)
+    doc_type       = (doc.get("document_type")  or "").lower()
+    filing_purpose = (doc.get("filing_purpose") or "").lower()
+    if any(doc_type.startswith(p) for p in _03B_PREFIXES):
+        return True
+    if filing_purpose in _03B_PURPOSES:
+        return True
+    # Exhibits that are themselves complaints/briefs filed as historical context
+    if filing_purpose == "historical_context" and any(p in doc_type for p in _03B_PREFIXES):
+        return True
+    return False
 
 
 def main():
@@ -71,6 +99,13 @@ def main():
     print(f"[Phase 2] Starting AST pipeline for '{file_name}' (id={document_id})")
     print("=" * 60)
 
+    # Step 07C: Case-context re-classification (requires case_id; safe to skip if absent)
+    if case_id:
+        print("[Phase 2] Step 07C — Case-context re-classification…")
+        _run("07C_case_context_classification.py", "--document_id", document_id)
+    else:
+        print("[Phase 2] Step 07C — SKIPPED (no case_id on document)")
+
     # Step 0: Section refinement (split oversized sections before tree build)
     print("[Phase 2] Step 0 — Refining section structure…")
     _run("00_section_refine.py", "--document_id", document_id)
@@ -83,9 +118,16 @@ def main():
     print("[Phase 2] Step 2 — Assigning semantic labels…")
     _run("02_AST_semantic_label.py", "--document_id", document_id)
 
-    # Step 3: Entity extraction
-    print("[Phase 2] Step 3 — Extracting entities…")
-    _run("03_entity_extraction.py", "--document_id", document_id)
+    # Step 3A: Entity extraction (parties, dates, amounts, courts, judges, attorneys, law firms)
+    print("[Phase 2] Step 3A — Extracting entities…")
+    _run("03A_entity_extraction.py", "--document_id", document_id)
+
+    # Step 3B: Legal structure extraction (complaints, briefs, motions, appeals, answers)
+    if _should_run_03b(document_id):
+        print("[Phase 2] Step 3B — Extracting legal structure…")
+        _run("03B_legal_structure_extraction.py", "--document_id", document_id)
+    else:
+        print("[Phase 2] Step 3B — SKIPPED (document type not eligible)")
 
     # Step 4A: Knowledge graph (intra-document)
     print("[Phase 2] Step 4A — Building knowledge graph…")
@@ -95,11 +137,11 @@ def main():
     print(f"[Phase 2] COMPLETE — '{file_name}' AST + entities + KG ready in Supabase.")
 
     # Process child exhibit documents if any exist
-    from supabase import create_client
-    _url = os.environ.get("SUPABASE_URL")
-    _key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
-    if _url and _key:
-        sb = create_client(_url, _key)
+    try:
+        sb = _sb()
+    except SystemExit:
+        sb = None
+    if sb:
         child_resp = sb.table("documents").select("id, file_name").eq("parent_document_id", document_id).execute()
         if child_resp.data:
             print(f"\n[Phase 2] Processing {len(child_resp.data)} child exhibit(s)...")
@@ -115,11 +157,15 @@ def main():
                     continue
 
                 print(f"\n[Phase 2] --- Exhibit: {child_name} ({total_chars:,} chars) ---")
+                if case_id:
+                    _run("07C_case_context_classification.py", "--document_id", child_id)
                 _run("00_section_refine.py",    "--document_id", child_id)
                 _run("01_AST_tree_build.py",    "--document_id", child_id)
                 _run("02_AST_semantic_label.py","--document_id", child_id)
-                _run("03_entity_extraction.py", "--document_id", child_id)
-                _run("04A_kg_inner_build.py",   "--document_id", child_id)
+                _run("03A_entity_extraction.py", "--document_id", child_id)
+                if _should_run_03b(child_id):
+                    _run("03B_legal_structure_extraction.py", "--document_id", child_id)
+                _run("04A_kg_inner_build.py", "--document_id", child_id)
             print(f"\n[Phase 2] COMPLETE — all exhibits processed.")
 
     # Phase 3: Embed all sections for the case into the vector store

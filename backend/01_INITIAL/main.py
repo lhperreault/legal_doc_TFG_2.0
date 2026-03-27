@@ -58,11 +58,17 @@ def _run_exhibit_split(text_md: str, temp_dir: str, stem: str):
 
 
 def main():
-    if len(sys.argv) != 2:
-        print("Usage: python main.py <filename>")
-        sys.exit(1)
+    import argparse
+    parser = argparse.ArgumentParser(description="Run Phase 1 pipeline on a single document.")
+    parser.add_argument("filename",          help="Filename in data_storage/documents (or zz_Mockfiles via 01_Intake)")
+    parser.add_argument("--case-id",         default=None, help="Supabase case UUID to attach this document to")
+    parser.add_argument("--primary",         action="store_true", help="Mark this document as is_primary_filing=True")
+    args = parser.parse_args()
 
-    filename   = sys.argv[1]
+    filename   = args.filename
+    case_id    = args.case_id
+    is_primary = args.primary
+
     temp_dir   = os.path.join(BACKEND_DIR, "zz_temp_chunks")
     doc_path   = os.path.join(BACKEND_DIR, "data_storage", "documents", filename)
     stem       = os.path.splitext(filename)[0]
@@ -102,12 +108,19 @@ def main():
     # 5. Classification (always runs, regardless of TOC type)
     _run("05_doc_classification.py", text_md)
 
+    # Build optional extra args for 08_Send_Supabase.py
+    send_extra = []
+    if case_id:
+        send_extra += ["--case-id", case_id]
+    if is_primary:
+        send_extra += ["--primary"]
+
     # Branch: native TOC?
     has_native_toc = str(df.get("has_native_toc", [False])[0]).strip().lower() == "true"
     if has_native_toc:
         print("Native embedded TOC detected → skipping step 6, running 07_Native_TOC.py")
         _run("07_Native_TOC.py", text_md)
-        _run("08_Send_Supabase.py", text_md)
+        _run("08_Send_Supabase.py", text_md, *send_extra)
         _run_exhibit_split(text_md, temp_dir, stem)
         return
 
@@ -136,7 +149,7 @@ def main():
         _run("07_No_TOC.py", text_md)
 
     # 8. Send to Supabase
-    _run("08_Send_Supabase.py", text_md)
+    _run("08_Send_Supabase.py", text_md, *send_extra)
 
     # 7b/8b. Exhibit separation (runs after parent is in Supabase)
     _run_exhibit_split(text_md, temp_dir, stem)

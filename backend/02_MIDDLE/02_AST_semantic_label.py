@@ -688,8 +688,22 @@ _COMPLAINT_PATTERNS: list[tuple[list[str], str]] = [
       "Statement of Facts", "Factual Background",
       "Background Facts"],                                              "factual_allegations"),
 
-    # Causes of action
-    (["Causes of Action", "Claims for Relief"],                         "causes_of_action"),
+    # Causes of action — section headers
+    (["Causes of Action", "Claims for Relief",
+      "Cause of Action"],                                               "causes_of_action"),
+    # Numbered counts / causes ("COUNT I", "FIRST CAUSE OF ACTION", etc.)
+    # These are caught here so they don't fall through to GPT unlabeled.
+    # The label is causes_of_action; 03B will extract the specific type from text.
+    (["Count I", "Count II", "Count III", "Count IV", "Count V",
+      "Count VI", "Count VII", "Count VIII", "Count IX", "Count X",
+      "Count 1", "Count 2", "Count 3", "Count 4", "Count 5",
+      "COUNT I", "COUNT II", "COUNT III", "COUNT IV", "COUNT V",
+      "First Cause of Action", "Second Cause of Action",
+      "Third Cause of Action", "Fourth Cause of Action",
+      "Fifth Cause of Action", "Sixth Cause of Action",
+      "FIRST CAUSE OF ACTION", "SECOND CAUSE OF ACTION",
+      "THIRD CAUSE OF ACTION", "FOURTH CAUSE OF ACTION"],              "causes_of_action"),
+    # Typed counts — if the title names the claim type directly
     (["Breach of Contract"],                                            "causes_of_action.breach_of_contract"),
     (["Breach of Fiduciary", "Fiduciary Duty"],                         "causes_of_action.breach_of_fiduciary"),
     (["Negligence", "Gross Negligence"],                                "causes_of_action.negligence"),
