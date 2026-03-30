@@ -12,6 +12,11 @@ Usage:
         --case_id "7d178a8c-eecb-42f6-b607-a3b847e4ec1e" \\
         --interactive
 
+    # Generate professional case summary (populates the legal pad UI)
+    python backend/04_AGENTIC_ARCHITECTURE/run.py \\
+        --case_id "7d178a8c-eecb-42f6-b607-a3b847e4ec1e" \\
+        --summary
+
     # Run full checklist (Tier 1 universal + auto-detected Tier 2 add-ons)
     python backend/04_AGENTIC_ARCHITECTURE/run.py \\
         --case_id "7d178a8c-eecb-42f6-b607-a3b847e4ec1e" \\
@@ -238,6 +243,10 @@ def main():
         help="Start a multi-turn interactive session."
     )
     parser.add_argument(
+        "--summary", action="store_true",
+        help="Generate a professional case summary and persist it to Supabase (populates the legal pad UI)."
+    )
+    parser.add_argument(
         "--checklist", action="store_true",
         help="Run the full two-tier case checklist (Tier 1 universal + auto-detected Tier 2 add-ons)."
     )
@@ -258,7 +267,18 @@ def main():
     )
     args = parser.parse_args()
 
-    if args.checklist or args.checklist_tier1_only:
+    if args.summary:
+        import importlib.util as _ilu2
+        _sum_spec = _ilu2.spec_from_file_location(
+            "document_summary",
+            os.path.join(os.path.dirname(__file__), "document_summary.py"),
+        )
+        _sum_mod = _ilu2.module_from_spec(_sum_spec)
+        _sum_spec.loader.exec_module(_sum_mod)
+        result = _sum_mod.generate_summary(case_id=args.case_id, verbose=True)
+        if not result.get("success"):
+            sys.exit(1)
+    elif args.checklist or args.checklist_tier1_only:
         run_checklist_cmd(
             args.case_id,
             template=args.template,

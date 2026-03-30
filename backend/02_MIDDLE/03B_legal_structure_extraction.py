@@ -371,7 +371,7 @@ def _process_section(
         case_name           = case.get("case_name") or "Unknown Case",
         our_client          = case.get("our_client") or "unknown party",
         party_role          = case.get("party_role") or "unknown",
-        section_title       = section.get("section") or "(untitled)",
+        section_title       = section.get("section_title") or "(untitled)",
         semantic_label      = section.get("semantic_label") or "",
         parent_section_title= parent_title or "(none)",
         section_text        = text[:6000],
@@ -603,7 +603,7 @@ def extract_legal_structure(document_id: str, dry_run: bool = False) -> int:
 
     # Fetch sections
     sections_resp = sb.table("sections").select(
-        "id, section, semantic_label, section_text, start_page, end_page, page_range, parent_id, level"
+        "id, section_title, semantic_label, section_text, start_page, end_page, page_range, parent_section_id, level"
     ).eq("document_id", document_id).order("start_page", desc=False).execute()
     sections = sections_resp.data or []
 
@@ -611,15 +611,15 @@ def extract_legal_structure(document_id: str, dry_run: bool = False) -> int:
         print(f"[03B] No sections found")
         return 0
 
-    id_to_title = {s["id"]: s.get("section") or "" for s in sections}
+    id_to_title = {s["id"]: s.get("section_title") or "" for s in sections}
 
     # Filter to qualifying sections
     targets: list[tuple[dict, str]] = []
     for s in sections:
         label      = s.get("semantic_label") or ""
-        parent_id  = s.get("parent_id")
+        parent_id  = s.get("parent_section_id")
         parent_ttl = id_to_title.get(parent_id, "") if parent_id else ""
-        title = s.get("section") or ""
+        title = s.get("section_title") or ""
         if _is_causes_section(label) or _is_factual_section(label) or _title_looks_like_count(title):
             targets.append((s, parent_ttl))
 
@@ -647,7 +647,7 @@ def extract_legal_structure(document_id: str, dry_run: bool = False) -> int:
             try:
                 section, n = future.result()
                 label = section.get("semantic_label", "")
-                title = (section.get("section") or "?")[:50]
+                title = (section.get("section_title") or "?")[:50]
                 print(f"  ✓ [{label}] {title!r}: {n} rows")
                 total += n
             except Exception as exc:

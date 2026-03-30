@@ -193,6 +193,34 @@ def main():
             f"python backend/03_SEARCH/main.py --case_id <case_uuid>"
         )
 
+    # Phase 4 refresh: re-generate the case summary and run the full checklist
+    # now that extractions, legal structure, and the KG are all in Supabase.
+    # Runs as a background subprocess so 02_MIDDLE exits immediately after
+    # kicking it off — the refresh uses Gemini independently without overlap.
+    if case_id:
+        refresh_script = os.path.join(
+            os.path.dirname(__file__), '..', '04_AGENTIC_ARCHITECTURE',
+            'refresh_after_extraction.py',
+        )
+        log_dir  = os.path.join(os.path.dirname(__file__), '..', 'data_storage', 'logs')
+        os.makedirs(log_dir, exist_ok=True)
+        log_path = os.path.join(log_dir, f"refresh_{case_id[:8]}.log")
+        print(f"\n[Phase 4] Triggering post-extraction refresh for case {case_id}...")
+        print(f"[Phase 4] Refresh log → data_storage/logs/refresh_{case_id[:8]}.log")
+        with open(log_path, 'a') as lf:
+            subprocess.Popen(
+                [sys.executable, refresh_script, '--case_id', case_id],
+                stdout=lf,
+                stderr=lf,
+            )
+        print("[Phase 4] Summary refresh + checklist started in background.")
+    else:
+        print(
+            "\n[Phase 4] SKIPPED — no case_id. "
+            "Run manually: python backend/04_AGENTIC_ARCHITECTURE/refresh_after_extraction.py "
+            "--case_id <uuid>"
+        )
+
 
 if __name__ == "__main__":
     main()
