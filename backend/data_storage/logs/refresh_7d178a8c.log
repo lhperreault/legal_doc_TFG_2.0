@@ -1,0 +1,35 @@
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+
+============================================================
+  POST-EXTRACTION REFRESH
+  Case: 7d178a8c-eecb-42f6-b607-a3b847e4ec1e
+============================================================
+
+[Refresh] Step 1 — Re-generating case summary with enriched data...
+Traceback (most recent call last):
+  File "C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\backend\02_MIDDLE\..\04_AGENTIC_ARCHITECTURE\refresh_after_extraction.py", line 104, in <module>
+    main()
+  File "C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\backend\02_MIDDLE\..\04_AGENTIC_ARCHITECTURE\refresh_after_extraction.py", line 100, in main
+    refresh(case_id=args.case_id)
+  File "C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\backend\02_MIDDLE\..\04_AGENTIC_ARCHITECTURE\refresh_after_extraction.py", line 59, in refresh
+    doc_summary = _load_module(
+                  ^^^^^^^^^^^^^
+  File "C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\backend\02_MIDDLE\..\04_AGENTIC_ARCHITECTURE\refresh_after_extraction.py", line 47, in _load_module
+    spec.loader.exec_module(mod)
+  File "<frozen importlib._bootstrap_external>", line 940, in exec_module
+  File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+  File "C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\backend\04_AGENTIC_ARCHITECTURE\document_summary.py", line 52, in <module>
+    _graph_spec.loader.exec_module(_graph_mod)
+  File "<frozen importlib._bootstrap_external>", line 940, in exec_module
+  File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+  File "C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\backend\04_AGENTIC_ARCHITECTURE\graph.py", line 52, in <module>
+    from nodes.classify import classify, route_by_type
+  File "C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\backend\04_AGENTIC_ARCHITECTURE\nodes\__init__.py", line 2, in <module>
+    from nodes.complaint_agent import complaint_agent_node, should_continue
+  File "C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\backend\04_AGENTIC_ARCHITECTURE\nodes\complaint_agent.py", line 19, in <module>
+    from tools import complaint_tools
+  File "C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\backend\04_AGENTIC_ARCHITECTURE\tools\__init__.py", line 4, in <module>
+    from .search import search_sections, query_extractions  # or wherever these live
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ImportError: cannot import name 'query_extractions' from 'tools.search' (C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\backend\04_AGENTIC_ARCHITECTURE\tools\search.py)

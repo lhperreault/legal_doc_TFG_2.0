@@ -1,7 +1,8 @@
 # tools/__init__.py
 
 from .kg_query import query_kg, get_claim_evidence, get_timeline
-from .search import search_sections, query_extractions  # or wherever these live
+from .search import search_sections
+from .extractions import query_extractions
 from .evidence_tools import match_evidence, detect_evidence_gaps, link_evidence_batch
 
 complaint_tools = [

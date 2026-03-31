@@ -26,9 +26,14 @@ import subprocess
 import sys
 import uuid
 
-from fastapi import FastAPI, File, Form, HTTPException, UploadFile
+# Load .env from the project root before any module-level API key reads
+from dotenv import load_dotenv
+load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".env"))
+
+from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
+from pydantic import BaseModel
 
 app = FastAPI(title="Legal Pipeline API")
 
@@ -141,6 +146,97 @@ async def ingest(
         media_type="text/event-stream",
         headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
     )
+
+
+# ---------------------------------------------------------------------------
+# /api/query — Legal agent chat endpoint
+# ---------------------------------------------------------------------------
+
+# Lazily-built graph (expensive to initialise — built once, reused across requests)
+_graph_cache = None
+_graph_lock  = asyncio.Lock()
+
+
+def _build_graph_sync():
+    """Import and build the LangGraph agent. Runs in an executor thread."""
+    import importlib.util as _ilu
+    from langchain_core.messages import HumanMessage  # noqa: F401 — triggers langchain init
+
+    agentic_dir = os.path.join(BACKEND_DIR, "04_AGENTIC_ARCHITECTURE")
+    project_root = os.path.join(BACKEND_DIR, "..")
+    for p in (project_root, agentic_dir):
+        if p not in sys.path:
+            sys.path.insert(0, p)
+
+    spec = _ilu.spec_from_file_location("graph_module", os.path.join(agentic_dir, "graph.py"))
+    mod  = _ilu.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod.build_graph()
+
+
+async def _get_graph():
+    global _graph_cache
+    async with _graph_lock:
+        if _graph_cache is None:
+            loop = asyncio.get_event_loop()
+            _graph_cache = await loop.run_in_executor(None, _build_graph_sync)
+    return _graph_cache
+
+
+class QueryRequest(BaseModel):
+    case_id:    str
+    query:      str
+    session_id: str | None = None
+
+
+@app.post("/api/query")
+async def query_agent(body: QueryRequest):
+    from langchain_core.messages import HumanMessage
+    import datetime
+
+    session_id = body.session_id or str(uuid.uuid4())
+    thread_id  = f"case-{body.case_id}-{session_id}"
+
+    state = {
+        "messages":            [HumanMessage(content=body.query)],
+        "case_id":             body.case_id,
+        "tool_call_count":     0,
+        "search_results":      [],
+        "kg_context":          [],
+        "extractions_context": [],
+        "provenance_links":    [],
+        "reasoning_steps":     [],
+        "needs_review":        False,
+        "query_type":          None,
+        "agent_name":          None,
+        "answer":              None,
+        "confidence":          None,
+    }
+    config = {"configurable": {"thread_id": thread_id, "case_id": body.case_id}}
+
+    try:
+        graph = await _get_graph()
+        loop  = asyncio.get_event_loop()
+        result = await loop.run_in_executor(
+            None, lambda: graph.invoke(state, config=config)
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Agent error: {e}")
+
+    return {
+        "id":               str(uuid.uuid4()),
+        "case_id":          body.case_id,
+        "session_id":       session_id,
+        "query":            body.query,
+        "agent_name":       result.get("agent_name") or "unknown",
+        "answer":           result.get("answer") or "(no answer)",
+        "confidence":       float(result.get("confidence") or 0),
+        "needs_review":     bool(result.get("needs_review", False)),
+        "provenance_links": result.get("provenance_links") or [],
+        "reasoning_steps":  result.get("reasoning_steps") or [],
+        "tool_calls_made":  [],
+        "created_at":       datetime.datetime.utcnow().isoformat() + "Z",
+    }
 
 
 if __name__ == "__main__":

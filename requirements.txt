@@ -11,3 +11,6 @@ lxml
 openai
 pydantic
 charset_normalizer 
+
+uvicorn backend.server:app --reload --port 8000
+uvicorn backend.server:app --port 8000

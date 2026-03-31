@@ -29,6 +29,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import random
 import sys
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -129,6 +130,7 @@ _SCHEMA_HINT = json.dumps(SectionExtractionResult.model_json_schema(), indent=2)
 
 _USER_TEMPLATE = """Document type: {document_type}
 Section title: {section_title}
+Section semantic label: {semantic_label}
 {lexnlp_block}
 Section text:
 {section_text}
@@ -155,14 +157,16 @@ Return ONLY a JSON object matching this schema:
 
 
 def _build_prompt(
-    section_title: str,
-    document_type: str,
-    section_text:  str,
-    lexnlp_block:  str,
+    section_title:  str,
+    document_type:  str,
+    section_text:   str,
+    lexnlp_block:   str,
+    semantic_label: str = "",
 ) -> str:
     return _USER_TEMPLATE.format(
         document_type  = document_type,
         section_title  = section_title or "(untitled section)",
+        semantic_label = semantic_label or "(none)",
         section_text   = section_text[:3000],
         lexnlp_block   = lexnlp_block,
         schema         = _SCHEMA_HINT,
@@ -250,9 +254,10 @@ def _call_gemini(client, prompt: str) -> dict | None:
             err   = str(e)
             is_429 = "429" in err or "quota" in err.lower() or "rate" in err.lower()
             if attempt < 2:
-                wait = (20 * (attempt + 1)) if is_429 else (2 ** attempt)
+                wait = (5 + 10 * attempt) if is_429 else (2 ** attempt)
+                wait += random.uniform(0, 2)
                 if is_429:
-                    print(f"  [03A] Rate-limited — waiting {wait}s…")
+                    print(f"  [03A] Rate-limited — waiting {wait:.1f}s…")
                 time.sleep(wait)
             else:
                 print(f"  [03A] Gemini failed after 3 attempts: {e}")
@@ -369,16 +374,33 @@ _SKIP_TITLES = {
     "statement of compliance",
 }
 
+# Semantic labels guaranteed to contain no extractable structural entities
+_SKIP_LABELS = {
+    "table_of_contents", "table_of_authorities",
+    "certificate_of_service", "signature_block", "cover_page",
+    "index_of_exhibits", "statement_of_compliance",
+    "prayer_for_relief",   # asks for damages — no new entity introductions
+    "exhibit_list",        # references only, no named entities worth extracting
+    "recitals",            # intro boilerplate — parties captured in caption
+    "notice_of_hearing",   # procedural filler
+}
+
 
 def _should_skip(section: dict) -> str | None:
     """Return a reason string if the section should be skipped, else None."""
     text  = (section.get("section_text") or "").strip()
     title = (section.get("section_title") or "").strip().lower()
+    label = (section.get("semantic_label") or "").strip().lower().replace(" ", "_")
 
     if len(text) < _MIN_CHARS:
         return "too short"
     if title in _SKIP_TITLES:
         return f"boilerplate ({title})"
+    if label and label in _SKIP_LABELS:
+        return f"skip label ({label})"
+    # Skip child micro-sections (numbered paragraphs already covered by parent)
+    if section.get("parent_section_id") and len(text) < 200:
+        return "child micro-section"
     return None
 
 
@@ -395,7 +417,14 @@ def _extract_section(
     page_range = section.get("page_range")
 
     hints  = _lexnlp_hints(text)
-    prompt = _build_prompt(title, document_type, text, hints)
+
+    # LexNLP gate: if LexNLP finds nothing interesting in a short, non-entity section, skip Gemini
+    _ENTITY_LABELS = {"parties", "caption", "jurisdiction", "venue"}
+    label = (section.get("semantic_label") or "").strip().lower().replace(" ", "_")
+    if _LEXNLP_OK and not hints and len(text) < 400 and label not in _ENTITY_LABELS:
+        return []
+
+    prompt = _build_prompt(title, document_type, text, hints, semantic_label=label)
 
     raw = _call_gemini(gemini_client, prompt)
     if raw is None:
@@ -476,7 +505,7 @@ def extract_entities_03a(document_id: str, dry_run: bool = False) -> int:
     # Fetch sections
     sec_resp = (
         sb.table("sections")
-        .select("id, document_id, section_title, section_text, page_range, parent_section_id")
+        .select("id, document_id, section_title, section_text, page_range, parent_section_id, semantic_label")
         .eq("document_id", document_id)
         .execute()
     )
@@ -489,9 +518,11 @@ def extract_entities_03a(document_id: str, dry_run: bool = False) -> int:
     print(f"  [03A] {total} sections to process")
 
     # Clear existing 03A extractions for this document (makes re-runs idempotent).
-    # We only delete the 7 types we own so we don't clobber 03B outputs.
+    # kg_nodes references extractions via source_extraction_id (FK), so wipe KG first.
+    # kg_edges cascade-delete when kg_nodes are removed.
     _OWN_TYPES = ("party", "date", "amount", "court", "judge", "attorney", "law_firm")
     if not dry_run:
+        sb.table("kg_nodes").delete().eq("document_id", document_id).execute()
         for etype in _OWN_TYPES:
             sb.table("extractions").delete()\
               .eq("document_id", document_id)\

@@ -69,7 +69,7 @@ def _fetch_doc(document_id: str) -> dict:
     return resp.data or {}
 
 
-_03B_PREFIXES = ("complaint", "brief", "motion", "appeal", "answer", "counterclaim")
+_03B_PREFIXES = ("complaint", "brief", "motion", "appeal", "answer", "counterclaim", "pleading")
 _03B_PURPOSES = {"operative_pleading", "motion", "brief"}
 
 

@@ -1,0 +1,142 @@
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\sklearn\base.py:463: InconsistentVersionWarning: Trying to unpickle estimator SelectKBest from version 0.23.1 when using version 1.8.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:
+https://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\sklearn\base.py:463: InconsistentVersionWarning: Trying to unpickle estimator LogisticRegressionCV from version 0.23.1 when using version 1.8.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:
+https://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\sklearn\base.py:463: InconsistentVersionWarning: Trying to unpickle estimator Pipeline from version 0.23.1 when using version 1.8.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:
+https://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+[Phase 2] Starting AST pipeline for '8.21 EXHIBIT 3_05584ec4' (id=0d50466b-a660-42cc-96fe-8219767eeb3d)
+============================================================
+[Phase 2] Step 07C — Case-context re-classification…
+[07C] Calling Gemini Flash for '8.21 EXHIBIT 3_05584ec4'…
+[07C] WARNING: GOOGLE_API_KEY not set — using fallback classification.
+[07C] Document updated (id=0d50466b-a660-42cc-96fe-8219767eeb3d)
+[07C] '8.21 EXHIBIT 3_05584ec4': primary=False, perspective=unknown, temporal=current, purpose=evidence, confidence=40%
+
+SUCCESS: 07C_case_context_classification.py complete for '8.21 EXHIBIT 3_05584ec4'
+[Phase 2] Step 0 — Refining section structure…
+5 sections total, 2 candidates for refinement
+  Evaluating 'G App Store Review Guidelines 2020.03.04 [current 2020.' (78,500 chars)...
+    Splitting into 7 sub-sections...
+    Done — 7 children inserted
+  Evaluating '    App Store Review Guidelines - Apple Developer' (78,088 chars)...
+    Splitting into 5 sub-sections...
+    Done — 5 children inserted
+SUCCESS: Section refinement complete for '8.21 EXHIBIT 3_05584ec4'. 2 sections split, 12 new child sections added, 0 skipped (coherent or GPT failure).
+[Phase 2] Step 1 — Building parent-child tree…
+SUCCESS: Tree built for '8.21 EXHIBIT 3_05584ec4'. 17 sections processed, 3 root node(s), max depth 3.
+[Phase 2] Step 2 — Assigning semantic labels…
+SUCCESS: Labeled 17 sections for '8.21 EXHIBIT 3_05584ec4'. 2 pattern-matched (2 title, 0 text), 15 GPT-labeled, 0 flagged for review, 0 errors.
+[Phase 2] Step 3A — Extracting entities…
+[03A] Extracting from '8.21 EXHIBIT 3_05584ec4' (Administrative - Case Summary)
+  [03A] 17 sections to process
+  [  2/17] SKIP  'TOC' — skip label (table_of_contents)
+  [  3/17] SKIP  '    App Store Review Guidelines - Apple Developer' — child micro-section
+  [  4/17] SKIP  'G App Store Review Guidelines 2020.03.04 [current 2020.08.20' — skip label (table_of_contents)
+  [  6/17] SKIP  'Title Page' — too short
+  [03A] Processing 13 sections (4 skipped)
+  [  1/17] ERROR 'Guidelines for App Submission' — 'charmap' codec can't encode character '\u2192' in position 49: character maps to <undefined>
+  [ 10/17] ERROR 'App Store Overview and Structure' — 'charmap' codec can't encode character '\u2192' in position 52: character maps to <undefined>
+  [  8/17] ERROR 'Introduction to App Store Guidelines' — 'charmap' codec can't encode character '\u2192' in position 56: character maps to <undefined>
+  [  5/17] ERROR 'Limited Use Cases for Certain Features' — 'charmap' codec can't encode character '\u2192' in position 58: character maps to <undefined>
+  [  9/17] ERROR 'Parental Controls and User Safety' — 'charmap' codec can't encode character '\u2192' in position 53: character maps to <undefined>
+  [  7/17] ERROR 'Consequences of Cheating the System' — 'charmap' codec can't encode character '\u2192' in position 55: character maps to <undefined>
+  [ 11/17] ERROR 'App Store as a Distribution Platform' — 'charmap' codec can't encode character '\u2192' in position 56: character maps to <undefined>
+  [ 16/17] ERROR '  apple.com' — 'charmap' codec can't encode character '\u2192' in position 31: character maps to <undefined>
+  [ 12/17] ERROR 'Respectful Representation on the App Sto' — 'charmap' codec can't encode character '\u2192' in position 62: character maps to <undefined>
+  [ 13/17] ERROR 'Introduction to App Store Guidelines' — 'charmap' codec can't encode character '\u2192' in position 56: character maps to <undefined>
+  [ 14/17] ERROR 'App Store Review Process Overview' — 'charmap' codec can't encode character '\u2192' in position 53: character maps to <undefined>
+  [ 15/17] ERROR 'Respectful Representation of Opinions' — 'charmap' codec can't encode character '\u2192' in position 57: character maps to <undefined>
+  [ 17/17] ERROR 'Appealing App Review Decisions' — 'charmap' codec can't encode character '\u2192' in position 50: character maps to <undefined>
+
+  [03A] DONE — 36 extractions from '8.21 EXHIBIT 3_05584ec4'
+         amount             1
+         court              2
+         date               2
+         party              31
+
+SUCCESS: 03A_entity_extraction.py — 36 entities extracted from '8.21 EXHIBIT 3_05584ec4'
+[Phase 2] Step 3B — SKIPPED (document type not eligible)
+[Phase 2] Step 4A — Building knowledge graph…
+36 extractions loaded for '8.21 EXHIBIT 3_05584ec4'
+  Document category: 'other' (type='Administrative - Case Summary')
+  Pass 1 — 19 nodes created
+  Fuzzy dedup — merged 6 duplicate nodes (13 remaining)
+  Pass 2 — 0 edges created
+SUCCESS: KG built for '8.21 EXHIBIT 3_05584ec4'. 13 nodes [amount:1, event:2, party:10], 0 edges [].
+============================================================
+[Phase 2] COMPLETE — '8.21 EXHIBIT 3_05584ec4' AST + entities + KG ready in Supabase.
+
+[Phase 3] Starting embedding for case 080dbde5-ab26-492c-bac4-8a55a0c55cf0...
+[Phase 3] Starting embedding pipeline for case '080dbde5-ab26-492c-bac4-8a55a0c55cf0'
+============================================================
+[Phase 3] Step 1 — Embedding sections...
+============================================================
+  Phase 3 — Embedding Sections
+  Case ID: 080dbde5-ab26-492c-bac4-8a55a0c55cf0
+============================================================
+
+[1/4] Fetching sections from Supabase...
+  Found 6 document(s) in case
+  Found 107 total section(s)
+[2/4] Checking existing embeddings...
+  Found 92 existing embedding(s)
+
+  Sections to embed: 14
+  Skipped (up to date): 86
+  Skipped (empty/short): 2
+  Skipped (boilerplate label): 5
+
+[3/4] Generating embeddings (14 sections)...
+  WARNING: Truncated section 'Limited Use Cases for Certain Features' (doc: 8.21 EXHIBIT 3_05584ec4)
+  WARNING: Truncated section 'Consequences of Cheating the System' (doc: 8.21 EXHIBIT 3_05584ec4)
+  Batch 1/1 (14 sections)...
+
+[4/4] Upserting 14 embedding(s) to Supabase...
+  Summary written to C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\backend\03_SEARCH\..\zz_temp_chunks\080dbde5-ab26-492c-bac4-8a55a0c55cf0_embedding_summary.json
+
+============================================================
+  RESULTS
+============================================================
+  Total sections:       107
+  Newly embedded:       14
+  Re-embedded (changed):2
+  Skipped (up to date): 86
+  Skipped (empty):      2
+  Skipped (label):      5
+  Truncated:            2
+  Errors:               0
+
+SUCCESS: 14 section(s) embedded for case 080dbde5-ab26-492c-bac4-8a55a0c55cf0
+============================================================
+[Phase 3] COMPLETE — case '080dbde5-ab26-492c-bac4-8a55a0c55cf0' is now search-ready.
+[Phase 3] COMPLETE — case 080dbde5-ab26-492c-bac4-8a55a0c55cf0 is search-ready.
+
+[Phase 4] Triggering post-extraction refresh for case 080dbde5-ab26-492c-bac4-8a55a0c55cf0...
+Traceback (most recent call last):
+  File "C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\backend\02_MIDDLE\main.py", line 226, in <module>
+    main()
+  File "C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\backend\02_MIDDLE\main.py", line 209, in main
+    print(f"[Phase 4] Refresh log \u2192 data_storage/logs/refresh_{case_id[:8]}.log")
+  File "C:\Users\lukep\AppData\Local\Programs\Python\Python311\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2192' in position 22: character maps to <undefined>

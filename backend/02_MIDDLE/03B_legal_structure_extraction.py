@@ -40,6 +40,7 @@ _QUALIFYING_PREFIXES = (
     "appeal",
     "answer",
     "counterclaim",
+    "pleading",
 )
 _QUALIFYING_PURPOSES = {
     "operative_pleading",
