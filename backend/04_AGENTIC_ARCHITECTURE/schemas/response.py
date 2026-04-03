@@ -10,6 +10,7 @@ from pydantic import BaseModel, Field
 
 class ProvenanceLink(BaseModel):
     section_id: str
+    document_id: str | None = None
     file_name: str
     document_type: str | None = None
     page_range: str | None = None

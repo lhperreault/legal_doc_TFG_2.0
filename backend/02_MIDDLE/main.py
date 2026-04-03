@@ -206,12 +206,15 @@ def main():
         os.makedirs(log_dir, exist_ok=True)
         log_path = os.path.join(log_dir, f"refresh_{case_id[:8]}.log")
         print(f"\n[Phase 4] Triggering post-extraction refresh for case {case_id}...")
-        print(f"[Phase 4] Refresh log → data_storage/logs/refresh_{case_id[:8]}.log")
-        with open(log_path, 'a') as lf:
+        print(f"[Phase 4] Refresh log -> data_storage/logs/refresh_{case_id[:8]}.log")
+        with open(log_path, 'a', encoding='utf-8') as lf:
+            env = os.environ.copy()
+            env["PYTHONIOENCODING"] = "utf-8"
             subprocess.Popen(
                 [sys.executable, refresh_script, '--case_id', case_id],
                 stdout=lf,
                 stderr=lf,
+                env=env,
             )
         print("[Phase 4] Summary refresh + checklist started in background.")
     else:

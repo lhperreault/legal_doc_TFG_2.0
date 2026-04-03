@@ -32,6 +32,7 @@ Usage:
             "agent_name":          None,
             "answer":              None,
             "confidence":          None,
+            "conversation_summary": None,
         },
         config=config,
     )
@@ -50,6 +51,7 @@ if _ARCH_DIR not in _sys.path:
 
 from state import AgentState
 from nodes.classify import classify, route_by_type
+from nodes.compact import compact_messages, needs_compaction
 from nodes.complaint_agent import complaint_agent_node, should_continue
 from nodes.contract_agent import contract_agent_node
 from nodes.cross_doc_agent import cross_doc_agent_node
@@ -83,6 +85,7 @@ def build_graph(checkpointer=None) -> "CompiledGraph":
     workflow = StateGraph(AgentState)
 
     # ── Nodes ────────────────────────────────────────────────────────────────
+    workflow.add_node("compact",         compact_messages)
     workflow.add_node("classify",        classify)
     workflow.add_node("complaint_agent", complaint_agent_node)
     workflow.add_node("contract_agent",  contract_agent_node)
@@ -92,7 +95,14 @@ def build_graph(checkpointer=None) -> "CompiledGraph":
     workflow.add_node("respond",         respond)
 
     # ── Edges ────────────────────────────────────────────────────────────────
-    workflow.add_edge(START, "classify")
+    # Compact fires first when conversation history is long enough; otherwise
+    # routes directly to classify.
+    workflow.add_conditional_edges(
+        START,
+        lambda state: "compact" if needs_compaction(state) else "classify",
+        {"compact": "compact", "classify": "classify"},
+    )
+    workflow.add_edge("compact", "classify")
 
     # classify → one of the four agents
     workflow.add_conditional_edges(

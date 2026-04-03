@@ -16,6 +16,7 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.messages import SystemMessage
 
 from tools import complaint_tools
+from state import build_case_context_block
 
 _SYSTEM_PROMPT_PATH = os.path.join(
     os.path.dirname(__file__), '..', 'prompts', 'cross_doc_system.md'
@@ -32,9 +33,13 @@ _model_with_tools = ChatGoogleGenerativeAI(
 
 def cross_doc_agent_node(state: dict) -> dict:
     """Cross-doc agent: reasons across documents using KG edges and multi-doc search."""
-    case_id = state.get("case_id", "")
+    case_id            = state.get("case_id", "")
+    case_context_block = build_case_context_block(state)
     system_message = SystemMessage(
-        content=_SYSTEM_PROMPT_TEMPLATE.format(case_id=case_id)
+        content=_SYSTEM_PROMPT_TEMPLATE.format(
+            case_id=case_id,
+            case_context_block=case_context_block,
+        )
     )
     response = _model_with_tools.invoke(
         [system_message] + state["messages"]

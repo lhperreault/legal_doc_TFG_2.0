@@ -73,8 +73,10 @@ def _run_background(args: list[str], log_name: str = "bg") -> None:
     """Fire-and-forget subprocess — stdout/stderr written to data_storage/logs/."""
     os.makedirs(LOGS_DIR, exist_ok=True)
     log_path = os.path.join(LOGS_DIR, f"{log_name}.log")
-    with open(log_path, "a") as lf:
-        subprocess.Popen(args, stdout=lf, stderr=lf)
+    env = os.environ.copy()
+    env["PYTHONIOENCODING"] = "utf-8"
+    with open(log_path, "a", encoding="utf-8") as lf:
+        subprocess.Popen(args, stdout=lf, stderr=lf, env=env)
 
 
 async def _pipeline_stream(filename: str, case_id: str):
@@ -152,6 +154,51 @@ async def ingest(
 # /api/query — Legal agent chat endpoint
 # ---------------------------------------------------------------------------
 
+# ---------------------------------------------------------------------------
+# Persistent checkpointer — PostgresSaver (Supabase) with MemorySaver fallback
+# ---------------------------------------------------------------------------
+
+def _create_checkpointer():
+    """Return a PostgresSaver backed by Supabase if DATABASE_URL is set.
+
+    DATABASE_URL must be the direct PostgreSQL connection string from
+    Supabase → Project Settings → Database → Connection string (URI, port 5432).
+    Example: postgresql://postgres:{password}@db.{ref}.supabase.co:5432/postgres
+
+    Falls back to MemorySaver (in-process RAM, lost on restart) when the
+    env var is absent or the postgres packages are not installed.
+    """
+    db_url = os.environ.get("DATABASE_URL")
+    if not db_url:
+        from langgraph.checkpoint.memory import MemorySaver
+        print("[checkpointer] DATABASE_URL not set — using in-memory MemorySaver (memory lost on restart)")
+        return MemorySaver()
+
+    try:
+        from psycopg_pool import ConnectionPool
+        from langgraph.checkpoint.postgres import PostgresSaver
+
+        pool = ConnectionPool(
+            conninfo=db_url,
+            max_size=10,
+            kwargs={"autocommit": True, "prepare_threshold": 0},
+            open=True,
+        )
+        checkpointer = PostgresSaver(pool)
+        checkpointer.setup()  # creates checkpoints + checkpoint_writes tables if they don't exist
+        print("[checkpointer] PostgresSaver initialised — multi-turn memory persists across restarts")
+        return checkpointer
+    except ImportError:
+        print("[checkpointer] psycopg_pool / langgraph-checkpoint-postgres not installed — falling back to MemorySaver")
+        print("[checkpointer]   pip install 'psycopg[binary]' psycopg_pool langgraph-checkpoint-postgres")
+        from langgraph.checkpoint.memory import MemorySaver
+        return MemorySaver()
+    except Exception as e:
+        print(f"[checkpointer] PostgresSaver init failed ({e}) — falling back to MemorySaver")
+        from langgraph.checkpoint.memory import MemorySaver
+        return MemorySaver()
+
+
 # Lazily-built graph (expensive to initialise — built once, reused across requests)
 _graph_cache = None
 _graph_lock  = asyncio.Lock()
@@ -171,7 +218,9 @@ def _build_graph_sync():
     spec = _ilu.spec_from_file_location("graph_module", os.path.join(agentic_dir, "graph.py"))
     mod  = _ilu.module_from_spec(spec)
     spec.loader.exec_module(mod)
-    return mod.build_graph()
+
+    checkpointer = _create_checkpointer()
+    return mod.build_graph(checkpointer=checkpointer)
 
 
 async def _get_graph():
@@ -197,6 +246,26 @@ async def query_agent(body: QueryRequest):
     session_id = body.session_id or str(uuid.uuid4())
     thread_id  = f"case-{body.case_id}-{session_id}"
 
+    # Fetch case metadata so agents know what stage the litigation is in.
+    # A filing-stage case needs very different analysis than a trial or appeal.
+    _case_meta: dict = {}
+    try:
+        from supabase import create_client as _sb_create
+        _sb = _sb_create(
+            os.environ["SUPABASE_URL"],
+            os.environ["SUPABASE_SERVICE_ROLE_KEY"],
+        )
+        _row = (
+            _sb.table("cases")
+            .select("case_stage,case_context,party_role,our_client,opposing_party,court_name")
+            .eq("id", body.case_id)
+            .maybe_single()
+            .execute()
+        )
+        _case_meta = _row.data or {}
+    except Exception:
+        pass  # non-fatal — agents still work, just without stage context
+
     state = {
         "messages":            [HumanMessage(content=body.query)],
         "case_id":             body.case_id,
@@ -211,6 +280,14 @@ async def query_agent(body: QueryRequest):
         "agent_name":          None,
         "answer":              None,
         "confidence":          None,
+        "conversation_summary": None,
+        # Case context — injected into agent system prompts
+        "case_stage":      _case_meta.get("case_stage"),
+        "case_context":    _case_meta.get("case_context"),
+        "party_role":      _case_meta.get("party_role"),
+        "our_client":      _case_meta.get("our_client"),
+        "opposing_party":  _case_meta.get("opposing_party"),
+        "court_name":      _case_meta.get("court_name"),
     }
     config = {"configurable": {"thread_id": thread_id, "case_id": body.case_id}}
 
@@ -236,6 +313,100 @@ async def query_agent(body: QueryRequest):
         "reasoning_steps":  result.get("reasoning_steps") or [],
         "tool_calls_made":  [],
         "created_at":       datetime.datetime.utcnow().isoformat() + "Z",
+    }
+
+
+# ---------------------------------------------------------------------------
+# /api/case/{case_id}/sessions — Session / memory management
+# ---------------------------------------------------------------------------
+
+def _get_supabase_client():
+    from supabase import create_client
+    return create_client(
+        os.environ["SUPABASE_URL"],
+        os.environ["SUPABASE_SERVICE_ROLE_KEY"],
+    )
+
+
+@app.get("/api/case/{case_id}/sessions")
+async def list_sessions(case_id: str):
+    """List all conversation sessions for a case.
+
+    Pulls from agent_responses (the audit log) and groups by session_id so
+    the UI can show what conversations exist and how heavy they are.
+    """
+    try:
+        sb = _get_supabase_client()
+        resp = (
+            sb.table("agent_responses")
+            .select("session_id, created_at, query, agent_name, confidence")
+            .eq("case_id", case_id)
+            .order("created_at", desc=False)
+            .execute()
+        )
+        rows = resp.data or []
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Could not fetch sessions: {e}")
+
+    sessions: dict[str, dict] = {}
+    for row in rows:
+        sid = row["session_id"]
+        if sid not in sessions:
+            sessions[sid] = {
+                "session_id":    sid,
+                "message_count": 0,
+                "first_query":   row.get("query", "")[:80],
+                "last_active":   row.get("created_at"),
+            }
+        sessions[sid]["message_count"] += 1
+        sessions[sid]["last_active"] = row.get("created_at")
+
+    # Sort most-recent first
+    result = sorted(sessions.values(), key=lambda s: s["last_active"] or "", reverse=True)
+    return {"sessions": result}
+
+
+@app.delete("/api/case/{case_id}/sessions/{session_id}")
+async def clear_session_memory(case_id: str, session_id: str):
+    """Clear LangGraph checkpoint state for a session.
+
+    This resets what the AI remembers for that conversation thread.
+    The audit log in agent_responses is NOT deleted — that stays for review.
+
+    Requires DATABASE_URL to be set (PostgresSaver mode). In MemorySaver mode,
+    the in-process thread is simply dropped from the cache (best effort).
+    """
+    thread_id = f"case-{case_id}-{session_id}"
+    db_url = os.environ.get("DATABASE_URL")
+
+    if db_url:
+        try:
+            import psycopg
+            with psycopg.connect(db_url, autocommit=True) as conn:
+                with conn.cursor() as cur:
+                    cur.execute(
+                        "DELETE FROM checkpoint_writes WHERE thread_id = %s",
+                        (thread_id,),
+                    )
+                    cur.execute(
+                        "DELETE FROM checkpoints WHERE thread_id = %s",
+                        (thread_id,),
+                    )
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Failed to clear checkpoints: {e}")
+    else:
+        # MemorySaver — clear from the in-memory cache if graph is loaded
+        global _graph_cache
+        if _graph_cache is not None:
+            try:
+                _graph_cache.checkpointer.storage.pop(thread_id, None)
+            except Exception:
+                pass  # MemorySaver internals may vary
+
+    return {
+        "cleared":   True,
+        "thread_id": thread_id,
+        "note":      "AI memory cleared. Audit log (agent_responses) preserved.",
     }
 
 

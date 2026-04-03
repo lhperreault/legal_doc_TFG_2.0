@@ -1,0 +1,177 @@
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\sklearn\base.py:463: InconsistentVersionWarning: Trying to unpickle estimator SelectKBest from version 0.23.1 when using version 1.8.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:
+https://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\sklearn\base.py:463: InconsistentVersionWarning: Trying to unpickle estimator LogisticRegressionCV from version 0.23.1 when using version 1.8.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:
+https://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\sklearn\base.py:463: InconsistentVersionWarning: Trying to unpickle estimator Pipeline from version 0.23.1 when using version 1.8.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:
+https://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\sklearn\base.py:463: InconsistentVersionWarning: Trying to unpickle estimator SelectKBest from version 0.23.1 when using version 1.8.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:
+https://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\sklearn\base.py:463: InconsistentVersionWarning: Trying to unpickle estimator LogisticRegressionCV from version 0.23.1 when using version 1.8.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:
+https://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\sklearn\base.py:463: InconsistentVersionWarning: Trying to unpickle estimator Pipeline from version 0.23.1 when using version 1.8.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:
+https://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+Exception in thread Thread-27 (_readerthread):
+Traceback (most recent call last):
+  File "C:\Users\lukep\AppData\Local\Programs\Python\Python311\Lib\threading.py", line 1045, in _bootstrap_inner
+    self.run()
+  File "C:\Users\lukep\AppData\Local\Programs\Python\Python311\Lib\threading.py", line 982, in run
+    self._target(*self._args, **self._kwargs)
+  File "C:\Users\lukep\AppData\Local\Programs\Python\Python311\Lib\subprocess.py", line 1599, in _readerthread
+    buffer.append(fh.read())
+                  ^^^^^^^^^
+  File "C:\Users\lukep\AppData\Local\Programs\Python\Python311\Lib\encodings\cp1252.py", line 23, in decode
+    return codecs.charmap_decode(input,self.errors,decoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeDecodeError: 'charmap' codec can't decode byte 0x9d in position 272: character maps to <undefined>
+[Phase 2] Starting AST pipeline for 'Complaint_Ying_v_US_75a33266' (id=41a718bc-f01e-4452-aa55-e2d18336a47f)
+============================================================
+[Phase 2] Step 07C — Case-context re-classification…
+[07C] Calling Gemini Flash for 'Complaint_Ying_v_US_75a33266'â€¦
+[07C] WARNING: GOOGLE_API_KEY not set â€” using fallback classification.
+[07C] Document updated (id=41a718bc-f01e-4452-aa55-e2d18336a47f)
+[07C] 'Complaint_Ying_v_US_75a33266': primary=False, perspective=unknown, temporal=current, purpose=evidence, confidence=40%
+
+SUCCESS: 07C_case_context_classification.py complete for 'Complaint_Ying_v_US_75a33266'
+[Phase 2] Step 0 — Refining section structure…
+22 sections total, 0 candidates for refinement
+SUCCESS: Section refinement complete for 'Complaint_Ying_v_US_75a33266'. 0 sections split, 0 new child sections added, 0 skipped (coherent or GPT failure).
+[Phase 2] Step 1 — Building parent-child tree…
+SUCCESS: Tree built for 'Complaint_Ying_v_US_75a33266'. 22 sections processed, 5 root node(s), max depth 3.
+[Phase 2] Step 2 — Assigning semantic labels…
+SUCCESS: Labeled 22 sections for 'Complaint_Ying_v_US_75a33266'. 1 pattern-matched (1 title, 0 text), 21 GPT-labeled, 0 flagged for review, 0 errors.
+[Phase 2] Step 3A — Extracting entities…
+[03A] Extracting from 'Complaint_Ying_v_US_75a33266' (Pleading - Criminal Complaint)
+  [03A] 22 sections to process
+  [  1/22] SKIP  '  VI. STATEMENT OF PROBABLE CAUSE' â€” too short
+  [  7/22] SKIP  'ATTACHMENT A' â€” too short
+  [  8/22] SKIP  'ATTACHMENT B' â€” too short
+  [ 12/22] SKIP  '  III. SUBJECT DEVICE TO BE SEARCHED' â€” child micro-section
+  [ 13/22] SKIP  'TOC (Synthetic)' â€” skip label (table_of_contents)
+  [03A] Processing 17 sections (5 skipped)
+  [  4/22] OK    '  VII. TRAINING AND EXPERIENCE REGARDING DIGITAL DEVICES' â†’ 1 entities
+  [  9/22] EMPTY '  IV. ITEMS TO BE SEIZED' â†’ nothing found
+  [ 10/22] EMPTY 'AFFIDAVIT' â†’ nothing found
+  [  5/22] OK    '    G. Search of YING's Hotel Room' â†’ 5 entities
+  [  6/22] OK    '  SUBJECT DEVICE TO BE SEARCHED' â†’ 4 entities
+  [  2/22] OK    '    E. YING's Travel' â†’ 7 entities
+  [ 14/22] OK    '    F. YING's Arrest' â†’ 8 entities
+  [ 11/22] OK    '    D. YING's Aliases' â†’ 8 entities
+  [  3/22] OK    '    C. Additional Thefts' â†’ 17 entities
+  [ 15/22] OK    '  VIII. CONCLUSION' â†’ 10 entities
+  [ 16/22] OK    '  I. INTRODUCTION' â†’ 9 entities
+  [ 19/22] OK    '    A. The UCLA Library System' â†’ 7 entities
+  [ 20/22] OK    '  II. PURPOSE OF AFFIDAVIT' â†’ 7 entities
+  [ 18/22] OK    '  V. SUMMARY OF PROBABLE CAUSE' â†’ 7 entities
+  [ 21/22] OK    '  I. ITEMS TO BE SEIZED' â†’ 8 entities
+  [ 22/22] OK    'Title Page' â†’ 7 entities
+  [ 17/22] OK    '    B. Initial Thefts' â†’ 16 entities
+
+  [03A] DONE â€” 121 extractions from 'Complaint_Ying_v_US_75a33266'
+         amount             3
+         court              3
+         date               35
+         judge              1
+         party              79
+
+SUCCESS: 03A_entity_extraction.py â€” 121 entities extracted from 'Complaint_Ying_v_US_75a33266'
+[Phase 2] Step 3B — Extracting legal structure…
+[03B] Legal structure extraction: Complaint_Ying_v_US_75a33266
+      Type: Pleading - Criminal Complaint | Case: john vs wayne
+[03B] Processing 3 qualifying section(s)â€¦
+  âœ“ [factual_allegations] '  VI. STATEMENT OF PROBABLE CAUSE': 0 rows
+  âœ“ [factual_allegations] '  SUBJECT DEVICE TO BE SEARCHED': 2 rows
+  âœ“ [factual_allegations] '  VII. TRAINING AND EXPERIENCE REGARDING DIGITAL D': 11 rows
+[03B] SUCCESS â€” 13 rows inserted for document 41a718bc-f01e-4452-aa55-e2d18336a47f
+[Phase 2] Step 4A — Building knowledge graph…
+121 extractions loaded for 'Complaint_Ying_v_US_75a33266'
+  Document category: 'complaint' (type='Pleading - Criminal Complaint')
+  Pass 1 â€” 67 nodes created
+  Fuzzy dedup â€” merged 7 duplicate nodes (60 remaining)
+  Pass 2 â€” 47 edges created
+SUCCESS: KG built for 'Complaint_Ying_v_US_75a33266'. 60 nodes [amount:3, event:20, party:35, procedural_event:2], 47 edges [involved_in:47].
+============================================================
+[Phase 2] COMPLETE — 'Complaint_Ying_v_US_75a33266' AST + entities + KG ready in Supabase.
+
+[Phase 2] Processing 1 child exhibit(s)...
+
+[Phase 2] --- Exhibit: Complaint_Ying_v_US_75a33266_exhibit_i (8,899 chars) ---
+[07C] Calling Gemini Flash for 'Complaint_Ying_v_US_75a33266_exhibit_i'â€¦
+[07C] WARNING: GOOGLE_API_KEY not set â€” using fallback classification.
+[07C] Document updated (id=5440c1ed-f81a-4c53-bd5b-05f44e1ecd73)
+[07C] Stage advance: filing â†’ discovery (triggered by 'Complaint_Ying_v_US_75a33266_exhibit_i')
+[07C] 'Complaint_Ying_v_US_75a33266_exhibit_i': primary=False, perspective=unknown, temporal=current, purpose=evidence, confidence=50%
+
+SUCCESS: 07C_case_context_classification.py complete for 'Complaint_Ying_v_US_75a33266_exhibit_i'
+1 sections total, 1 candidates for refinement
+  Evaluating 'i' (8,899 chars)...
+    Splitting into 3 sub-sections...
+    Done â€” 3 children inserted
+SUCCESS: Section refinement complete for 'Complaint_Ying_v_US_75a33266_exhibit_i'. 1 sections split, 3 new child sections added, 0 skipped (coherent or GPT failure).
+SUCCESS: Tree built for 'Complaint_Ying_v_US_75a33266_exhibit_i'. 4 sections processed, 1 root node(s), max depth 2.
+SUCCESS: Labeled 4 sections for 'Complaint_Ying_v_US_75a33266_exhibit_i'. 0 pattern-matched (0 title, 0 text), 4 GPT-labeled, 0 flagged for review, 0 errors.
+[03A] Extracting from 'Complaint_Ying_v_US_75a33266_exhibit_i' (Discovery - Subpoena)
+  [03A] 4 sections to process
+  [03A] Processing 4 sections (0 skipped)
+  [  3/4] EMPTY 'i' â†’ nothing found
+  [  1/4] OK    'Subject Device to be Searched' â†’ 4 entities
+  [  2/4] OK    'Search Procedure for the Subject Device' â†’ 7 entities
+  [  4/4] OK    'Items to be Seized' â†’ 8 entities
+
+  [03A] DONE â€” 19 extractions from 'Complaint_Ying_v_US_75a33266_exhibit_i'
+         court              1
+         date               7
+         judge              1
+         party              10
+
+SUCCESS: 03A_entity_extraction.py â€” 19 entities extracted from 'Complaint_Ying_v_US_75a33266_exhibit_i'
+19 extractions loaded for 'Complaint_Ying_v_US_75a33266_exhibit_i'
+  Document category: 'discovery' (type='Discovery - Subpoena')
+  Pass 1 â€” 15 nodes created
+  Fuzzy dedup â€” merged 2 duplicate nodes (13 remaining)
+  Pass 2 â€” 13 edges created
+SUCCESS: KG built for 'Complaint_Ying_v_US_75a33266_exhibit_i'. 13 nodes [event:4, party:8, procedural_event:1], 13 edges [involved_in:13].
+
+[Phase 2] COMPLETE — all exhibits processed.
+
+[Phase 3] Starting embedding for case ea590f7b-9dc6-4923-afc6-1f8941334143...
+Traceback (most recent call last):
+  File "C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\backend\02_MIDDLE\main.py", line 229, in <module>
+    main()
+  File "C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\backend\02_MIDDLE\main.py", line 179, in main
+    if result.stdout.strip():
+       ^^^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'strip'

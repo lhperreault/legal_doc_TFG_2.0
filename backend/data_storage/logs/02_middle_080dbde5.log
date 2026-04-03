@@ -140,3 +140,482 @@ Traceback (most recent call last):
     return codecs.charmap_encode(input,self.errors,encoding_table)[0]
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 UnicodeEncodeError: 'charmap' codec can't encode character '\u2192' in position 22: character maps to <undefined>
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+[Phase 2] Starting AST pipeline for 'Complaint (Epic Games to Apple_bfb234ec' (id=ed880a67-0b5a-4dbd-ad22-a8d9c6bdf6b2)
+============================================================
+[Phase 2] Step 07C — Case-context re-classification…
+[07C] Calling Gemini Flash for 'Complaint (Epic Games to Apple_bfb234ec'…
+[07C] WARNING: GOOGLE_API_KEY not set — using fallback classification.
+[07C] Document updated (id=ed880a67-0b5a-4dbd-ad22-a8d9c6bdf6b2)
+[07C] 'Complaint (Epic Games to Apple_bfb234ec': primary=False, perspective=unknown, temporal=current, purpose=operative_pleading, confidence=40%
+
+SUCCESS: 07C_case_context_classification.py complete for 'Complaint (Epic Games to Apple_bfb234ec'
+[Phase 2] Step 0 — Refining section structure…
+37 sections total, 7 candidates for refinement
+  Evaluating '  NATURE OF THE ACTION' (14,740 chars)...
+    Splitting into 10 sub-sections...
+    Done — 10 children inserted
+  Evaluating '    I. Apple Monopolizes the iOS App Distribution Marke' (10,511 chars)...
+    Splitting into 7 sub-sections...
+    Done — 7 children inserted
+  Evaluating '      D. Anti-competitive Effects in the iOS App Distri' (7,643 chars)...
+    Splitting into 2 sub-sections...
+    Done — 2 children inserted
+  Evaluating '      D. Anti-competitive Effects in the iOS In-App Pay' (6,722 chars)...
+    Splitting into 5 sub-sections...
+    Done — 5 children inserted
+  Evaluating '      A. Apple’s Mobile Device Customers Face Substanti' (7,601 chars)...
+    Splitting into 1 sub-sections...
+    Done — 1 children inserted
+  Evaluating '      C. Information Costs and Other Market Inefficienc' (6,943 chars)...
+    Splitting into 5 sub-sections...
+    Done — 5 children inserted
+  Evaluating '  COUNT 9: California Cartwright Act (Tying the App Sto' (6,008 chars)...
+    Splitting into 7 sub-sections...
+    Done — 7 children inserted
+SUCCESS: Section refinement complete for 'Complaint (Epic Games to Apple_bfb234ec'. 7 sections split, 37 new child sections added, 0 skipped (coherent or GPT failure).
+[Phase 2] Step 1 — Building parent-child tree…
+SUCCESS: Tree built for 'Complaint (Epic Games to Apple_bfb234ec'. 74 sections processed, 18 root node(s), max depth 4.
+[Phase 2] Step 2 — Assigning semantic labels…
+SUCCESS: Labeled 74 sections for 'Complaint (Epic Games to Apple_bfb234ec'. 15 pattern-matched (15 title, 0 text), 59 GPT-labeled, 0 flagged for review, 0 errors.
+[Phase 2] Step 3A — Extracting entities…
+[03A] Extracting from 'Complaint (Epic Games to Apple_bfb234ec' (Pleading - Complaint)
+  [03A] 74 sections to process
+  [  5/74] SKIP  '  RELEVANT FACTS' — too short
+  [ 10/74] SKIP  '        iii. Lack of Procompetitive Justification' — child micro-section
+  [ 11/74] SKIP  '      D. Anti-competitive Effects in the iOS App Distributio' — child micro-section
+  [ 16/74] SKIP  '      D. Anti-competitive Effects in the iOS In-App Payment ' — child micro-section
+  [ 25/74] SKIP  '    I. Apple Monopolizes the iOS App Distribution Market' — child micro-section
+  [ 33/74] SKIP  '      A. Apple’s Mobile Device Customers Face Substantial Sw' — child micro-section
+  [ 37/74] SKIP  '      C. Information Costs and Other Market Inefficiencies i' — child micro-section
+  [ 61/74] SKIP  '  PRAYER FOR RELIEF' — skip label (prayer_for_relief)
+  [ 71/74] SKIP  'TOC' — skip label (table_of_contents)
+  [03A] Processing 65 sections (9 skipped)
+  [  2/74] ERROR '    III. Competition in the Sale of Mobi' — 'charmap' codec can't encode character '\u2192' in position 80: character maps to <undefined>
+  [  6/74] ERROR '  INTRADISTRICT ASSIGNMENT' — 'charmap' codec can't encode character '\u2192' in position 46: character maps to <undefined>
+  [  8/74] ERROR '      C. Apple’s Anti-competitive Conduc' — 'charmap' codec can't encode character '\u2192' in position 80: character maps to <undefined>
+  [  4/74] ERROR 'Apple's Control Over Mobile Operating Sy' — 'charmap' codec can't encode character '\u2192' in position 65: character maps to <undefined>
+  [  3/74] ERROR 'Apple's Anti-Competitive Practices' — 'charmap' codec can't encode character '\u2192' in position 54: character maps to <undefined>
+  [  7/74] ERROR '      A. The iOS App Distribution Market' — 'charmap' codec can't encode character '\u2192' in position 60: character maps to <undefined>
+  [  1/74] ERROR '  JURISDICTION AND VENUE' — 'charmap' codec can't encode character '\u2192' in position 44: character maps to <undefined>
+  [ 15/74] ERROR '      C. Apple’s Anti-competitive Conduc' — 'charmap' codec can't encode character '\u2192' in position 80: character maps to <undefined>
+  [  9/74] ERROR '        ii. Contractual Restrictions' — 'charmap' codec can't encode character '\u2192' in position 56: character maps to <undefined>
+  [ 12/74] ERROR 'Apple's Foreclosure of Competition' — 'charmap' codec can't encode character '\u2192' in position 54: character maps to <undefined>
+  [ 13/74] ERROR '  COUNT 1: Sherman Act § 2 (Unlawful Mon' — 'charmap' codec can't encode character '\u2192' in position 80: character maps to <undefined>
+  [ 14/74] ERROR '      A. The iOS In-App Payment Processi' — 'charmap' codec can't encode character '\u2192' in position 69: character maps to <undefined>
+  [ 19/74] ERROR 'Comparison with Apple Personal Computers' — 'charmap' codec can't encode character '\u2192' in position 60: character maps to <undefined>
+  [ 22/74] ERROR '  NATURE OF THE ACTION' — 'charmap' codec can't encode character '\u2192' in position 42: character maps to <undefined>
+  [ 18/74] ERROR '  COUNT 6: Sherman Act § 1 (Tying the Ap' — 'charmap' codec can't encode character '\u2192' in position 80: character maps to <undefined>
+  [ 24/74] ERROR 'Epic's Request for Injunctive Relief' — 'charmap' codec can't encode character '\u2192' in position 56: character maps to <undefined>
+  [ 26/74] ERROR 'Evolution of App Availability on iOS' — 'charmap' codec can't encode character '\u2192' in position 56: character maps to <undefined>
+  [ 20/74] ERROR 'Impact on Consumers and Developers' — 'charmap' codec can't encode character '\u2192' in position 54: character maps to <undefined>
+  [ 21/74] ERROR 'Fortnite's Removal from the App Store' — 'charmap' codec can't encode character '\u2192' in position 57: character maps to <undefined>
+  [ 23/74] ERROR 'Consequences of Apple's Conduct' — 'charmap' codec can't encode character '\u2192' in position 51: character maps to <undefined>
+  [ 30/74] ERROR 'Overview of Subsequent Parts' — 'charmap' codec can't encode character '\u2192' in position 48: character maps to <undefined>
+  [ 27/74] ERROR 'Importance of App Updates' — 'charmap' codec can't encode character '\u2192' in position 45: character maps to <undefined>
+  [ 28/74] ERROR 'Consumer Choice Limitations' — 'charmap' codec can't encode character '\u2192' in position 47: character maps to <undefined>
+  [ 34/74] ERROR 'Consumer Ignorance of Anti-Competitive C' — 'charmap' codec can't encode character '\u2192' in position 66: character maps to <undefined>
+  [ 29/74] ERROR 'Impact on Consumers' — 'charmap' codec can't encode character '\u2192' in position 39: character maps to <undefined>
+  [ 31/74] ERROR 'Increased Costs for Developers' — 'charmap' codec can't encode character '\u2192' in position 50: character maps to <undefined>
+  [ 38/74] ERROR 'Separation of Tying and Tied Products' — 'charmap' codec can't encode character '\u2192' in position 57: character maps to <undefined>
+  [ 32/74] ERROR 'iOS Lock-In Overview' — 'charmap' codec can't encode character '\u2192' in position 40: character maps to <undefined>
+  [ 39/74] ERROR 'Coercion of Developers' — 'charmap' codec can't encode character '\u2192' in position 42: character maps to <undefined>
+  [ 17/74] ERROR '      B. Apple’s Sticky iOS Ecosystem Pr' — 'charmap' codec can't encode character '\u2192' in position 80: character maps to <undefined>
+  [ 42/74] ERROR '  COUNT 9: California Cartwright Act (Ty' — 'charmap' codec can't encode character '\u2192' in position 80: character maps to <undefined>
+  [ 40/74] ERROR 'Epic's Legal Action Against Apple' — 'charmap' codec can't encode character '\u2192' in position 53: character maps to <undefined>
+  [ 35/74] ERROR 'Apple's Market Power in Tablets' — 'charmap' codec can't encode character '\u2192' in position 51: character maps to <undefined>
+  [ 43/74] ERROR 'Jurisdiction Under Cartwright Act' — 'charmap' codec can't encode character '\u2192' in position 53: character maps to <undefined>
+  [ 41/74] ERROR 'Apple's Rise and Market Position' — 'charmap' codec can't encode character '\u2192' in position 52: character maps to <undefined>
+  [ 44/74] ERROR '        i. Contractual and Policy Restri' — 'charmap' codec can't encode character '\u2192' in position 66: character maps to <undefined>
+  [ 36/74] ERROR 'Lifecycle Price Determination Issues' — 'charmap' codec can't encode character '\u2192' in position 56: character maps to <undefined>
+  [ 48/74] ERROR '  COUNT 3: Sherman Act § 1 (Unreasonable' — 'charmap' codec can't encode character '\u2192' in position 80: character maps to <undefined>
+  [ 50/74] ERROR 'Introduction to California Cartwright Ac' — 'charmap' codec can't encode character '\u2192' in position 61: character maps to <undefined>
+  [ 49/74] ERROR '  COUNT 5: Sherman Act § 1 (Unreasonable' — 'charmap' codec can't encode character '\u2192' in position 80: character maps to <undefined>
+  [ 47/74] ERROR '  COUNT 10: California Unfair Competitio' — 'charmap' codec can't encode character '\u2192' in position 65: character maps to <undefined>
+  [ 46/74] ERROR '  COUNT 4: Sherman Act § 2 (Unlawful Mon' — 'charmap' codec can't encode character '\u2192' in position 80: character maps to <undefined>
+  [ 45/74] ERROR 'Apple's Tax Compared to Competitors' — 'charmap' codec can't encode character '\u2192' in position 55: character maps to <undefined>
+  [ 52/74] ERROR '  COUNT 2: Sherman Act § 2 (Denial of Es' — 'charmap' codec can't encode character '\u2192' in position 80: character maps to <undefined>
+  [ 53/74] ERROR 'Restrictions on iOS App Developers' — 'charmap' codec can't encode character '\u2192' in position 54: character maps to <undefined>
+  [ 55/74] ERROR 'Definition of Combination Under Cartwrig' — 'charmap' codec can't encode character '\u2192' in position 66: character maps to <undefined>
+  [ 54/74] ERROR 'Complexity of Device Pricing' — 'charmap' codec can't encode character '\u2192' in position 48: character maps to <undefined>
+  [ 57/74] ERROR 'Harm to Epic' — 'charmap' codec can't encode character '\u2192' in position 32: character maps to <undefined>
+  [ 58/74] ERROR '  COUNT 8: California Cartwright Act (Un' — 'charmap' codec can't encode character '\u2192' in position 80: character maps to <undefined>
+  [ 56/74] ERROR 'Title Page' — 'charmap' codec can't encode character '\u2192' in position 30: character maps to <undefined>
+  [ 59/74] ERROR 'Apple's Economic Power in Tying Market' — 'charmap' codec can't encode character '\u2192' in position 58: character maps to <undefined>
+  [ 60/74] ERROR '  PARTIES' — 'charmap' codec can't encode character '\u2192' in position 29: character maps to <undefined>
+  [ 63/74] ERROR '      B. Apple’s Monopoly Power in the i' — 'charmap' codec can't encode character '\u2192' in position 80: character maps to <undefined>
+  [ 62/74] ERROR 'Apple's Monopoly in App Distribution' — 'charmap' codec can't encode character '\u2192' in position 56: character maps to <undefined>
+  [ 51/74] ERROR 'Rational Ignorance of Consumers' — 'charmap' codec can't encode character '\u2192' in position 51: character maps to <undefined>
+  [ 65/74] ERROR 'Effects on Consumers' — 'charmap' codec can't encode character '\u2192' in position 40: character maps to <undefined>
+  [ 64/74] ERROR 'Third-Party App Development and Distribu' — 'charmap' codec can't encode character '\u2192' in position 64: character maps to <undefined>
+  [ 66/74] ERROR 'Background on Apple and Mobile Devices' — 'charmap' codec can't encode character '\u2192' in position 58: character maps to <undefined>
+  [ 68/74] ERROR '        i. Technical Restrictions' — 'charmap' codec can't encode character '\u2192' in position 53: character maps to <undefined>
+  [ 70/74] ERROR '        ii. Lack of Procompetitive Justi' — 'charmap' codec can't encode character '\u2192' in position 68: character maps to <undefined>
+  [ 69/74] ERROR '    II. Apple Monopolizes the iOS In-App' — 'charmap' codec can't encode character '\u2192' in position 80: character maps to <undefined>
+  [ 73/74] ERROR 'Impact on Developers' — 'charmap' codec can't encode character '\u2192' in position 40: character maps to <undefined>
+  [ 74/74] ERROR '  COUNT 7: California Cartwright Act (Un' — 'charmap' codec can't encode character '\u2192' in position 80: character maps to <undefined>
+  [ 67/74] ERROR 'The Role of Apps in Mobile Devices' — 'charmap' codec can't encode character '\u2192' in position 54: character maps to <undefined>
+  [ 72/74] ERROR '      B. Apple’s Monopoly Power in the i' — 'charmap' codec can't encode character '\u2192' in position 80: character maps to <undefined>
+
+  [03A] DONE — 313 extractions from 'Complaint (Epic Games to Apple_bfb234ec'
+         amount             42
+         attorney           8
+         court              5
+         date               53
+         law_firm           2
+         party              203
+
+SUCCESS: 03A_entity_extraction.py — 313 entities extracted from 'Complaint (Epic Games to Apple_bfb234ec'C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\sklearn\base.py:463: InconsistentVersionWarning: Trying to unpickle estimator SelectKBest from version 0.23.1 when using version 1.8.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:
+https://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\sklearn\base.py:463: InconsistentVersionWarning: Trying to unpickle estimator LogisticRegressionCV from version 0.23.1 when using version 1.8.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:
+https://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\sklearn\base.py:463: InconsistentVersionWarning: Trying to unpickle estimator Pipeline from version 0.23.1 when using version 1.8.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:
+https://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+  \u2717 ?: 'charmap' codec can't encode character '\u2713' in position 2: character maps to <undefined>
+  \u2717 ?: 'charmap' codec can't encode character '\u2713' in position 2: character maps to <undefined>
+  \u2717 ?: 'charmap' codec can't encode character '\u2713' in position 2: character maps to <undefined>
+  \u2717 ?: 'charmap' codec can't encode character '\u2713' in position 2: character maps to <undefined>
+  \u2717 ?: 'charmap' codec can't encode character '\u2713' in position 2: character maps to <undefined>
+  \u2717 ?: 'charmap' codec can't encode character '\u2713' in position 2: character maps to <undefined>
+  \u2717 ?: 'charmap' codec can't encode character '\u2713' in position 2: character maps to <undefined>
+  \u2717 ?: 'charmap' codec can't encode character '\u2713' in position 2: character maps to <undefined>
+  \u2717 ?: 'charmap' codec can't encode character '\u2713' in position 2: character maps to <undefined>
+  \u2717 ?: 'charmap' codec can't encode character '\u2713' in position 2: character maps to <undefined>
+  \u2717 ?: 'charmap' codec can't encode character '\u2713' in position 2: character maps to <undefined>
+  \u2717 ?: 'charmap' codec can't encode character '\u2713' in position 2: character maps to <undefined>
+  \u2717 ?: 'charmap' codec can't encode character '\u2713' in position 2: character maps to <undefined>
+  \u2717 ?: 'charmap' codec can't encode character '\u2713' in position 2: character maps to <undefined>
+  \u2717 ?: 'charmap' codec can't encode character '\u2713' in position 2: character maps to <undefined>
+  \u2717 ?: 'charmap' codec can't encode character '\u2713' in position 2: character maps to <undefined>
+  \u2717 ?: 'charmap' codec can't encode character '\u2713' in position 2: character maps to <undefined>
+  \u2717 ?: 'charmap' codec can't encode character '\u2713' in position 2: character maps to <undefined>
+  \u2717 ?: 'charmap' codec can't encode character '\u2713' in position 2: character maps to <undefined>
+  \u2717 ?: 'charmap' codec can't encode character '\u2713' in position 2: character maps to <undefined>
+  \u2717 ?: 'charmap' codec can't encode character '\u2713' in position 2: character maps to <undefined>
+  \u2717 ?: 'charmap' codec can't encode character '\u2713' in position 2: character maps to <undefined>
+  \u2717 ?: 'charmap' codec can't encode character '\u2713' in position 2: character maps to <undefined>
+  \u2717 ?: 'charmap' codec can't encode character '\u2713' in position 2: character maps to <undefined>
+  \u2717 ?: 'charmap' codec can't encode character '\u2713' in position 2: character maps to <undefined>
+  \u2717 ?: 'charmap' codec can't encode character '\u2713' in position 2: character maps to <undefined>
+  \u2717 ?: 'charmap' codec can't encode character '\u2713' in position 2: character maps to <undefined>
+  \u2717 ?: 'charmap' codec can't encode character '\u2713' in position 2: character maps to <undefined>
+  \u2717 ?: 'charmap' codec can't encode character '\u2713' in position 2: character maps to <undefined>
+  \u2717 ?: 'charmap' codec can't encode character '\u2713' in position 2: character maps to <undefined>
+  \u2717 ?: 'charmap' codec can't encode character '\u2713' in position 2: character maps to <undefined>
+  \u2717 ?: 'charmap' codec can't encode character '\u2713' in position 2: character maps to <undefined>
+  \u2717 ?: 'charmap' codec can't encode character '\u2713' in position 2: character maps to <undefined>
+  \u2717 ?: 'charmap' codec can't encode character '\u2713' in position 2: character maps to <undefined>
+  \u2717 ?: 'charmap' codec can't encode character '\u2713' in position 2: character maps to <undefined>
+  \u2717 ?: 'charmap' codec can't encode character '\u2713' in position 2: character maps to <undefined>
+  \u2717 ?: 'charmap' codec can't encode character '\u2713' in position 2: character maps to <undefined>
+  \u2717 ?: 'charmap' codec can't encode character '\u2713' in position 2: character maps to <undefined>
+  \u2717 ?: 'charmap' codec can't encode character '\u2713' in position 2: character maps to <undefined>
+  \u2717 ?: 'charmap' codec can't encode character '\u2713' in position 2: character maps to <undefined>
+  \u2717 ?: 'charmap' codec can't encode character '\u2713' in position 2: character maps to <undefined>
+  \u2717 ?: 'charmap' codec can't encode character '\u2713' in position 2: character maps to <undefined>
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\sklearn\base.py:463: InconsistentVersionWarning: Trying to unpickle estimator SelectKBest from version 0.23.1 when using version 1.8.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:
+https://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\sklearn\base.py:463: InconsistentVersionWarning: Trying to unpickle estimator LogisticRegressionCV from version 0.23.1 when using version 1.8.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:
+https://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\sklearn\base.py:463: InconsistentVersionWarning: Trying to unpickle estimator Pipeline from version 0.23.1 when using version 1.8.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:
+https://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\sklearn\base.py:463: InconsistentVersionWarning: Trying to unpickle estimator SelectKBest from version 0.23.1 when using version 1.8.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:
+https://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\sklearn\base.py:463: InconsistentVersionWarning: Trying to unpickle estimator LogisticRegressionCV from version 0.23.1 when using version 1.8.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:
+https://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\sklearn\base.py:463: InconsistentVersionWarning: Trying to unpickle estimator Pipeline from version 0.23.1 when using version 1.8.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:
+https://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\sklearn\base.py:463: InconsistentVersionWarning: Trying to unpickle estimator SelectKBest from version 0.23.1 when using version 1.8.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:
+https://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\sklearn\base.py:463: InconsistentVersionWarning: Trying to unpickle estimator LogisticRegressionCV from version 0.23.1 when using version 1.8.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:
+https://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\sklearn\base.py:463: InconsistentVersionWarning: Trying to unpickle estimator Pipeline from version 0.23.1 when using version 1.8.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:
+https://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\sklearn\base.py:463: InconsistentVersionWarning: Trying to unpickle estimator SelectKBest from version 0.23.1 when using version 1.8.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:
+https://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\sklearn\base.py:463: InconsistentVersionWarning: Trying to unpickle estimator LogisticRegressionCV from version 0.23.1 when using version 1.8.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:
+https://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\sklearn\base.py:463: InconsistentVersionWarning: Trying to unpickle estimator Pipeline from version 0.23.1 when using version 1.8.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:
+https://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+
+[Phase 2] Step 3B — Extracting legal structure…
+[03B] Legal structure extraction: Complaint (Epic Games to Apple_bfb234ec
+      Type: Pleading - Complaint | Case: apple vs epic
+[03B] Processing 42 qualifying section(s)…
+[03B] SUCCESS — 0 rows inserted for document ed880a67-0b5a-4dbd-ad22-a8d9c6bdf6b2
+[Phase 2] Step 4A — Building knowledge graph…
+313 extractions loaded for 'Complaint (Epic Games to Apple_bfb234ec'
+  Document category: 'complaint' (type='Pleading - Complaint')
+  Pass 1 — 172 nodes created
+  Fuzzy dedup — merged 14 duplicate nodes (158 remaining)
+  Pass 2 — 204 edges created
+SUCCESS: KG built for 'Complaint (Epic Games to Apple_bfb234ec'. 158 nodes [amount:41, event:47, party:70], 204 edges [involved_in:204].
+============================================================
+[Phase 2] COMPLETE — 'Complaint (Epic Games to Apple_bfb234ec' AST + entities + KG ready in Supabase.
+
+[Phase 2] Processing 4 child exhibit(s)...
+
+[Phase 2] --- Exhibit: Complaint (Epic Games to Apple_bfb234ec_exhibit_A (283,764 chars) ---
+[07C] Calling Gemini Flash for 'Complaint (Epic Games to Apple_bfb234ec_exhibit_A'…
+[07C] WARNING: GOOGLE_API_KEY not set — using fallback classification.
+[07C] Document updated (id=0339207a-8a4f-48aa-84f1-66eeaad94274)
+[07C] 'Complaint (Epic Games to Apple_bfb234ec_exhibit_A': primary=False, perspective=unknown, temporal=current, purpose=evidence, confidence=50%
+
+SUCCESS: 07C_case_context_classification.py complete for 'Complaint (Epic Games to Apple_bfb234ec_exhibit_A'
+1 sections total, 1 candidates for refinement
+  Evaluating 'Exhibit A' (283,764 chars)...
+    Splitting into 4 sub-sections...
+    Done — 4 children inserted
+SUCCESS: Section refinement complete for 'Complaint (Epic Games to Apple_bfb234ec_exhibit_A'. 1 sections split, 4 new child sections added, 0 skipped (coherent or GPT failure).
+SUCCESS: Tree built for 'Complaint (Epic Games to Apple_bfb234ec_exhibit_A'. 5 sections processed, 1 root node(s), max depth 2.
+SUCCESS: Labeled 5 sections for 'Complaint (Epic Games to Apple_bfb234ec_exhibit_A'. 2 pattern-matched (2 title, 0 text), 3 GPT-labeled, 0 flagged for review, 0 errors.
+[03A] Extracting from 'Complaint (Epic Games to Apple_bfb234ec_exhibit_A' (Contract - Agreement)
+  [03A] 5 sections to process
+  [03A] Processing 5 sections (0 skipped)
+  [  5/5] ERROR 'Exhibit A' — 'charmap' codec can't encode character '\u2192' in position 28: character maps to <undefined>
+  [  3/5] ERROR 'Separate Agreements for Paid Application' — 'charmap' codec can't encode character '\u2192' in position 60: character maps to <undefined>
+  [  2/5] ERROR 'Acceptance of the Agreement' — 'charmap' codec can't encode character '\u2192' in position 46: character maps to <undefined>
+  [  1/5] ERROR 'Purpose of the Agreement' — 'charmap' codec can't encode character '\u2192' in position 43: character maps to <undefined>
+  [  4/5] ERROR 'Legal Risks and Warranties' — 'charmap' codec can't encode character '\u2192' in position 45: character maps to <undefined>
+
+  [03A] DONE — 14 extractions from 'Complaint (Epic Games to Apple_bfb234ec_exhibit_A'
+         party              14
+
+SUCCESS: 03A_entity_extraction.py — 14 entities extracted from 'Complaint (Epic Games to Apple_bfb234ec_exhibit_A'
+14 extractions loaded for 'Complaint (Epic Games to Apple_bfb234ec_exhibit_A'
+  Document category: 'contract' (type='Contract - Agreement')
+  Pass 1 — 10 nodes created
+  Fuzzy dedup — merged 2 duplicate nodes (8 remaining)
+  Pass 2 — 0 edges created
+SUCCESS: KG built for 'Complaint (Epic Games to Apple_bfb234ec_exhibit_A'. 8 nodes [party:8], 0 edges [].
+
+[Phase 2] --- Exhibit: Complaint (Epic Games to Apple_bfb234ec_exhibit_B (4,629 chars) ---
+[07C] Calling Gemini Flash for 'Complaint (Epic Games to Apple_bfb234ec_exhibit_B'…
+[07C] WARNING: GOOGLE_API_KEY not set — using fallback classification.
+[07C] Document updated (id=5518f3ae-082a-4ccd-baec-40a01ea4b989)
+[07C] 'Complaint (Epic Games to Apple_bfb234ec_exhibit_B': primary=False, perspective=unknown, temporal=current, purpose=evidence, confidence=50%
+
+SUCCESS: 07C_case_context_classification.py complete for 'Complaint (Epic Games to Apple_bfb234ec_exhibit_B'
+1 sections total, 0 candidates for refinement
+SUCCESS: Section refinement complete for 'Complaint (Epic Games to Apple_bfb234ec_exhibit_B'. 0 sections split, 0 new child sections added, 0 skipped (coherent or GPT failure).
+SUCCESS: Tree built for 'Complaint (Epic Games to Apple_bfb234ec_exhibit_B'. 1 sections processed, 1 root node(s), max depth 0.
+SUCCESS: Labeled 1 sections for 'Complaint (Epic Games to Apple_bfb234ec_exhibit_B'. 1 pattern-matched (1 title, 0 text), 0 GPT-labeled, 0 flagged for review, 0 errors.
+[03A] Extracting from 'Complaint (Epic Games to Apple_bfb234ec_exhibit_B' (Contract - License Agreement)
+  [03A] 1 sections to process
+  [03A] Processing 1 sections (0 skipped)
+  [  1/1] ERROR '(to Schedule 1) Instructions for Minimum' — 'charmap' codec can't encode character '\u2192' in position 79: character maps to <undefined>
+
+  [03A] DONE — 5 extractions from 'Complaint (Epic Games to Apple_bfb234ec_exhibit_B'
+         amount             1
+         date               1
+         party              3
+
+SUCCESS: 03A_entity_extraction.py — 5 entities extracted from 'Complaint (Epic Games to Apple_bfb234ec_exhibit_B'
+5 extractions loaded for 'Complaint (Epic Games to Apple_bfb234ec_exhibit_B'
+  Document category: 'contract' (type='Contract - License Agreement')
+  Pass 1 — 4 nodes created
+  Fuzzy dedup — merged 0 duplicate nodes (4 remaining)
+  Pass 2 — 0 edges created
+SUCCESS: KG built for 'Complaint (Epic Games to Apple_bfb234ec_exhibit_B'. 4 nodes [amount:1, party:3], 0 edges [].
+
+[Phase 2] --- Exhibit: Complaint (Epic Games to Apple_bfb234ec_exhibit_C (13,934 chars) ---
+[07C] Calling Gemini Flash for 'Complaint (Epic Games to Apple_bfb234ec_exhibit_C'…
+[07C] WARNING: GOOGLE_API_KEY not set — using fallback classification.
+[07C] Document updated (id=335fab9a-cd98-41c0-94d2-a56154bc5d05)
+[07C] 'Complaint (Epic Games to Apple_bfb234ec_exhibit_C': primary=False, perspective=unknown, temporal=current, purpose=evidence, confidence=50%
+
+SUCCESS: 07C_case_context_classification.py complete for 'Complaint (Epic Games to Apple_bfb234ec_exhibit_C'
+1 sections total, 1 candidates for refinement
+  Evaluating '(to Schedule 1) App Store Promo Code Terms Notwithstand' (13,934 chars)...
+    Splitting into 2 sub-sections...
+    Done — 2 children inserted
+SUCCESS: Section refinement complete for 'Complaint (Epic Games to Apple_bfb234ec_exhibit_C'. 1 sections split, 2 new child sections added, 0 skipped (coherent or GPT failure).
+SUCCESS: Tree built for 'Complaint (Epic Games to Apple_bfb234ec_exhibit_C'. 3 sections processed, 1 root node(s), max depth 2.
+SUCCESS: Labeled 3 sections for 'Complaint (Epic Games to Apple_bfb234ec_exhibit_C'. 1 pattern-matched (1 title, 0 text), 2 GPT-labeled, 0 flagged for review, 0 errors.
+[03A] Extracting from 'Complaint (Epic Games to Apple_bfb234ec_exhibit_C' (Administrative - Case Summary)
+  [03A] 3 sections to process
+  [03A] Processing 3 sections (0 skipped)
+  [  3/3] ERROR '(to Schedule 1) App Store Promo Code Ter' — 'charmap' codec can't encode character '\u2192' in position 79: character maps to <undefined>
+  [  2/3] ERROR 'Prohibition of Certain Terms' — 'charmap' codec can't encode character '\u2192' in position 47: character maps to <undefined>
+  [  1/3] ERROR 'Terms and Conditions of Use' — 'charmap' codec can't encode character '\u2192' in position 46: character maps to <undefined>
+
+  [03A] DONE — 13 extractions from 'Complaint (Epic Games to Apple_bfb234ec_exhibit_C'
+         date               1
+         party              12
+
+SUCCESS: 03A_entity_extraction.py — 13 entities extracted from 'Complaint (Epic Games to Apple_bfb234ec_exhibit_C'
+13 extractions loaded for 'Complaint (Epic Games to Apple_bfb234ec_exhibit_C'
+  Document category: 'other' (type='Administrative - Case Summary')
+  Pass 1 — 10 nodes created
+  Fuzzy dedup — merged 1 duplicate nodes (9 remaining)
+  Pass 2 — 1 edges created
+SUCCESS: KG built for 'Complaint (Epic Games to Apple_bfb234ec_exhibit_C'. 9 nodes [party:8, procedural_event:1], 1 edges [involved_in:1].
+
+[Phase 2] --- Exhibit: Complaint (Epic Games to Apple_bfb234ec_exhibit_D (89,586 chars) ---
+[07C] Calling Gemini Flash for 'Complaint (Epic Games to Apple_bfb234ec_exhibit_D'…
+[07C] WARNING: GOOGLE_API_KEY not set — using fallback classification.
+[07C] Document updated (id=b0f4f472-1694-4b75-ac1d-21ba619ab38a)
+[07C] 'Complaint (Epic Games to Apple_bfb234ec_exhibit_D': primary=False, perspective=unknown, temporal=current, purpose=evidence, confidence=50%
+
+SUCCESS: 07C_case_context_classification.py complete for 'Complaint (Epic Games to Apple_bfb234ec_exhibit_D'
+1 sections total, 1 candidates for refinement
+  Evaluating '(to Schedule 1) Additional App Store Terms 1.' (89,586 chars)...
+    Splitting into 1 sub-sections...
+    Done — 1 children inserted
+SUCCESS: Section refinement complete for 'Complaint (Epic Games to Apple_bfb234ec_exhibit_D'. 1 sections split, 1 new child sections added, 0 skipped (coherent or GPT failure).
+SUCCESS: Tree built for 'Complaint (Epic Games to Apple_bfb234ec_exhibit_D'. 2 sections processed, 1 root node(s), max depth 2.
+SUCCESS: Labeled 2 sections for 'Complaint (Epic Games to Apple_bfb234ec_exhibit_D'. 0 pattern-matched (0 title, 0 text), 2 GPT-labeled, 0 flagged for review, 0 errors.
+[03A] Extracting from 'Complaint (Epic Games to Apple_bfb234ec_exhibit_D' (Administrative - Case Summary)
+  [03A] 2 sections to process
+  [03A] Processing 2 sections (0 skipped)
+  [  2/2] ERROR '(to Schedule 1) Additional App Store Ter' — 'charmap' codec can't encode character '\u2192' in position 64: character maps to <undefined>
+  [  1/2] ERROR 'Access to App Store Data' — 'charmap' codec can't encode character '\u2192' in position 43: character maps to <undefined>
+
+  [03A] DONE — 4 extractions from 'Complaint (Epic Games to Apple_bfb234ec_exhibit_D'
+         party              4
+
+SUCCESS: 03A_entity_extraction.py — 4 entities extracted from 'Complaint (Epic Games to Apple_bfb234ec_exhibit_D'
+4 extractions loaded for 'Complaint (Epic Games to Apple_bfb234ec_exhibit_D'
+  Document category: 'other' (type='Administrative - Case Summary')
+  Pass 1 — 4 nodes created
+  Fuzzy dedup — merged 0 duplicate nodes (4 remaining)
+  Pass 2 — 0 edges created
+SUCCESS: KG built for 'Complaint (Epic Games to Apple_bfb234ec_exhibit_D'. 4 nodes [party:4], 0 edges [].
+
+[Phase 2] COMPLETE — all exhibits processed.
+
+[Phase 3] Starting embedding for case 080dbde5-ab26-492c-bac4-8a55a0c55cf0...
+[Phase 3] Starting embedding pipeline for case '080dbde5-ab26-492c-bac4-8a55a0c55cf0'
+============================================================
+[Phase 3] Step 1 — Embedding sections...
+============================================================
+  Phase 3 — Embedding Sections
+  Case ID: 080dbde5-ab26-492c-bac4-8a55a0c55cf0
+============================================================
+
+[1/4] Fetching sections from Supabase...
+  Found 6 document(s) in case
+  Found 161 total section(s)
+[2/4] Checking existing embeddings...
+  Found 115 existing embedding(s)
+
+  Sections to embed: 83
+  Skipped (up to date): 74
+  Skipped (empty/short): 2
+  Skipped (boilerplate label): 2
+
+[3/4] Generating embeddings (83 sections)...
+  WARNING: Truncated section 'Legal Risks and Warranties' (doc: Complaint (Epic Games to Apple_bfb234ec_exhibit_A)
+  WARNING: Truncated section 'Access to App Store Data' (doc: Complaint (Epic Games to Apple_bfb234ec_exhibit_D)
+  Batch 1/1 (83 sections)...
+
+[4/4] Upserting 83 embedding(s) to Supabase...
+  Summary written to C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\backend\03_SEARCH\..\zz_temp_chunks\080dbde5-ab26-492c-bac4-8a55a0c55cf0_embedding_summary.json
+
+============================================================
+  RESULTS
+============================================================
+  Total sections:       161
+  Newly embedded:       83
+  Re-embedded (changed):39
+  Skipped (up to date): 74
+  Skipped (empty):      2
+  Skipped (label):      2
+  Truncated:            2
+  Errors:               0
+
+SUCCESS: 83 section(s) embedded for case 080dbde5-ab26-492c-bac4-8a55a0c55cf0
+============================================================
+[Phase 3] COMPLETE — case '080dbde5-ab26-492c-bac4-8a55a0c55cf0' is now search-ready.
+[Phase 3] COMPLETE — case 080dbde5-ab26-492c-bac4-8a55a0c55cf0 is search-ready.
+
+[Phase 4] Triggering post-extraction refresh for case 080dbde5-ab26-492c-bac4-8a55a0c55cf0...
+Traceback (most recent call last):
+  File "C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\backend\02_MIDDLE\main.py", line 226, in <module>
+    main()
+  File "C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\backend\02_MIDDLE\main.py", line 209, in main
+    print(f"[Phase 4] Refresh log \u2192 data_storage/logs/refresh_{case_id[:8]}.log")
+  File "C:\Users\lukep\AppData\Local\Programs\Python\Python311\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2192' in position 22: character maps to <undefined>

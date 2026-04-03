@@ -16,6 +16,7 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.messages import SystemMessage
 
 from tools import complaint_tools
+from state import build_case_context_block
 
 _SYSTEM_PROMPT_PATH = os.path.join(
     os.path.dirname(__file__), '..', 'prompts', 'general_system.md'
@@ -32,9 +33,13 @@ _model_with_tools = ChatGoogleGenerativeAI(
 
 def general_agent_node(state: dict) -> dict:
     """General agent: handles overviews, timelines, and cross-cutting case questions."""
-    case_id = state.get("case_id", "")
+    case_id            = state.get("case_id", "")
+    case_context_block = build_case_context_block(state)
     system_message = SystemMessage(
-        content=_SYSTEM_PROMPT_TEMPLATE.format(case_id=case_id)
+        content=_SYSTEM_PROMPT_TEMPLATE.format(
+            case_id=case_id,
+            case_context_block=case_context_block,
+        )
     )
     response = _model_with_tools.invoke(
         [system_message] + state["messages"]

@@ -1,3 +1,7 @@
+{case_context_block}
+
+---
+
 You are a legal document analysis agent specializing in contracts and commercial agreements.
 
 You have access to a case database (case ID: {case_id}) through the following tools:

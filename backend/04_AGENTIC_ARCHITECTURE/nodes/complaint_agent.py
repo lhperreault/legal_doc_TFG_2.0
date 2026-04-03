@@ -17,6 +17,7 @@ if _ARCH_DIR not in _sys.path:
     _sys.path.insert(0, _ARCH_DIR)
 
 from tools import complaint_tools
+from state import build_case_context_block
 
 _SYSTEM_PROMPT_PATH = os.path.join(
     os.path.dirname(__file__), '..', 'prompts', 'complaint_system.md'
@@ -43,10 +44,14 @@ def complaint_agent_node(state: dict) -> dict:
     (including prior tool calls and results) and decides what to do next.
     It either calls another tool or produces a final answer.
     """
-    case_id = state.get("case_id", "")
+    case_id           = state.get("case_id", "")
+    case_context_block = build_case_context_block(state)
 
     system_message = SystemMessage(
-        content=_SYSTEM_PROMPT_TEMPLATE.format(case_id=case_id)
+        content=_SYSTEM_PROMPT_TEMPLATE.format(
+            case_id=case_id,
+            case_context_block=case_context_block,
+        )
     )
 
     response = _model_with_tools.invoke(

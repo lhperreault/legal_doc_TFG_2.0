@@ -73,6 +73,8 @@ _FACTUAL_LABELS = {
     "factual_history",
     "statement_of_facts",
     "background",
+    "purpose_of_affidavit",
+    "affidavit_purpose",
 }
 
 # Title keywords that identify a Count/Cause-of-Action section even if the
@@ -85,6 +87,8 @@ _COUNT_TITLE_KEYWORDS = (
     "causes of action",
     "claims for relief",
     "claim for relief",
+    "purpose of affidavit",
+    "purpose of the affidavit",
 )
 
 
@@ -307,6 +311,44 @@ Extract the legal structure from this section following this hierarchy:
 Return ONLY a JSON object matching this schema:
 {schema}"""
 
+# Separate, stripped-down prompt for factual/background sections.
+# These sections contain supporting facts, not causes of action — the AI must
+# NOT invent claims or counts from them.
+_FACTUAL_PROMPT_TEMPLATE = """\
+## Context
+Document type: {document_type}
+Case: {case_name}
+
+## Section Being Analyzed
+Section title: {section_title}
+Semantic label: {semantic_label}
+
+Section text:
+{section_text}
+
+---
+
+## Your Task
+
+This is a FACTUAL BACKGROUND section (e.g. "Statement of Facts", "Factual Allegations",
+"Background"). It contains supporting facts, not causes of action.
+
+STRICT RULES — you MUST follow these exactly:
+- Leave "claims" as an empty list [].
+- Leave any claim's "counts" as an empty list [].
+- Do NOT create any Claim or Count objects.
+- Extract each numbered paragraph or factual assertion as a separate entry in
+  "standalone_allegations".
+- For each standalone allegation:
+    - allegation_number: the paragraph number if present, otherwise null
+    - allegation_text: the verbatim or close-paraphrase text of the assertion
+    - allegation_type: "factual" (what happened), "legal_conclusion" (characterization),
+      or "damages" (harm)
+    - evidence_references: any exhibit/declaration citations found ["Exhibit A", etc.]
+
+Return ONLY a JSON object matching this schema:
+{schema}"""
+
 
 def _init_gemini():
     key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
@@ -357,27 +399,38 @@ _MIN_CHARS = 80
 
 def _process_section(
     client,
-    section:      dict,
+    section:    dict,
     parent_title: str,
-    doc:          dict,
-    case:         dict,
+    doc:        dict,
+    case:       dict,
+    is_factual: bool = False,
 ) -> LegalStructureExtraction | None:
     text = section.get("section_text") or ""
     if len(text) < _MIN_CHARS:
         return None
 
-    prompt = _PROMPT_TEMPLATE.format(
-        document_type       = doc.get("document_type") or "Unknown",
-        party_perspective   = doc.get("party_perspective") or "unknown",
-        case_name           = case.get("case_name") or "Unknown Case",
-        our_client          = case.get("our_client") or "unknown party",
-        party_role          = case.get("party_role") or "unknown",
-        section_title       = section.get("section_title") or "(untitled)",
-        semantic_label      = section.get("semantic_label") or "",
-        parent_section_title= parent_title or "(none)",
-        section_text        = text[:6000],
-        schema              = _SCHEMA_HINT,
-    )
+    if is_factual:
+        prompt = _FACTUAL_PROMPT_TEMPLATE.format(
+            document_type  = doc.get("document_type") or "Unknown",
+            case_name      = case.get("case_name") or "Unknown Case",
+            section_title  = section.get("section_title") or "(untitled)",
+            semantic_label = section.get("semantic_label") or "",
+            section_text   = text[:6000],
+            schema         = _SCHEMA_HINT,
+        )
+    else:
+        prompt = _PROMPT_TEMPLATE.format(
+            document_type        = doc.get("document_type") or "Unknown",
+            party_perspective    = doc.get("party_perspective") or "unknown",
+            case_name            = case.get("case_name") or "Unknown Case",
+            our_client           = case.get("our_client") or "unknown party",
+            party_role           = case.get("party_role") or "unknown",
+            section_title        = section.get("section_title") or "(untitled)",
+            semantic_label       = section.get("semantic_label") or "",
+            parent_section_title = parent_title or "(none)",
+            section_text         = text[:6000],
+            schema               = _SCHEMA_HINT,
+        )
 
     raw = _call_gemini(client, prompt)
     if raw is None:
@@ -389,10 +442,18 @@ def _process_section(
         print(f"  [03B] Validation error in section {section.get('id')}: {exc}", file=sys.stderr)
         return None
 
-    # Post-process: fill missing elements from standard schemas
-    for claim in result.claims:
-        for i, count in enumerate(claim.counts):
-            claim.counts[i] = _fill_missing_elements(count)
+    if is_factual:
+        # Hard guard: discard any claims/counts the model hallucinated from a
+        # factual section. Move allegations buried inside them to standalone.
+        for claim in result.claims:
+            for count in claim.counts:
+                result.standalone_allegations.extend(count.allegations)
+        result.claims = []
+    else:
+        # Post-process: fill missing elements from standard schemas
+        for claim in result.claims:
+            for i, count in enumerate(claim.counts):
+                claim.counts[i] = _fill_missing_elements(count)
 
     return result
 
@@ -614,29 +675,35 @@ def extract_legal_structure(document_id: str, dry_run: bool = False) -> int:
 
     id_to_title = {s["id"]: s.get("section_title") or "" for s in sections}
 
-    # Filter to qualifying sections
-    targets: list[tuple[dict, str]] = []
+    # Filter to qualifying sections, tagging factual ones separately so they
+    # get the stripped-down prompt and cannot produce claims/counts.
+    targets: list[tuple[dict, str, bool]] = []
     for s in sections:
         label      = s.get("semantic_label") or ""
         parent_id  = s.get("parent_section_id")
         parent_ttl = id_to_title.get(parent_id, "") if parent_id else ""
-        title = s.get("section_title") or ""
-        if _is_causes_section(label) or _is_factual_section(label) or _title_looks_like_count(title):
-            targets.append((s, parent_ttl))
+        title      = s.get("section_title") or ""
+        if _is_factual_section(label):
+            targets.append((s, parent_ttl, True))   # factual — standalone allegations only
+        elif _is_causes_section(label) or _title_looks_like_count(title):
+            targets.append((s, parent_ttl, False))  # causes-of-action — full extraction
 
     if not targets:
         available = sorted({s.get("semantic_label") for s in sections if s.get("semantic_label")})
         print(f"[03B] No qualifying sections found. Available labels: {available}")
         return 0
 
-    print(f"[03B] Processing {len(targets)} qualifying section(s)…")
+    factual_count = sum(1 for _, _, f in targets if f)
+    claims_count  = len(targets) - factual_count
+    print(f"[03B] Processing {len(targets)} qualifying section(s) "
+          f"({claims_count} claims, {factual_count} factual)…")
 
-    client    = _init_gemini()
-    total     = 0
+    client = _init_gemini()
+    total  = 0
 
-    def _process_one(item: tuple[dict, str]) -> tuple[dict, int]:
-        section, parent_title = item
-        result = _process_section(client, section, parent_title, doc, case)
+    def _process_one(item: tuple[dict, str, bool]) -> tuple[dict, int]:
+        section, parent_title, is_factual = item
+        result = _process_section(client, section, parent_title, doc, case, is_factual=is_factual)
         if result is None:
             return section, 0
         n = _insert_structure(result, section, document_id, case_id, sb, dry_run)
@@ -653,8 +720,8 @@ def extract_legal_structure(document_id: str, dry_run: bool = False) -> int:
                 total += n
             except Exception as exc:
                 item    = futures[future]
-                section = item[0]
-                print(f"  ✗ {section.get('section', '?')}: {exc}", file=sys.stderr)
+                section = item[0]  # item is (section, parent_title, is_factual)
+                print(f"  ✗ {section.get('section_title', '?')}: {exc}", file=sys.stderr)
 
     tag = "DRY RUN" if dry_run else "SUCCESS"
     print(f"[03B] {tag} — {total} rows inserted for document {document_id}")
