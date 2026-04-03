@@ -12,6 +12,13 @@ import sys
 
 from dotenv import load_dotenv
 
+# Force UTF-8 output on Windows so Unicode characters in log messages
+# (→, ✓, etc.) never cause UnicodeEncodeError on cp1252 terminals/log files.
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+if hasattr(sys.stderr, "reconfigure"):
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+
 # Load .env from project root
 load_dotenv(os.path.join(os.path.dirname(__file__), '..', '..', '.env'))
 
@@ -24,10 +31,15 @@ def _run(script_name: str, *args) -> str:
     Run a Phase 2 script, capture stdout, and check for SUCCESS/ERROR.
     Returns stdout text. Exits on ERROR.
     """
+    env = os.environ.copy()
+    env["PYTHONIOENCODING"] = "utf-8"
     result = subprocess.run(
         [sys.executable, os.path.join(PHASE_DIR, script_name)] + list(args),
         capture_output=True,
         text=True,
+        encoding="utf-8",
+        errors="replace",
+        env=env,
     )
     output = result.stdout.strip()
     if output:
@@ -122,6 +134,14 @@ def main():
     print("[Phase 2] Step 3A — Extracting entities…")
     _run("03A_entity_extraction.py", "--document_id", document_id)
 
+    # Step 07D: Promote high-confidence party/court/judge entities to the cases row.
+    # Only fills null fields — never overwrites values the user has already set.
+    if case_id:
+        print("[Phase 2] Step 07D — Promoting case metadata from extracted entities…")
+        _run("07D_case_meta_promotion.py", "--document_id", document_id)
+    else:
+        print("[Phase 2] Step 07D — SKIPPED (no case_id)")
+
     # Step 3B: Legal structure extraction (complaints, briefs, motions, appeals, answers)
     if _should_run_03b(document_id):
         print("[Phase 2] Step 3B — Extracting legal structure…")
@@ -163,6 +183,8 @@ def main():
                 _run("01_AST_tree_build.py",    "--document_id", child_id)
                 _run("02_AST_semantic_label.py","--document_id", child_id)
                 _run("03A_entity_extraction.py", "--document_id", child_id)
+                if case_id:
+                    _run("07D_case_meta_promotion.py", "--document_id", child_id)
                 if _should_run_03b(child_id):
                     _run("03B_legal_structure_extraction.py", "--document_id", child_id)
                 _run("04A_kg_inner_build.py", "--document_id", child_id)
@@ -171,10 +193,15 @@ def main():
     # Phase 3: Embed all sections for the case into the vector store
     if case_id:
         print(f"\n[Phase 3] Starting embedding for case {case_id}...")
+        _p3_env = os.environ.copy()
+        _p3_env["PYTHONIOENCODING"] = "utf-8"
         result = subprocess.run(
             [sys.executable, os.path.join(SEARCH_DIR, "main.py"), "--case_id", case_id],
             capture_output=True,
             text=True,
+            encoding="utf-8",
+            errors="replace",
+            env=_p3_env,
         )
         if result.stdout.strip():
             print(result.stdout.strip())

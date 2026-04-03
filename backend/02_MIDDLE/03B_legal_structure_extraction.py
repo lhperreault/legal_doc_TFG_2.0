@@ -109,6 +109,13 @@ def _title_looks_like_count(title: str) -> bool:
 
 # ── Pydantic models ────────────────────────────────────────────────────────────
 
+class SectionTypeCheck(BaseModel):
+    """AI post-verification: is the section actually a claims section or a facts section?"""
+    contains_legal_claims: bool    # True → keep extracted claims/counts
+    section_appears_factual: bool  # True → demote claims to standalone_allegations
+    reason: str                    # brief explanation for auditing
+
+
 class LegalElement(BaseModel):
     element_number:  Optional[int]   = None
     element_text:    str
@@ -350,6 +357,94 @@ Return ONLY a JSON object matching this schema:
 {schema}"""
 
 
+_SECTION_VERIFY_SCHEMA = json.dumps(SectionTypeCheck.model_json_schema(), indent=2)
+
+_SECTION_VERIFY_PROMPT = """\
+A legal extraction model found the following claims/counts in a document section.
+Before accepting these results, verify whether this section actually contains legal
+causes of action, or whether it is a factual background / statement of facts section.
+
+## Section metadata
+Title:          {section_title}
+Semantic label: {semantic_label}
+Parent section: {parent_section_title}
+
+## Section text (preview)
+{section_text_preview}
+
+## Extracted claims summary
+{claims_summary}
+
+---
+
+## Decision rules
+
+Mark section_appears_factual = true and contains_legal_claims = false if the section:
+- Is titled or labeled: "Statement of Facts", "Background", "Factual Background",
+  "Factual Allegations", "Common Allegations", "General Allegations", "Preliminary Statement",
+  "Nature of the Case", "Introduction", or any similar narrative/background section.
+- Primarily narrates events, dates, or conduct WITHOUT asserting a named legal theory.
+- Lacks language like "COUNT", "CAUSE OF ACTION", "CLAIM FOR RELIEF", or a legal doctrine
+  name (negligence, breach of contract, fraud, etc.) used as the section heading.
+
+Mark contains_legal_claims = true if the section:
+- Is titled "Count I/II", "First Cause of Action", "Claims for Relief", etc.
+- Explicitly states a legal theory as the subject of the section.
+- Formally asserts that the defendant violated a specific law or duty.
+
+Return ONLY a JSON object matching this schema:
+{schema}"""
+
+
+def _verify_section_is_claims_section(
+    client,
+    section:       dict,
+    parent_title:  str,
+    result:        "LegalStructureExtraction",
+) -> bool:
+    """AI post-verification: returns True if the section legitimately contains claims/counts.
+
+    Runs only when the initial extraction produced claims from a non-factual-labeled section.
+    If the AI decides the section is actually a factual background section, the caller
+    should demote all extracted claims to standalone_allegations.
+    """
+    claims_summary_lines = []
+    for claim in result.claims:
+        count_labels = ", ".join(c.count_label for c in claim.counts) if claim.counts else "(no counts)"
+        claims_summary_lines.append(
+            f"  - Claim type: {claim.claim_type!r}, label: {claim.claim_label!r}, counts: {count_labels}"
+        )
+    claims_summary = "\n".join(claims_summary_lines) or "  (none)"
+
+    text_preview = (section.get("section_text") or "")[:800]
+
+    prompt = _SECTION_VERIFY_PROMPT.format(
+        section_title        = section.get("section_title") or "(untitled)",
+        semantic_label       = section.get("semantic_label") or "(none)",
+        parent_section_title = parent_title or "(none)",
+        section_text_preview = text_preview,
+        claims_summary       = claims_summary,
+        schema               = _SECTION_VERIFY_SCHEMA,
+    )
+
+    raw = _call_gemini(client, prompt)
+    if raw is None:
+        # If verification call fails, be conservative and keep the claims.
+        return True
+
+    try:
+        check = SectionTypeCheck.model_validate(raw)
+        if check.section_appears_factual:
+            print(
+                f"  [03B] Verification: section '{section.get('section_title')}' "
+                f"flagged as factual — demoting {len(result.claims)} claim(s) to standalone. "
+                f"Reason: {check.reason}"
+            )
+        return not check.section_appears_factual
+    except Exception:
+        return True  # validation failed — keep claims
+
+
 def _init_gemini():
     key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
     if not key:
@@ -450,6 +545,19 @@ def _process_section(
                 result.standalone_allegations.extend(count.allegations)
         result.claims = []
     else:
+        # AI post-verification: confirm this section actually contains causes of
+        # action, not factual background content mislabeled by the semantic tagger.
+        if result.claims:
+            section_is_valid = _verify_section_is_claims_section(
+                client, section, parent_title, result
+            )
+            if not section_is_valid:
+                # Demote all claims/counts to standalone_allegations
+                for claim in result.claims:
+                    for count in claim.counts:
+                        result.standalone_allegations.extend(count.allegations)
+                result.claims = []
+
         # Post-process: fill missing elements from standard schemas
         for claim in result.claims:
             for i, count in enumerate(claim.counts):
