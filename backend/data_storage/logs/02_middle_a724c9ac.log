@@ -1,0 +1,556 @@
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\sklearn\base.py:463: InconsistentVersionWarning: Trying to unpickle estimator SelectKBest from version 0.23.1 when using version 1.8.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:
+https://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\sklearn\base.py:463: InconsistentVersionWarning: Trying to unpickle estimator LogisticRegressionCV from version 0.23.1 when using version 1.8.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:
+https://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\sklearn\base.py:463: InconsistentVersionWarning: Trying to unpickle estimator Pipeline from version 0.23.1 when using version 1.8.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:
+https://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\sklearn\base.py:463: InconsistentVersionWarning: Trying to unpickle estimator SelectKBest from version 0.23.1 when using version 1.8.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:
+https://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\sklearn\base.py:463: InconsistentVersionWarning: Trying to unpickle estimator LogisticRegressionCV from version 0.23.1 when using version 1.8.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:
+https://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\sklearn\base.py:463: InconsistentVersionWarning: Trying to unpickle estimator Pipeline from version 0.23.1 when using version 1.8.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:
+https://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations
+  warnings.warn(
+[Phase 2] Starting AST pipeline for 'Complaint (Epic Games to Apple_7e646bdc' (id=b55a4fec-7ffd-4d14-8ede-1bb0e254b662)
+============================================================
+
+[Phase 2] === Processing 'Complaint (Epic Games to Apple_7e646bdc' (id=b55a4fec-7ffd-4d14-8ede-1bb0e254b662) ===
+[Phase 2] Step 07C — Case-context re-classification…
+[07C] Calling Gemini Flash for 'Complaint (Epic Games to Apple_7e646bdc'…
+[07C] WARNING: GOOGLE_API_KEY not set — using fallback classification.
+[07C] Document updated (id=b55a4fec-7ffd-4d14-8ede-1bb0e254b662)
+[07C] 'Complaint (Epic Games to Apple_7e646bdc': primary=False, perspective=unknown, temporal=current, purpose=operative_pleading, confidence=40%
+
+SUCCESS: 07C_case_context_classification.py complete for 'Complaint (Epic Games to Apple_7e646bdc'
+[Phase 2] Step 0 — Refining section structure…
+37 sections total, 7 candidates for refinement
+  Evaluating '  NATURE OF THE ACTION' (14,740 chars)...
+    Splitting into 10 sub-sections...
+    Done — 10 children inserted
+  Evaluating '    I. Apple Monopolizes the iOS App Distribution Marke' (10,511 chars)...
+    Splitting into 9 sub-sections...
+    Done — 9 children inserted
+  Evaluating '      D. Anti-competitive Effects in the iOS App Distri' (7,643 chars)...
+    Splitting into 2 sub-sections...
+    Done — 2 children inserted
+  Evaluating '      D. Anti-competitive Effects in the iOS In-App Pay' (6,722 chars)...
+    Splitting into 3 sub-sections...
+    Done — 3 children inserted
+  Evaluating '      A. Apple’s Mobile Device Customers Face Substanti' (7,601 chars)...
+    Splitting into 1 sub-sections...
+    Done — 1 children inserted
+  Evaluating '      C. Information Costs and Other Market Inefficienc' (6,943 chars)...
+    Splitting into 5 sub-sections...
+    Done — 5 children inserted
+  Evaluating '  COUNT 9: California Cartwright Act (Tying the App Sto' (6,008 chars)...
+    Splitting into 7 sub-sections...
+    Done — 7 children inserted
+SUCCESS: Section refinement complete for 'Complaint (Epic Games to Apple_7e646bdc'. 7 sections split, 37 new child sections added, 0 skipped (coherent or GPT failure).
+[Phase 2] Step 1 — Building parent-child tree…
+SUCCESS: Tree built for 'Complaint (Epic Games to Apple_7e646bdc'. 74 sections processed, 18 root node(s), max depth 4.
+[Phase 2] Step 2 — Assigning semantic labels…
+SUCCESS: Labeled 74 sections for 'Complaint (Epic Games to Apple_7e646bdc'. 14 pattern-matched (14 title, 0 text), 60 GPT-labeled, 0 flagged for review, 0 errors.
+[Phase 2] Steps 3A/3B — Extracting entities + legal structure (parallel)…
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+[03A] Extracting from 'Complaint (Epic Games to Apple_7e646bdc' (Pleading - Complaint)
+  [03A] 74 sections to process
+  [  1/74] SKIP  'TOC' — skip label (table_of_contents)
+  [  5/74] SKIP  '    I. Apple Monopolizes the iOS App Distribution Market' — child micro-section
+  [  7/74] SKIP  '  RELEVANT FACTS' — too short
+  [ 11/74] SKIP  '        iii. Lack of Procompetitive Justification' — child micro-section
+  [ 15/74] SKIP  '      D. Anti-competitive Effects in the iOS In-App Payment ' — child micro-section
+  [ 39/74] SKIP  '      A. Apple’s Mobile Device Customers Face Substantial Sw' — child micro-section
+  [ 50/74] SKIP  '      D. Anti-competitive Effects in the iOS App Distributio' — child micro-section
+  [ 66/74] SKIP  '      C. Information Costs and Other Market Inefficiencies i' — child micro-section
+  [ 69/74] SKIP  '  PRAYER FOR RELIEF' — skip label (prayer_for_relief)
+  [03A] Processing 65 sections (9 skipped)
+  [  3/74] EMPTY '  NATURE OF THE ACTION' → nothing found
+  [  9/74] EMPTY '      C. Apple’s Anti-competitive Conduct in the iOS App Dis' → nothing found
+  [  8/74] EMPTY '      A. The iOS App Distribution Market' → nothing found
+  [ 10/74] OK    '        ii. Contractual Restrictions' → 1 entities
+  [ 13/74] EMPTY '      C. Apple’s Anti-competitive Conduct in the iOS In-App ' → nothing found
+  [  4/74] OK    '  JURISDICTION AND VENUE' → 6 entities
+  [  6/74] OK    '  INTRADISTRICT ASSIGNMENT' → 1 entities
+  [ 14/74] OK    '        ii. Lack of Procompetitive Justification' → 8 entities
+  [ 17/74] OK    '  COUNT 4: Sherman Act § 2 (Unlawful Monopoly Maintenance in' → 5 entities
+  [ 12/74] OK    '      A. The iOS In-App Payment Processing Market' → 9 entities
+  [ 20/74] EMPTY '  COUNT 9: California Cartwright Act (Tying the App Store in' → nothing found
+  [  2/74] OK    'Title Page' → 11 entities
+  [ 18/74] OK    '  COUNT 6: Sherman Act § 1 (Tying the App Store in the iOS A' → 2 entities
+  [ 23/74] EMPTY 'Apple's Proprietary iOS' → nothing found
+  [ 19/74] OK    '  COUNT 5: Sherman Act § 1 (Unreasonable Restraints of Trade' → 4 entities
+  [ 22/74] OK    'Epic's Legal Objectives' → 4 entities
+  [ 21/74] OK    '  COUNT 10: California Unfair Competition Law' → 4 entities
+  [ 26/74] OK    'Comparison with Apple Personal Computers' → 3 entities
+  [ 25/74] OK    'Impact on Consumer Choices and Costs' → 4 entities
+  [ 24/74] OK    'Need for App Updates' → 5 entities
+  [ 27/74] OK    'Apple's Rise and Market Control' → 8 entities
+  [ 31/74] EMPTY 'Evolution of iOS App Availability' → nothing found
+  [ 30/74] EMPTY 'Mobile OS Functionality' → nothing found
+  [ 28/74] OK    'Monopoly in iOS App Distribution' → 3 entities
+  [ 29/74] OK    'Fortnite Removal and Market Control' → 4 entities
+  [ 32/74] OK    'iOS Lock-In Overview' → 4 entities
+  [ 35/74] OK    'Pre-installed Mobile OS on Devices' → 3 entities
+  [ 36/74] OK    'Third-party App Development on iOS' → 6 entities
+  [ 33/74] OK    'Impact on Consumers and Developers' → 3 entities
+  [ 16/74] OK    '      B. Apple’s Sticky iOS Ecosystem Protects its Dominance' → 41 entities
+  [ 34/74] OK    'Consequences of Apple's App Distribution Policies' → 7 entities
+  [ 40/74] EMPTY 'Definition of Combination' → nothing found
+  [ 43/74] OK    'Apple's Control Over Mobile OS' → 1 entities
+  [ 44/74] EMPTY 'Overview of Subsequent Parts' → nothing found
+  [ 45/74] EMPTY 'Consumer Ignorance of Anti-Competitive Conduct' → nothing found
+  [ 37/74] OK    'Impact on Consumers' → 9 entities
+  [ 41/74] OK    'Anti-Competitive Practices Overview' → 3 entities
+  [ 38/74] OK    'Harm to Developers from Apple's Conduct' → 13 entities
+  [ 46/74] OK    'Coercion of Developers' → 2 entities
+  [ 48/74] OK    'Allegations of Harm' → 3 entities
+  [ 42/74] OK    'Restrictions on iOS App Developers' → 7 entities
+  [ 52/74] OK    'Appropriateness of Action Under Cartwright Act' → 1 entities
+  [ 51/74] OK    '        i. Technical Restrictions' → 1 entities
+  [ 49/74] OK    'Market Power and Competition' → 3 entities
+  [ 55/74] OK    '  COUNT 7: California Cartwright Act (Unreasonable Restraint' → 2 entities
+  [ 47/74] OK    'Rational Ignorance of Consumers' → 14 entities
+  [ 56/74] OK    'Apple's Current Market Position' → 3 entities
+  [ 58/74] OK    'Harm to Epic' → 2 entities
+  [ 53/74] OK    '      B. Apple’s Monopoly Power in the iOS In-App Payment Pr' → 10 entities
+  [ 59/74] OK    '  PARTIES' → 4 entities
+  [ 60/74] OK    '  COUNT 2: Sherman Act § 2 (Denial of Essential Facility in ' → 3 entities
+  [ 61/74] OK    'Distinct Products in Separate Markets' → 2 entities
+  [ 54/74] OK    'Complexity of Device Pricing' → 10 entities
+  [ 57/74] OK    'Importance of Apps for Mobile Users' → 9 entities
+  [ 63/74] OK    '        i. Contractual and Policy Restrictions' → 4 entities
+  [ 62/74] OK    'Consumer Choice and Innovation' → 5 entities
+  [ 67/74] OK    '  COUNT 3: Sherman Act § 1 (Unreasonable Restraints of Trade' → 3 entities
+  [ 64/74] OK    '    III. Competition in the Sale of Mobile Devices Cannot Di' → 1 entities
+  [ 65/74] OK    '  COUNT 1: Sherman Act § 2 (Unlawful Monopoly Maintenance in' → 2 entities
+  [ 68/74] OK    '  COUNT 8: California Cartwright Act (Unreasonable Restraint' → 5 entities
+  [ 70/74] OK    'Foreclosure of Competition in Payment Processing' → 7 entities
+  [ 72/74] OK    '    II. Apple Monopolizes the iOS In-App Payment Processing ' → 6 entities
+  [ 71/74] OK    '      B. Apple’s Monopoly Power in the iOS App Distribution ' → 5 entities
+  [ 74/74] OK    'Lifecycle Price Determination Issues' → 12 entities
+  [ 73/74] OK    'Apple's Market Power in Tablets' → 14 entities
+
+  [03A] DONE — 312 extractions from 'Complaint (Epic Games to Apple_7e646bdc'
+         amount             54
+         attorney           8
+         court              9
+         date               56
+         law_firm           2
+         party              183
+
+SUCCESS: 03A_entity_extraction.py — 312 entities extracted from 'Complaint (Epic Games to Apple_7e646bdc'
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\sklearn\base.py:463: InconsistentVersionWarning: Trying to unpickle estimator SelectKBest from version 0.23.1 when using version 1.8.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:
+https://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\sklearn\base.py:463: InconsistentVersionWarning: Trying to unpickle estimator LogisticRegressionCV from version 0.23.1 when using version 1.8.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:
+https://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\sklearn\base.py:463: InconsistentVersionWarning: Trying to unpickle estimator Pipeline from version 0.23.1 when using version 1.8.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:
+https://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\sklearn\base.py:463: InconsistentVersionWarning: Trying to unpickle estimator SelectKBest from version 0.23.1 when using version 1.8.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:
+https://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\sklearn\base.py:463: InconsistentVersionWarning: Trying to unpickle estimator LogisticRegressionCV from version 0.23.1 when using version 1.8.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:
+https://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\sklearn\base.py:463: InconsistentVersionWarning: Trying to unpickle estimator Pipeline from version 0.23.1 when using version 1.8.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:
+https://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\sklearn\base.py:463: InconsistentVersionWarning: Trying to unpickle estimator SelectKBest from version 0.23.1 when using version 1.8.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:
+https://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\sklearn\base.py:463: InconsistentVersionWarning: Trying to unpickle estimator LogisticRegressionCV from version 0.23.1 when using version 1.8.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:
+https://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\sklearn\base.py:463: InconsistentVersionWarning: Trying to unpickle estimator Pipeline from version 0.23.1 when using version 1.8.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:
+https://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+[03B] Legal structure extraction: Complaint (Epic Games to Apple_7e646bdc
+      Type: Pleading - Complaint | Case: Epic vs Apple
+[03B] Processing 47 qualifying section(s) (19 claims, 28 factual)…
+  ✓ [factual_allegations] "Apple's Current Market Position": 1 rows
+  ✓ [factual_allegations] 'Restrictions on iOS App Developers': 1 rows
+  [03B] Verification: section 'Anti-Competitive Practices Overview' flagged as factual — demoting 1 claim(s) to standalone. Reason: The section is titled 'Anti-Competitive Practices Overview' and is a child of 'NATURE OF THE ACTION,' both indicating a narrative or introductory section. The text describes the defendant's alleged conduct and the subject matter of the case ('This case concerns...') rather than formally asserting a specific legal count or cause of action with a dedicated heading like 'COUNT I.' It sets the factual and legal background for the claims.
+  ✓ [causes_of_action.antitrust] 'Anti-Competitive Practices Overview': 1 rows
+  ✓ [factual_allegations] "Consequences of Apple's App Distribution Policies": 9 rows
+  ✓ [factual_allegations] '    I. Apple Monopolizes the iOS App Distribution ': 0 rows
+  ✓ [factual_allegations] '  RELEVANT FACTS': 0 rows
+  ✓ [factual_allegations] 'Pre-installed Mobile OS on Devices': 2 rows
+  ✓ [factual_allegations] "Apple's Control Over Mobile OS": 2 rows
+  ✓ [factual_allegations] "Apple's Proprietary iOS": 1 rows
+  ✓ [factual_allegations] '      A. The iOS App Distribution Market': 2 rows
+  [03B] Verification: section 'Monopoly in iOS App Distribution' flagged as factual — demoting 1 claim(s) to standalone. Reason: The section is nested under 'NATURE OF THE ACTION', which functions as a preliminary statement or introduction to the case, similar to 'Nature of the Case' or 'Preliminary Statement'. While the text describes alleged unlawful conduct and legal theories ('unlawfully maintains a total monopoly'), it does not present these as formally pleaded counts with headings like 'COUNT I' or 'FIRST CAUSE OF ACTION'. Instead, it sets the stage for the legal claims that would typically follow in a complaint.
+  ✓ [causes_of_action.antitrust] 'Monopoly in iOS App Distribution': 5 rows
+  ✓ [factual_allegations] '      B. Apple’s Monopoly Power in the iOS App Dis': 6 rows
+  ✓ [factual_allegations] '        i. Technical Restrictions': 3 rows
+  ✓ [causes_of_action.antitrust] '        iii. Lack of Procompetitive Justification': 0 rows
+  ✓ [factual_allegations] '        ii. Contractual Restrictions': 13 rows
+  ✓ [factual_allegations] '      D. Anti-competitive Effects in the iOS App D': 0 rows
+  ✓ [factual_allegations] 'Third-party App Development on iOS': 1 rows
+  ✓ [factual_allegations] 'Consumer Choice and Innovation': 2 rows
+  ✓ [factual_allegations] '    II. Apple Monopolizes the iOS In-App Payment P': 6 rows
+  ✓ [factual_allegations] '      A. The iOS In-App Payment Processing Market': 8 rows
+  ✓ [factual_allegations] '      C. Apple’s Anti-competitive Conduct in the i': 2 rows
+  ✓ [factual_allegations] 'Impact on Consumers': 11 rows
+  ✓ [factual_allegations] '        i. Contractual and Policy Restrictions': 3 rows
+  ✓ [factual_allegations] '      D. Anti-competitive Effects in the iOS In-Ap': 0 rows
+  ✓ [causes_of_action.antitrust] '      B. Apple’s Monopoly Power in the iOS In-App ': 10 rows
+  ✓ [factual_allegations] 'Impact on Consumer Choices and Costs': 5 rows
+  ✓ [factual_allegations] "Harm to Developers from Apple's Conduct": 8 rows
+  ✓ [factual_allegations] 'iOS Lock-In Overview': 7 rows
+  ✓ [causes_of_action.antitrust] 'Foreclosure of Competition in Payment Processing': 6 rows
+  ✓ [factual_allegations] 'Rational Ignorance of Consumers': 2 rows
+  ✓ [factual_allegations] '      C. Information Costs and Other Market Ineffi': 0 rows
+  ✓ [factual_allegations] "Apple's Market Power in Tablets": 3 rows
+  [03B] Verification: section '    III. Competition in the Sale of Mobile Devices Cannot Discipline Apple’s Conduct in the iOS App Distribution or iOS In-App Payment Processing Markets' flagged as factual — demoting 1 claim(s) to standalone. Reason: The section's parent is 'RELEVANT FACTS'. The section title and text primarily explain market dynamics and Apple's conduct, building a factual argument, rather than formally asserting a named legal claim with 'COUNT' or 'CAUSE OF ACTION' language. It describes 'anti-competitive conduct' but does not formally state a claim for relief.
+  ✓ [causes_of_action.antitrust] '    III. Competition in the Sale of Mobile Devices': 4 rows
+  ✓ [factual_allegations] 'Complexity of Device Pricing': 9 rows
+  ✓ [causes_of_action] '  COUNT 1: Sherman Act § 2 (Unlawful Monopoly Main': 7 rows
+  ✓ [causes_of_action] '  COUNT 2: Sherman Act § 2 (Denial of Essential Fa': 9 rows
+  ✓ [causes_of_action] '  COUNT 4: Sherman Act § 2 (Unlawful Monopoly Main': 11 rows
+  ✓ [causes_of_action] '  COUNT 3: Sherman Act § 1 (Unreasonable Restraint': 11 rows
+  ✓ [causes_of_action] '  COUNT 5: Sherman Act § 1 (Unreasonable Restraint': 9 rows
+  ✓ [causes_of_action.antitrust] '  COUNT 6: Sherman Act § 1 (Tying the App Store in': 14 rows
+  ✓ [causes_of_action.antitrust] '  COUNT 9: California Cartwright Act (Tying the Ap': 0 rows
+  ✓ [causes_of_action.antitrust] '  COUNT 7: California Cartwright Act (Unreasonable': 13 rows
+  ✓ [causes_of_action.statutory_violation] '  COUNT 8: California Cartwright Act (Unreasonable': 13 rows
+  ✓ [causes_of_action.antitrust] 'Distinct Products in Separate Markets': 4 rows
+  ✓ [causes_of_action.antitrust] 'Definition of Combination': 4 rows
+  ✓ [causes_of_action.antitrust] 'Market Power and Competition': 5 rows
+  ✓ [causes_of_action] '  COUNT 10: California Unfair Competition Law': 12 rows
+[03B] SUCCESS — 245 rows inserted for document b55a4fec-7ffd-4d14-8ede-1bb0e254b662
+[Phase 2] Step 07D — Promoting case metadata from extracted entities…
+[07D] All metadata fields already populated — nothing to promote
+[Phase 2] Step 4A — Building knowledge graph…
+312 extractions loaded for 'Complaint (Epic Games to Apple_7e646bdc'
+  Document category: 'complaint' (type='Pleading - Complaint')
+  Pass 1 — 182 nodes created
+  Fuzzy dedup — merged 12 duplicate nodes (170 remaining)
+  Pass 2 — 190 edges created
+SUCCESS: KG built for 'Complaint (Epic Games to Apple_7e646bdc'. 170 nodes [amount:54, event:54, party:62], 190 edges [involved_in:190].
+[Phase 2] === COMPLETE — 'Complaint (Epic Games to Apple_7e646bdc' ===
+============================================================
+[Phase 2] COMPLETE — 'Complaint (Epic Games to Apple_7e646bdc' AST + entities + KG ready in Supabase.
+
+[Phase 2] Processing 4 exhibit(s) in parallel…
+
+[Phase 2] === Processing 'Complaint (Epic Games to Apple_7e646bdc_exhibit_C' (id=788ca4a9-7df4-49d5-98aa-51a76d94ade2) ===
+[Phase 2] Step 07C — Case-context re-classification…
+
+[Phase 2] === Processing 'Complaint (Epic Games to Apple_7e646bdc_exhibit_B' (id=28cad7fe-a276-411e-b9ac-e0b5abac17f6) ===
+[Phase 2] Step 07C — Case-context re-classification…
+
+[Phase 2] === Processing 'Complaint (Epic Games to Apple_7e646bdc_exhibit_D' (id=8cbc80ae-4774-4d41-b65b-aee215ebdbd5) ===
+[Phase 2] Step 07C — Case-context re-classification…
+[07C] Calling Gemini Flash for 'Complaint (Epic Games to Apple_7e646bdc_exhibit_B'…
+[07C] WARNING: GOOGLE_API_KEY not set — using fallback classification.
+[07C] Document updated (id=28cad7fe-a276-411e-b9ac-e0b5abac17f6)
+[07C] 'Complaint (Epic Games to Apple_7e646bdc_exhibit_B': primary=False, perspective=unknown, temporal=current, purpose=evidence, confidence=50%
+
+SUCCESS: 07C_case_context_classification.py complete for 'Complaint (Epic Games to Apple_7e646bdc_exhibit_B'
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\sklearn\base.py:463: InconsistentVersionWarning: Trying to unpickle estimator SelectKBest from version 0.23.1 when using version 1.8.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:
+https://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\sklearn\base.py:463: InconsistentVersionWarning: Trying to unpickle estimator LogisticRegressionCV from version 0.23.1 when using version 1.8.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:
+https://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\sklearn\base.py:463: InconsistentVersionWarning: Trying to unpickle estimator Pipeline from version 0.23.1 when using version 1.8.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:
+https://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+[07C] Calling Gemini Flash for 'Complaint (Epic Games to Apple_7e646bdc_exhibit_D'…
+[07C] WARNING: GOOGLE_API_KEY not set — using fallback classification.
+[07C] Document updated (id=8cbc80ae-4774-4d41-b65b-aee215ebdbd5)
+[07C] 'Complaint (Epic Games to Apple_7e646bdc_exhibit_D': primary=False, perspective=unknown, temporal=current, purpose=evidence, confidence=50%
+
+SUCCESS: 07C_case_context_classification.py complete for 'Complaint (Epic Games to Apple_7e646bdc_exhibit_D'
+[07C] Calling Gemini Flash for 'Complaint (Epic Games to Apple_7e646bdc_exhibit_C'…
+[07C] WARNING: GOOGLE_API_KEY not set — using fallback classification.
+[07C] Document updated (id=788ca4a9-7df4-49d5-98aa-51a76d94ade2)
+[07C] 'Complaint (Epic Games to Apple_7e646bdc_exhibit_C': primary=False, perspective=unknown, temporal=current, purpose=evidence, confidence=50%
+
+SUCCESS: 07C_case_context_classification.py complete for 'Complaint (Epic Games to Apple_7e646bdc_exhibit_C'
+[Phase 2] Step 0 — Refining section structure…
+[Phase 2] Step 0 — Refining section structure…
+[Phase 2] Step 0 — Refining section structure…
+1 sections total, 0 candidates for refinement
+SUCCESS: Section refinement complete for 'Complaint (Epic Games to Apple_7e646bdc_exhibit_B'. 0 sections split, 0 new child sections added, 0 skipped (coherent or GPT failure).
+[Phase 2] Step 1 — Building parent-child tree…
+SUCCESS: Tree built for 'Complaint (Epic Games to Apple_7e646bdc_exhibit_B'. 1 sections processed, 1 root node(s), max depth 0.
+1 sections total, 1 candidates for refinement
+  Evaluating '(to Schedule 1) Additional App Store Terms 1.' (89,586 chars)...
+    Splitting into 3 sub-sections...
+    Done — 3 children inserted
+SUCCESS: Section refinement complete for 'Complaint (Epic Games to Apple_7e646bdc_exhibit_D'. 1 sections split, 3 new child sections added, 0 skipped (coherent or GPT failure).
+[Phase 2] Step 2 — Assigning semantic labels…
+[Phase 2] Step 1 — Building parent-child tree…
+SUCCESS: Labeled 1 sections for 'Complaint (Epic Games to Apple_7e646bdc_exhibit_B'. 1 pattern-matched (1 title, 0 text), 0 GPT-labeled, 0 flagged for review, 0 errors.
+SUCCESS: Tree built for 'Complaint (Epic Games to Apple_7e646bdc_exhibit_D'. 4 sections processed, 1 root node(s), max depth 2.
+[Phase 2] Steps 3A/3B — Extracting entities…
+1 sections total, 1 candidates for refinement
+  Evaluating '(to Schedule 1) App Store Promo Code Terms Notwithstand' (13,934 chars)...
+    Splitting into 2 sub-sections...
+    Done — 2 children inserted
+SUCCESS: Section refinement complete for 'Complaint (Epic Games to Apple_7e646bdc_exhibit_C'. 1 sections split, 2 new child sections added, 0 skipped (coherent or GPT failure).
+[Phase 2] Step 2 — Assigning semantic labels…
+[Phase 2] Step 1 — Building parent-child tree…
+SUCCESS: Labeled 4 sections for 'Complaint (Epic Games to Apple_7e646bdc_exhibit_D'. 0 pattern-matched (0 title, 0 text), 4 GPT-labeled, 0 flagged for review, 0 errors.
+SUCCESS: Tree built for 'Complaint (Epic Games to Apple_7e646bdc_exhibit_C'. 3 sections processed, 1 root node(s), max depth 2.
+[Phase 2] Step 2 — Assigning semantic labels…
+[Phase 2] Steps 3A/3B — Extracting entities…
+SUCCESS: Labeled 3 sections for 'Complaint (Epic Games to Apple_7e646bdc_exhibit_C'. 1 pattern-matched (1 title, 0 text), 2 GPT-labeled, 1 flagged for review, 0 errors.
+[03A] Extracting from 'Complaint (Epic Games to Apple_7e646bdc_exhibit_B' (Contract - License Agreement)
+  [03A] 1 sections to process
+  [03A] Processing 1 sections (0 skipped)
+  [  1/1] OK    '(to Schedule 1) Instructions for Minimum Terms of Developer’' → 4 entities
+
+  [03A] DONE — 4 extractions from 'Complaint (Epic Games to Apple_7e646bdc_exhibit_B'
+         date               1
+         party              3
+
+SUCCESS: 03A_entity_extraction.py — 4 entities extracted from 'Complaint (Epic Games to Apple_7e646bdc_exhibit_B'
+[Phase 2] Steps 3A/3B — Extracting entities…
+[Phase 2] Step 07D — Promoting case metadata from extracted entities…
+[07D] All metadata fields already populated — nothing to promote
+[Phase 2] Step 4A — Building knowledge graph…
+4 extractions loaded for 'Complaint (Epic Games to Apple_7e646bdc_exhibit_B'
+  Document category: 'contract' (type='Contract - License Agreement')
+  Pass 1 — 3 nodes created
+  Fuzzy dedup — merged 0 duplicate nodes (3 remaining)
+  Pass 2 — 0 edges created
+SUCCESS: KG built for 'Complaint (Epic Games to Apple_7e646bdc_exhibit_B'. 3 nodes [party:3], 0 edges [].
+[Phase 2] === COMPLETE — 'Complaint (Epic Games to Apple_7e646bdc_exhibit_B' ===
+
+[Phase 2] === Processing 'Complaint (Epic Games to Apple_7e646bdc_exhibit_A' (id=79b55453-c56d-4bd6-8233-0411efdf6f78) ===
+[Phase 2] Step 07C — Case-context re-classification…
+[03A] Extracting from 'Complaint (Epic Games to Apple_7e646bdc_exhibit_D' (Administrative - Case Summary)
+  [03A] 4 sections to process
+  [  4/4] SKIP  '(to Schedule 1) Additional App Store Terms 1.' — skip label (table_of_contents)
+  [03A] Processing 3 sections (1 skipped)
+  [  2/4] OK    'App Review Process' → 2 entities
+  [  3/4] OK    'Discoverability on the App Store' → 2 entities
+  [  1/4] OK    'Access to App Store Data' → 3 entities
+
+  [03A] DONE — 7 extractions from 'Complaint (Epic Games to Apple_7e646bdc_exhibit_D'
+         date               2
+         party              5
+
+SUCCESS: 03A_entity_extraction.py — 7 entities extracted from 'Complaint (Epic Games to Apple_7e646bdc_exhibit_D'
+[Phase 2] Step 07D — Promoting case metadata from extracted entities…
+[07C] Calling Gemini Flash for 'Complaint (Epic Games to Apple_7e646bdc_exhibit_A'…
+[07C] WARNING: GOOGLE_API_KEY not set — using fallback classification.
+[07C] Document updated (id=79b55453-c56d-4bd6-8233-0411efdf6f78)
+[07C] 'Complaint (Epic Games to Apple_7e646bdc_exhibit_A': primary=False, perspective=unknown, temporal=current, purpose=evidence, confidence=50%
+
+SUCCESS: 07C_case_context_classification.py complete for 'Complaint (Epic Games to Apple_7e646bdc_exhibit_A'
+[07D] All metadata fields already populated — nothing to promote
+[Phase 2] Step 0 — Refining section structure…
+[Phase 2] Step 4A — Building knowledge graph…
+7 extractions loaded for 'Complaint (Epic Games to Apple_7e646bdc_exhibit_D'
+  Document category: 'other' (type='Administrative - Case Summary')
+  Pass 1 — 5 nodes created
+  Fuzzy dedup — merged 0 duplicate nodes (5 remaining)
+  Pass 2 — 2 edges created
+SUCCESS: KG built for 'Complaint (Epic Games to Apple_7e646bdc_exhibit_D'. 5 nodes [event:2, party:3], 2 edges [involved_in:2].
+[Phase 2] === COMPLETE — 'Complaint (Epic Games to Apple_7e646bdc_exhibit_D' ===
+[03A] Extracting from 'Complaint (Epic Games to Apple_7e646bdc_exhibit_C' (Administrative - Case Summary)
+  [03A] 3 sections to process
+  [03A] Processing 3 sections (0 skipped)
+  [  3/3] EMPTY '(to Schedule 1) App Store Promo Code Terms Notwithstanding a' → nothing found
+  [  2/3] OK    'Void Where Prohibited' → 8 entities
+  [  1/3] OK    'Terms and Conditions of Use' → 9 entities
+
+  [03A] DONE — 17 extractions from 'Complaint (Epic Games to Apple_7e646bdc_exhibit_C'
+         date               4
+         party              13
+
+SUCCESS: 03A_entity_extraction.py — 17 entities extracted from 'Complaint (Epic Games to Apple_7e646bdc_exhibit_C'
+[Phase 2] Step 07D — Promoting case metadata from extracted entities…
+1 sections total, 1 candidates for refinement
+  Evaluating 'Exhibit A' (283,764 chars)...
+    Splitting into 4 sub-sections...
+    Done — 4 children inserted
+SUCCESS: Section refinement complete for 'Complaint (Epic Games to Apple_7e646bdc_exhibit_A'. 1 sections split, 4 new child sections added, 0 skipped (coherent or GPT failure).
+[07D] All metadata fields already populated — nothing to promote
+[Phase 2] Step 4A — Building knowledge graph…
+[Phase 2] Step 1 — Building parent-child tree…
+17 extractions loaded for 'Complaint (Epic Games to Apple_7e646bdc_exhibit_C'
+  Document category: 'other' (type='Administrative - Case Summary')
+  Pass 1 — 14 nodes created
+  Fuzzy dedup — merged 1 duplicate nodes (13 remaining)
+  Pass 2 — 8 edges created
+SUCCESS: KG built for 'Complaint (Epic Games to Apple_7e646bdc_exhibit_C'. 13 nodes [event:2, party:9, procedural_event:2], 8 edges [involved_in:8].
+SUCCESS: Tree built for 'Complaint (Epic Games to Apple_7e646bdc_exhibit_A'. 5 sections processed, 1 root node(s), max depth 2.
+[Phase 2] === COMPLETE — 'Complaint (Epic Games to Apple_7e646bdc_exhibit_C' ===
+[Phase 2] Step 2 — Assigning semantic labels…
+SUCCESS: Labeled 5 sections for 'Complaint (Epic Games to Apple_7e646bdc_exhibit_A'. 1 pattern-matched (1 title, 0 text), 4 GPT-labeled, 0 flagged for review, 0 errors.
+[Phase 2] Steps 3A/3B — Extracting entities…
+[03A] Extracting from 'Complaint (Epic Games to Apple_7e646bdc_exhibit_A' (Contract - Agreement)
+  [03A] 5 sections to process
+  [03A] Processing 5 sections (0 skipped)
+  [  5/5] EMPTY 'Exhibit A' → nothing found
+  [  2/5] EMPTY 'Separate Agreements for Paid Applications' → nothing found
+  [  1/5] OK    'Acceptance of Agreement' → 2 entities
+  [  3/5] OK    'Purpose of the Agreement' → 2 entities
+  [  4/5] OK    'Legal Agreement Confirmation' → 6 entities
+
+  [03A] DONE — 10 extractions from 'Complaint (Epic Games to Apple_7e646bdc_exhibit_A'
+         party              10
+
+SUCCESS: 03A_entity_extraction.py — 10 entities extracted from 'Complaint (Epic Games to Apple_7e646bdc_exhibit_A'
+[Phase 2] Step 07D — Promoting case metadata from extracted entities…
+[07D] All metadata fields already populated — nothing to promote
+[Phase 2] Step 4A — Building knowledge graph…
+10 extractions loaded for 'Complaint (Epic Games to Apple_7e646bdc_exhibit_A'
+  Document category: 'contract' (type='Contract - Agreement')
+  Pass 1 — 5 nodes created
+  Fuzzy dedup — merged 2 duplicate nodes (3 remaining)
+  Pass 2 — 0 edges created
+SUCCESS: KG built for 'Complaint (Epic Games to Apple_7e646bdc_exhibit_A'. 3 nodes [party:3], 0 edges [].
+[Phase 2] === COMPLETE — 'Complaint (Epic Games to Apple_7e646bdc_exhibit_A' ===
+
+[Phase 2] COMPLETE — all exhibits processed.
+
+[Phase 3] Starting embedding for case a724c9ac-8faa-4459-9cf9-8b6e1dcc0efe...
+[Phase 3] Starting embedding pipeline for case 'a724c9ac-8faa-4459-9cf9-8b6e1dcc0efe'
+============================================================
+[Phase 3] Step 1 — Embedding sections...
+============================================================
+  Phase 3 â€” Embedding Sections
+  Case ID: a724c9ac-8faa-4459-9cf9-8b6e1dcc0efe
+============================================================
+
+[1/4] Fetching sections from Supabase...
+  Found 5 document(s) in case
+  Found 87 total section(s)
+[2/4] Checking existing embeddings...
+  Found 40 existing embedding(s)
+
+  Sections to embed: 84
+  Skipped (up to date): 0
+  Skipped (empty/short): 1
+  Skipped (boilerplate label): 2
+
+[3/4] Generating embeddings (84 sections)...
+  WARNING: Truncated section 'Access to App Store Data' (doc: Complaint (Epic Games to Apple_7e646bdc_exhibit_D)
+  WARNING: Truncated section 'Legal Agreement Confirmation' (doc: Complaint (Epic Games to Apple_7e646bdc_exhibit_A)
+  Batch 1/1 (84 sections)...
+
+[4/4] Upserting 84 embedding(s) to Supabase...
+  Summary written to C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\backend\03_SEARCH\..\zz_temp_chunks\a724c9ac-8faa-4459-9cf9-8b6e1dcc0efe_embedding_summary.json
+
+============================================================
+  RESULTS
+============================================================
+  Total sections:       87
+  Newly embedded:       84
+  Re-embedded (changed):38
+  Skipped (up to date): 0
+  Skipped (empty):      1
+  Skipped (label):      2
+  Truncated:            2
+  Errors:               0
+
+SUCCESS: 84 section(s) embedded for case a724c9ac-8faa-4459-9cf9-8b6e1dcc0efe
+============================================================
+[Phase 3] COMPLETE — case 'a724c9ac-8faa-4459-9cf9-8b6e1dcc0efe' is now search-ready.
+[Phase 4] Case summary started in background → C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\backend\data_storage\logs\04_summary_a724c9ac.log
+[Phase 3] COMPLETE — case a724c9ac-8faa-4459-9cf9-8b6e1dcc0efe is search-ready.
+
+[Phase 4] Triggering post-extraction refresh for case a724c9ac-8faa-4459-9cf9-8b6e1dcc0efe...
+[Phase 4] Refresh log -> data_storage/logs/refresh_a724c9ac.log
+[Phase 4] Summary refresh + checklist started in background.

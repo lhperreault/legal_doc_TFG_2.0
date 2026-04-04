@@ -285,6 +285,44 @@ def _persist(
             )
 
 
+# ── Step tracking ──────────────────────────────────────────────────────────────
+
+def _upsert_step(
+    document_id: str | None,
+    case_id: str,
+    step_name: str,
+    display_label: str,
+    status: str,
+) -> None:
+    if not document_id:
+        return
+    try:
+        from supabase import create_client
+        from datetime import datetime, timezone
+        url = os.environ.get("SUPABASE_URL")
+        key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
+        if not url or not key:
+            return
+        sb = create_client(url, key)
+        now = datetime.now(timezone.utc).isoformat()
+        row: dict = {
+            "document_id":   document_id,
+            "case_id":       case_id,
+            "step_name":     step_name,
+            "display_label": display_label,
+            "status":        status,
+        }
+        if status == "running":
+            row["started_at"] = now
+        if status in ("done", "error"):
+            row["completed_at"] = now
+        sb.table("document_processing_steps").upsert(
+            row, on_conflict="document_id,step_name"
+        ).execute()
+    except Exception:
+        pass  # non-fatal
+
+
 # ── CLI ────────────────────────────────────────────────────────────────────────
 
 def main():
@@ -292,13 +330,23 @@ def main():
         description="Generate a professional case summary and persist it to Supabase."
     )
     parser.add_argument("--case_id", required=True, help="UUID of the case to summarise.")
+    parser.add_argument("--document_id", default="",
+                        help="UUID of the triggering document (for step tracking).")
     parser.add_argument(
         "--refresh", action="store_true",
         help="Replace the existing summary record instead of inserting a new one."
     )
     args = parser.parse_args()
 
+    document_id = args.document_id or None
+    _upsert_step(document_id, args.case_id, "initial_summary", "Case summary", "running")
+
     result = generate_summary(case_id=args.case_id, verbose=True, refresh=args.refresh)
+
+    if result.get("success"):
+        _upsert_step(document_id, args.case_id, "initial_summary", "Case summary", "done")
+    else:
+        _upsert_step(document_id, args.case_id, "initial_summary", "Case summary", "error")
 
     if result.get("success"):
         print("\n" + "=" * 60)

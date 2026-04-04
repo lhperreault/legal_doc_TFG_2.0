@@ -1,0 +1,2 @@
+usage: refresh_after_extraction.py [-h] --case_id CASE_ID
+refresh_after_extraction.py: error: unrecognized arguments: --document_id b55a4fec-7ffd-4d14-8ede-1bb0e254b662

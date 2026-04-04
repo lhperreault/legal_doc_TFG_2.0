@@ -3,9 +3,12 @@
 
 Usage:
     python backend/02_MIDDLE/main.py --file_name "Complaint (Epic Games to Apple"
+    python backend/02_MIDDLE/main.py --file_name "Complaint_abc12345" --document_id <uuid>
+    python backend/02_MIDDLE/main.py --file_name "Exhibit_A_abc12345" --no-recurse
 """
 
 import argparse
+import concurrent.futures
 import os
 import subprocess
 import sys
@@ -26,10 +29,10 @@ PHASE_DIR   = os.path.dirname(os.path.abspath(__file__))
 SEARCH_DIR  = os.path.join(PHASE_DIR, '..', '03_SEARCH')
 
 
-def _run(script_name: str, *args) -> str:
+def _run_safe(script_name: str, *args) -> str:
     """
-    Run a Phase 2 script, capture stdout, and check for SUCCESS/ERROR.
-    Returns stdout text. Exits on ERROR.
+    Like _run but raises RuntimeError instead of sys.exit.
+    Safe to call from worker threads (ThreadPoolExecutor).
     """
     env = os.environ.copy()
     env["PYTHONIOENCODING"] = "utf-8"
@@ -49,8 +52,7 @@ def _run(script_name: str, *args) -> str:
 
     last_line = output.splitlines()[-1] if output else ""
     if last_line.startswith("ERROR") or result.returncode != 0:
-        print(f"[Phase 2] FAILED at {script_name}. Stopping.")
-        sys.exit(result.returncode or 1)
+        raise RuntimeError(f"{script_name} failed (exit {result.returncode})")
 
     return output
 
@@ -63,6 +65,47 @@ def _sb():
         print("ERROR: SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY not set in .env")
         sys.exit(1)
     return create_client(url, key)
+
+
+def _upsert_step(
+    document_id: str,
+    case_id: str | None,
+    step_name: str,
+    display_label: str,
+    status: str,
+    error: str | None = None,
+) -> None:
+    """Write a step row for the frontend Realtime checklist."""
+    if not document_id:
+        return
+    try:
+        from supabase import create_client
+        from datetime import datetime, timezone
+        url = os.environ.get("SUPABASE_URL")
+        key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
+        if not url or not key:
+            return
+        sb = create_client(url, key)
+        now = datetime.now(timezone.utc).isoformat()
+        row: dict = {
+            "document_id":   document_id,
+            "step_name":     step_name,
+            "display_label": display_label,
+            "status":        status,
+        }
+        if case_id:
+            row["case_id"] = case_id
+        if status == "running":
+            row["started_at"] = now
+        if status in ("done", "error"):
+            row["completed_at"] = now
+        if error:
+            row["error_message"] = error
+        sb.table("document_processing_steps").upsert(
+            row, on_conflict="document_id,step_name"
+        ).execute()
+    except Exception as e:
+        print(f"[steps] WARNING: could not write step '{step_name}': {e}", file=sys.stderr)
 
 
 def _lookup_document(file_name: str) -> tuple[str, str | None]:
@@ -94,109 +137,168 @@ def _should_run_03b(document_id: str) -> bool:
         return True
     if filing_purpose in _03B_PURPOSES:
         return True
-    # Exhibits that are themselves complaints/briefs filed as historical context
     if filing_purpose == "historical_context" and any(p in doc_type for p in _03B_PREFIXES):
         return True
     return False
 
 
+def _process_one_document(document_id: str, file_name: str, case_id: str | None) -> None:
+    """
+    Run the full Phase 2 pipeline for a single document.
+    Steps 03A and 03B run in parallel after AST labeling.
+    """
+    print(f"\n[Phase 2] === Processing '{file_name}' (id={document_id}) ===")
+
+    # Step 07C: Case-context re-classification
+    if case_id:
+        print("[Phase 2] Step 07C — Case-context re-classification…")
+        _run_safe("07C_case_context_classification.py", "--document_id", document_id)
+
+    # Step 0: Section refinement
+    _upsert_step(document_id, case_id, "section_refine", "Refining section structure", "running")
+    print("[Phase 2] Step 0 — Refining section structure…")
+    _run_safe("00_section_refine.py", "--document_id", document_id)
+    _upsert_step(document_id, case_id, "section_refine", "Refining section structure", "done")
+
+    # Step 1: Tree reconstruction
+    _upsert_step(document_id, case_id, "ast_tree", "Building document tree", "running")
+    print("[Phase 2] Step 1 — Building parent-child tree…")
+    _run_safe("01_AST_tree_build.py", "--document_id", document_id)
+    _upsert_step(document_id, case_id, "ast_tree", "Building document tree", "done")
+
+    # Step 2: Semantic labeling
+    _upsert_step(document_id, case_id, "semantic_labeling", "Semantic labeling", "running")
+    print("[Phase 2] Step 2 — Assigning semantic labels…")
+    _run_safe("02_AST_semantic_label.py", "--document_id", document_id)
+    _upsert_step(document_id, case_id, "semantic_labeling", "Semantic labeling", "done")
+
+    # Steps 3A + 3B: Entity extraction and legal structure — run in PARALLEL
+    # Both only require AST labels; neither depends on the other.
+    run_3b = _should_run_03b(document_id)
+
+    _upsert_step(document_id, case_id, "entity_extraction", "Entity extraction", "running")
+    if run_3b:
+        _upsert_step(document_id, case_id, "legal_structure", "Legal structure analysis", "running")
+
+    print("[Phase 2] Steps 3A/3B — Extracting entities" +
+          (" + legal structure (parallel)…" if run_3b else "…"))
+
+    def _run_3a():
+        _run_safe("03A_entity_extraction.py", "--document_id", document_id)
+
+    def _run_3b():
+        _run_safe("03B_legal_structure_extraction.py", "--document_id", document_id)
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=2) as ex:
+        f3a = ex.submit(_run_3a)
+        f3b = ex.submit(_run_3b) if run_3b else None
+        # Propagate any exceptions
+        f3a.result()
+        if f3b:
+            f3b.result()
+
+    _upsert_step(document_id, case_id, "entity_extraction", "Entity extraction", "done")
+    if run_3b:
+        _upsert_step(document_id, case_id, "legal_structure", "Legal structure analysis", "done")
+
+    # Step 07D: Promote high-confidence entities to cases row
+    if case_id:
+        print("[Phase 2] Step 07D — Promoting case metadata from extracted entities…")
+        _run_safe("07D_case_meta_promotion.py", "--document_id", document_id)
+
+    # Step 4A: Knowledge graph (intra-document)
+    _upsert_step(document_id, case_id, "kg_build", "Knowledge graph", "running")
+    print("[Phase 2] Step 4A — Building knowledge graph…")
+    _run_safe("04A_kg_inner_build.py", "--document_id", document_id)
+    _upsert_step(document_id, case_id, "kg_build", "Knowledge graph", "done")
+
+    print(f"[Phase 2] === COMPLETE — '{file_name}' ===")
+
+
 def main():
     parser = argparse.ArgumentParser(description="Phase 2: AST construction pipeline.")
-    parser.add_argument("--file_name", required=True, help="Document stem (file_name in Supabase)")
+    parser.add_argument("--file_name",   required=True,
+                        help="Document stem (file_name in Supabase)")
+    parser.add_argument("--document_id", default="",
+                        help="Optional pre-resolved document UUID (skips lookup if provided)")
+    parser.add_argument("--no-recurse",  action="store_true",
+                        help="Skip child exhibit processing (used when exhibits are fired separately)")
     args = parser.parse_args()
 
-    file_name             = args.file_name
-    document_id, case_id  = _lookup_document(file_name)
+    file_name = args.file_name
+
+    # Resolve document_id — prefer the pre-supplied value to avoid an extra DB round-trip
+    if args.document_id:
+        document_id = args.document_id
+        _, case_id  = _lookup_document(file_name)   # still need case_id
+    else:
+        document_id, case_id = _lookup_document(file_name)
 
     print(f"[Phase 2] Starting AST pipeline for '{file_name}' (id={document_id})")
     print("=" * 60)
 
-    # Step 07C: Case-context re-classification (requires case_id; safe to skip if absent)
-    if case_id:
-        print("[Phase 2] Step 07C — Case-context re-classification…")
-        _run("07C_case_context_classification.py", "--document_id", document_id)
-    else:
-        print("[Phase 2] Step 07C — SKIPPED (no case_id on document)")
-
-    # Step 0: Section refinement (split oversized sections before tree build)
-    print("[Phase 2] Step 0 — Refining section structure…")
-    _run("00_section_refine.py", "--document_id", document_id)
-
-    # Step 1: Tree reconstruction
-    print("[Phase 2] Step 1 — Building parent-child tree…")
-    _run("01_AST_tree_build.py", "--document_id", document_id)
-
-    # Step 2: Semantic labeling
-    print("[Phase 2] Step 2 — Assigning semantic labels…")
-    _run("02_AST_semantic_label.py", "--document_id", document_id)
-
-    # Step 3A: Entity extraction (parties, dates, amounts, courts, judges, attorneys, law firms)
-    print("[Phase 2] Step 3A — Extracting entities…")
-    _run("03A_entity_extraction.py", "--document_id", document_id)
-
-    # Step 07D: Promote high-confidence party/court/judge entities to the cases row.
-    # Only fills null fields — never overwrites values the user has already set.
-    if case_id:
-        print("[Phase 2] Step 07D — Promoting case metadata from extracted entities…")
-        _run("07D_case_meta_promotion.py", "--document_id", document_id)
-    else:
-        print("[Phase 2] Step 07D — SKIPPED (no case_id)")
-
-    # Step 3B: Legal structure extraction (complaints, briefs, motions, appeals, answers)
-    if _should_run_03b(document_id):
-        print("[Phase 2] Step 3B — Extracting legal structure…")
-        _run("03B_legal_structure_extraction.py", "--document_id", document_id)
-    else:
-        print("[Phase 2] Step 3B — SKIPPED (document type not eligible)")
-
-    # Step 4A: Knowledge graph (intra-document)
-    print("[Phase 2] Step 4A — Building knowledge graph…")
-    _run("04A_kg_inner_build.py", "--document_id", document_id)
+    try:
+        _process_one_document(document_id, file_name, case_id)
+    except RuntimeError as e:
+        print(f"[Phase 2] FAILED: {e}")
+        sys.exit(1)
 
     print("=" * 60)
     print(f"[Phase 2] COMPLETE — '{file_name}' AST + entities + KG ready in Supabase.")
 
-    # Process child exhibit documents if any exist
-    try:
-        sb = _sb()
-    except SystemExit:
-        sb = None
-    if sb:
-        child_resp = sb.table("documents").select("id, file_name").eq("parent_document_id", document_id).execute()
-        if child_resp.data:
-            print(f"\n[Phase 2] Processing {len(child_resp.data)} child exhibit(s)...")
-            for child in child_resp.data:
+    # ── Child exhibit processing (parallel) ────────────────────────────────────
+    if not args.no_recurse:
+        try:
+            sb = _sb()
+        except SystemExit:
+            sb = None
+
+        if sb:
+            child_resp = (
+                sb.table("documents")
+                .select("id, file_name")
+                .eq("parent_document_id", document_id)
+                .execute()
+            )
+            children = child_resp.data or []
+
+            # Filter out tiny exhibits not worth the API calls
+            eligible = []
+            for child in children:
                 child_id   = child["id"]
                 child_name = child["file_name"]
-
-                # Skip tiny exhibits — not worth the API calls
                 section_resp = sb.table("sections").select("section_text").eq("document_id", child_id).execute()
                 total_chars  = sum(len(s.get("section_text") or "") for s in (section_resp.data or []))
                 if total_chars < 2000:
-                    print(f"\n[Phase 2] Skipping '{child_name}' — too short ({total_chars} chars)")
+                    print(f"\n[Phase 2] Skipping exhibit '{child_name}' — too short ({total_chars} chars)")
                     continue
+                eligible.append((child_id, child_name, total_chars))
 
-                print(f"\n[Phase 2] --- Exhibit: {child_name} ({total_chars:,} chars) ---")
-                if case_id:
-                    _run("07C_case_context_classification.py", "--document_id", child_id)
-                _run("00_section_refine.py",    "--document_id", child_id)
-                _run("01_AST_tree_build.py",    "--document_id", child_id)
-                _run("02_AST_semantic_label.py","--document_id", child_id)
-                _run("03A_entity_extraction.py", "--document_id", child_id)
-                if case_id:
-                    _run("07D_case_meta_promotion.py", "--document_id", child_id)
-                if _should_run_03b(child_id):
-                    _run("03B_legal_structure_extraction.py", "--document_id", child_id)
-                _run("04A_kg_inner_build.py", "--document_id", child_id)
-            print(f"\n[Phase 2] COMPLETE — all exhibits processed.")
+            if eligible:
+                print(f"\n[Phase 2] Processing {len(eligible)} exhibit(s) in parallel…")
+                max_workers = min(len(eligible), 3)  # cap at 3 parallel to respect API limits
+                with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as ex:
+                    futures = {
+                        ex.submit(_process_one_document, cid, cname, case_id): cname
+                        for cid, cname, _ in eligible
+                    }
+                    for fut in concurrent.futures.as_completed(futures):
+                        cname = futures[fut]
+                        try:
+                            fut.result()
+                        except Exception as exc:
+                            print(f"[Phase 2] WARNING: exhibit '{cname}' failed: {exc}", file=sys.stderr)
 
-    # Phase 3: Embed all sections for the case into the vector store
+                print(f"\n[Phase 2] COMPLETE — all exhibits processed.")
+
+    # ── Phase 3: Embed all sections for the case ────────────────────────────────
     if case_id:
         print(f"\n[Phase 3] Starting embedding for case {case_id}...")
         _p3_env = os.environ.copy()
         _p3_env["PYTHONIOENCODING"] = "utf-8"
         result = subprocess.run(
-            [sys.executable, os.path.join(SEARCH_DIR, "main.py"), "--case_id", case_id],
+            [sys.executable, os.path.join(SEARCH_DIR, "main.py"),
+             "--case_id", case_id, "--document_id", document_id],
             capture_output=True,
             text=True,
             encoding="utf-8",
@@ -220,10 +322,8 @@ def main():
             f"python backend/03_SEARCH/main.py --case_id <case_uuid>"
         )
 
-    # Phase 4 refresh: re-generate the case summary and run the full checklist
-    # now that extractions, legal structure, and the KG are all in Supabase.
-    # Runs as a background subprocess so 02_MIDDLE exits immediately after
-    # kicking it off — the refresh uses Gemini independently without overlap.
+    # ── Phase 4 refresh: re-generate summary + run full checklist ──────────────
+    # Runs as a background subprocess after all extraction + embedding is done.
     if case_id:
         refresh_script = os.path.join(
             os.path.dirname(__file__), '..', '04_AGENTIC_ARCHITECTURE',
@@ -238,7 +338,8 @@ def main():
             env = os.environ.copy()
             env["PYTHONIOENCODING"] = "utf-8"
             subprocess.Popen(
-                [sys.executable, refresh_script, '--case_id', case_id],
+                [sys.executable, refresh_script, '--case_id', case_id,
+                 '--document_id', document_id],
                 stdout=lf,
                 stderr=lf,
                 env=env,

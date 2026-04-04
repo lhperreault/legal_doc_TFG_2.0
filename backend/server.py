@@ -79,11 +79,83 @@ def _run_background(args: list[str], log_name: str = "bg") -> None:
         subprocess.Popen(args, stdout=lf, stderr=lf, env=env)
 
 
+# ---------------------------------------------------------------------------
+# Step tracking — writes to document_processing_steps for Realtime checklist
+# ---------------------------------------------------------------------------
+
+def _get_sb():
+    url = os.environ.get("SUPABASE_URL")
+    key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
+    if not url or not key:
+        return None
+    try:
+        from supabase import create_client
+        return create_client(url, key)
+    except Exception:
+        return None
+
+
+def _upsert_step(
+    document_id: str,
+    case_id: str | None,
+    step_name: str,
+    display_label: str,
+    status: str,
+    error: str | None = None,
+) -> None:
+    """Write a step row so the frontend Realtime checklist can show progress."""
+    if not document_id:
+        return
+    sb = _get_sb()
+    if not sb:
+        return
+    try:
+        from datetime import datetime, timezone
+        now = datetime.now(timezone.utc).isoformat()
+        row: dict = {
+            "document_id":   document_id,
+            "step_name":     step_name,
+            "display_label": display_label,
+            "status":        status,
+        }
+        if case_id:
+            row["case_id"] = case_id
+        if status == "running":
+            row["started_at"] = now
+        if status in ("done", "error"):
+            row["completed_at"] = now
+        if error:
+            row["error_message"] = error
+        sb.table("document_processing_steps").upsert(
+            row, on_conflict="document_id,step_name"
+        ).execute()
+    except Exception as e:
+        print(f"[steps] WARNING: could not write step '{step_name}': {e}", file=sys.stderr)
+
+
+def _lookup_document_id(file_stem: str) -> str | None:
+    """Return the UUID of the document whose file_name == file_stem, or None."""
+    sb = _get_sb()
+    if not sb:
+        return None
+    try:
+        resp = (
+            sb.table("documents")
+            .select("id")
+            .eq("file_name", file_stem)
+            .maybe_single()
+            .execute()
+        )
+        return resp.data["id"] if resp.data else None
+    except Exception:
+        return None
+
+
 async def _pipeline_stream(filename: str, case_id: str):
     file_stem = os.path.splitext(filename)[0]
     short_id  = case_id[:8]
 
-    # Phase 1: intake → text extraction → classification → TOC → Supabase
+    # ── Phase 1: intake → text extraction → classification → TOC → Supabase ──
     yield _sse({"phase": 1, "status": "start", "label": "Extracting & classifying"})
     rc = await _run([sys.executable, PHASE1_MAIN, filename, "--case-id", case_id])
     if rc != 0:
@@ -91,32 +163,37 @@ async def _pipeline_stream(filename: str, case_id: str):
         return
     yield _sse({"phase": 1, "status": "done", "label": "Extracting & classifying"})
 
-    # Phase 2: AST + entity extraction — logs to data_storage/logs/02_middle_<id>.log
+    # Resolve the real document UUID now that Phase 1 has written it to Supabase
+    document_id = _lookup_document_id(file_stem)
+
+    # Mark all Phase 1 sub-steps as done (they completed synchronously above)
+    if document_id:
+        for sname, slabel in [
+            ("text_extraction",    "Text extraction"),
+            ("doc_classification", "Document classification"),
+            ("toc_split",          "Section splitting"),
+            ("saved_to_db",        "Saved to database"),
+        ]:
+            _upsert_step(document_id, case_id, sname, slabel, "done")
+
+    # ── Phase 2: AST + entity extraction — background, non-blocking ──────────
+    #    Passes --document_id so Phase 2 can write its own step rows.
     _run_background(
-        [sys.executable, PHASE2_MAIN, "--file_name", file_stem],
+        [sys.executable, PHASE2_MAIN, "--file_name", file_stem,
+         "--document_id", document_id or ""],
         log_name=f"02_middle_{short_id}",
     )
 
-    # Phase 3: section embedding → vector store
-    yield _sse({"phase": 2, "status": "start", "label": "Embedding & indexing for search"})
-    rc = await _run([sys.executable, PHASE3_MAIN, "--case_id", case_id])
-    if rc != 0:
-        yield _sse({"phase": 2, "status": "error", "label": "Embedding & indexing for search"})
-        return
-    yield _sse({"phase": 2, "status": "done", "label": "Embedding & indexing for search"})
+    # ── Phase 3: section embedding — background (was previously blocking) ─────
+    #    Phase 3 writes its own "embeddings" step row and fires Phase 4 summary.
+    _run_background(
+        [sys.executable, PHASE3_MAIN, "--case_id", case_id,
+         "--document_id", document_id or ""],
+        log_name=f"03_embed_{short_id}",
+    )
 
-    # Phase 4: generate professional case summary — populates the legal pad UI
-    yield _sse({"phase": 3, "status": "start", "label": "Generating case summary"})
-    rc = await _run([sys.executable, PHASE4_SUMMARY, "--case_id", case_id])
-    if rc != 0:
-        yield _sse({"phase": 3, "status": "error", "label": "Generating case summary"})
-        return
-    yield _sse({"phase": 3, "status": "done", "label": "Generating case summary"})
-
-    # Checklist is triggered by 02_MIDDLE when it finishes — running it here
-    # concurrently with 02_MIDDLE's Gemini-heavy extraction steps risks rate limits.
-
-    yield _sse({"done": True, "document_id": filename, "case_id": case_id})
+    # ── SSE done — frontend subscribes to Realtime for the live checklist ─────
+    yield _sse({"done": True, "document_id": document_id or filename, "case_id": case_id})
 
 
 @app.post("/api/ingest")

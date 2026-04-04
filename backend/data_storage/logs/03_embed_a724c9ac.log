@@ -1,0 +1,94 @@
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+[Phase 3] Starting embedding pipeline for case 'a724c9ac-8faa-4459-9cf9-8b6e1dcc0efe'
+============================================================
+[Phase 3] Step 1 — Embedding sections...
+============================================================
+  Phase 3 â€” Embedding Sections
+  Case ID: a724c9ac-8faa-4459-9cf9-8b6e1dcc0efe
+============================================================
+
+[1/4] Fetching sections from Supabase...
+  Found 5 document(s) in case
+  Found 41 total section(s)
+[2/4] Checking existing embeddings...
+  Found 0 existing embedding(s)
+
+  Sections to embed: 40
+  Skipped (up to date): 0
+  Skipped (empty/short): 1
+  Skipped (boilerplate label): 0
+
+[3/4] Generating embeddings (40 sections)...
+  WARNING: Truncated section 'Exhibit A' (doc: Complaint (Epic Games to Apple_9143ea2c_exhibit_A)
+  WARNING: Truncated section '(to Schedule 1) Additional App Store Terms 1.' (doc: Complaint (Epic Games to Apple_9143ea2c_exhibit_D)
+  Batch 1/1 (40 sections)...
+
+[4/4] Upserting 40 embedding(s) to Supabase...
+  Summary written to C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\backend\03_SEARCH\..\zz_temp_chunks\a724c9ac-8faa-4459-9cf9-8b6e1dcc0efe_embedding_summary.json
+
+============================================================
+  RESULTS
+============================================================
+  Total sections:       41
+  Newly embedded:       40
+  Re-embedded (changed):0
+  Skipped (up to date): 0
+  Skipped (empty):      1
+  Skipped (label):      0
+  Truncated:            2
+  Errors:               0
+
+SUCCESS: 40 section(s) embedded for case a724c9ac-8faa-4459-9cf9-8b6e1dcc0efe
+============================================================
+[Phase 3] COMPLETE — case 'a724c9ac-8faa-4459-9cf9-8b6e1dcc0efe' is now search-ready.
+[Phase 4] Case summary started in background → C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\backend\data_storage\logs\04_summary_a724c9ac.log
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+[Phase 3] Starting embedding pipeline for case 'a724c9ac-8faa-4459-9cf9-8b6e1dcc0efe'
+============================================================
+[Phase 3] Step 1 — Embedding sections...
+============================================================
+  Phase 3 â€” Embedding Sections
+  Case ID: a724c9ac-8faa-4459-9cf9-8b6e1dcc0efe
+============================================================
+
+[1/4] Fetching sections from Supabase...
+  Found 5 document(s) in case
+  Found 41 total section(s)
+[2/4] Checking existing embeddings...
+  Found 0 existing embedding(s)
+
+  Sections to embed: 40
+  Skipped (up to date): 0
+  Skipped (empty/short): 1
+  Skipped (boilerplate label): 0
+
+[3/4] Generating embeddings (40 sections)...
+  WARNING: Truncated section 'Exhibit A' (doc: Complaint (Epic Games to Apple_7e646bdc_exhibit_A)
+  WARNING: Truncated section '(to Schedule 1) Additional App Store Terms 1.' (doc: Complaint (Epic Games to Apple_7e646bdc_exhibit_D)
+  Batch 1/1 (40 sections)...
+
+[4/4] Upserting 40 embedding(s) to Supabase...
+  Summary written to C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\backend\03_SEARCH\..\zz_temp_chunks\a724c9ac-8faa-4459-9cf9-8b6e1dcc0efe_embedding_summary.json
+
+============================================================
+  RESULTS
+============================================================
+  Total sections:       41
+  Newly embedded:       40
+  Re-embedded (changed):0
+  Skipped (up to date): 0
+  Skipped (empty):      1
+  Skipped (label):      0
+  Truncated:            2
+  Errors:               0
+
+SUCCESS: 40 section(s) embedded for case a724c9ac-8faa-4459-9cf9-8b6e1dcc0efe
+============================================================
+[Phase 3] COMPLETE — case 'a724c9ac-8faa-4459-9cf9-8b6e1dcc0efe' is now search-ready.
+[Phase 4] Case summary started in background → C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\backend\data_storage\logs\04_summary_a724c9ac.log

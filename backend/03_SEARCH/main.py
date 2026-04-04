@@ -45,18 +45,62 @@ def _run(script_name: str, *args) -> str:
     return output
 
 
+def _upsert_step(
+    document_id: str,
+    case_id: str | None,
+    step_name: str,
+    display_label: str,
+    status: str,
+) -> None:
+    """Write a progress step row for the frontend Realtime checklist."""
+    if not document_id:
+        return
+    try:
+        from supabase import create_client
+        from datetime import datetime, timezone
+        url = os.environ.get("SUPABASE_URL")
+        key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
+        if not url or not key:
+            return
+        sb = create_client(url, key)
+        now = datetime.now(timezone.utc).isoformat()
+        row: dict = {
+            "document_id":   document_id,
+            "step_name":     step_name,
+            "display_label": display_label,
+            "status":        status,
+        }
+        if case_id:
+            row["case_id"] = case_id
+        if status == "running":
+            row["started_at"] = now
+        if status in ("done", "error"):
+            row["completed_at"] = now
+        sb.table("document_processing_steps").upsert(
+            row, on_conflict="document_id,step_name"
+        ).execute()
+    except Exception as e:
+        print(f"[steps] WARNING: could not write step '{step_name}': {e}", file=sys.stderr)
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Phase 3: Embed case sections into the vector store."
     )
     parser.add_argument("--case_id", required=True,
                         help="UUID of the case whose sections should be embedded")
+    parser.add_argument("--document_id", default="",
+                        help="UUID of the triggering document (for step tracking)")
     parser.add_argument("--force", action="store_true",
                         help="Re-embed all sections even if already up to date")
     args = parser.parse_args()
 
+    document_id = args.document_id or None
+
     print(f"[Phase 3] Starting embedding pipeline for case '{args.case_id}'")
     print("=" * 60)
+
+    _upsert_step(document_id, args.case_id, "embeddings", "Vector embeddings", "running")
 
     embed_args = [args.case_id]
     if args.force:
@@ -65,8 +109,32 @@ def main():
     print("[Phase 3] Step 1 — Embedding sections...")
     _run("01_embed_sections.py", *embed_args)
 
+    _upsert_step(document_id, args.case_id, "embeddings", "Vector embeddings", "done")
+
     print("=" * 60)
     print(f"[Phase 3] COMPLETE — case '{args.case_id}' is now search-ready.")
+
+    # Fire Phase 4 summary now that embeddings exist — runs in background so
+    # Phase 3 exits immediately. Phase 2's refresh_after_extraction will later
+    # replace this with an enriched summary once entities + KG are ready.
+    if document_id:
+        phase4_script = os.path.join(
+            os.path.dirname(SEARCH_DIR), "04_AGENTIC_ARCHITECTURE", "document_summary.py"
+        )
+        log_dir  = os.path.join(os.path.dirname(SEARCH_DIR), "data_storage", "logs")
+        os.makedirs(log_dir, exist_ok=True)
+        log_path = os.path.join(log_dir, f"04_summary_{args.case_id[:8]}.log")
+        env = os.environ.copy()
+        env["PYTHONIOENCODING"] = "utf-8"
+        import subprocess as _sp
+        with open(log_path, "a", encoding="utf-8") as lf:
+            _sp.Popen(
+                [sys.executable, phase4_script,
+                 "--case_id", args.case_id,
+                 "--document_id", document_id],
+                stdout=lf, stderr=lf, env=env,
+            )
+        print(f"[Phase 4] Case summary started in background → {log_path}")
 
 
 if __name__ == "__main__":
