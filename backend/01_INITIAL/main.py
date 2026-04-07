@@ -10,20 +10,64 @@ import json
 import os
 import subprocess
 import sys
+import time
+
+PHASE2_MAIN = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '02_MIDDLE', 'main.py')
 
 import pandas as pd
 
 PHASE_DIR   = os.path.dirname(os.path.abspath(__file__))   # …/backend/01_INITIAL
 BACKEND_DIR = os.path.dirname(PHASE_DIR)                   # …/backend
 
+_timings: list[tuple[str, float]] = []   # (label, seconds)
+
 
 def _run(script_name: str, *args):
-    """Run a script in this phase's directory; exit on failure."""
+    """Run a script in this phase's directory; exit on failure. Records timing."""
+    t0 = time.perf_counter()
     result = subprocess.run(
         [sys.executable, os.path.join(PHASE_DIR, script_name)] + list(args)
     )
+    elapsed = time.perf_counter() - t0
+    _timings.append((script_name, elapsed))
     if result.returncode != 0:
         sys.exit(result.returncode)
+
+
+def _fire_next_phases(stem: str) -> None:
+    """Kick off Phase 2 → 3 → 4 in the background after Phase 1 completes."""
+    log_dir  = os.path.join(BACKEND_DIR, "data_storage", "logs")
+    os.makedirs(log_dir, exist_ok=True)
+    log_path = os.path.join(log_dir, f"02_middle_{stem[:8]}.log")
+    env = os.environ.copy()
+    env["PYTHONIOENCODING"] = "utf-8"
+    with open(log_path, "a", encoding="utf-8") as lf:
+        subprocess.Popen(
+            [sys.executable, PHASE2_MAIN, "--file_name", stem],
+            stdout=lf, stderr=lf, env=env,
+        )
+    print(f"\n[Pipeline] Phase 2 → 3 → 4 started in background.")
+    print(f"[Pipeline] Log: data_storage/logs/02_middle_{stem[:8]}.log")
+
+
+def _print_timing_summary(phase_total: float) -> None:
+    if not _timings:
+        return
+    col = max(len(label) for label, _ in _timings) + 2
+    width = col + 14
+    sep = "─" * width
+    slowest = max(_timings, key=lambda x: x[1])
+    print(f"\n┌{sep}┐")
+    print(f"│  {'PHASE 1 — TIMING SUMMARY':<{width - 2}}│")
+    print(f"├{sep}┤")
+    print(f"│  {'Step':<{col}}{'Duration':>10}  │")
+    print(f"├{sep}┤")
+    for label, secs in _timings:
+        marker = "  ◄ slowest" if label == slowest[0] else ""
+        print(f"│  {label:<{col}}{secs:>8.1f}s{marker:<{max(0, width - col - 11)}}│")
+    print(f"├{sep}┤")
+    print(f"│  {'TOTAL':<{col}}{phase_total:>8.1f}s{'':>{width - col - 11}}│")
+    print(f"└{sep}┘")
 
 
 def _run_exhibit_split(text_md: str, temp_dir: str, stem: str):
@@ -75,6 +119,8 @@ def main():
     struct_csv = os.path.join(temp_dir, stem + "_structure_report.csv")
     text_md    = os.path.join(temp_dir, stem + "_text_extraction.md")
 
+    _phase_start = time.perf_counter()
+
     # 1. Intake
     _run("01_Intake.py", filename)
 
@@ -114,6 +160,7 @@ def main():
         send_extra += ["--case-id", case_id]
     if is_primary:
         send_extra += ["--primary"]
+    send_extra += ["--original-file", filename]
 
     # Branch: native TOC?
     has_native_toc = str(df.get("has_native_toc", [False])[0]).strip().lower() == "true"
@@ -122,6 +169,8 @@ def main():
         _run("07_Native_TOC.py", text_md)
         _run("08_Send_Supabase.py", text_md, *send_extra)
         _run_exhibit_split(text_md, temp_dir, stem)
+        _print_timing_summary(time.perf_counter() - _phase_start)
+        _fire_next_phases(stem)
         return
 
     # 6. TOC detection
@@ -153,6 +202,9 @@ def main():
 
     # 7b/8b. Exhibit separation (runs after parent is in Supabase)
     _run_exhibit_split(text_md, temp_dir, stem)
+
+    _print_timing_summary(time.perf_counter() - _phase_start)
+    _fire_next_phases(stem)
 
 
 if __name__ == "__main__":

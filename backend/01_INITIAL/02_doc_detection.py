@@ -1,7 +1,47 @@
 import os
+import re as _re_detect
 import pandas as pd
 import fitz  # PyMuPDF
 import pdfplumber
+
+_CHECKBOX_RE = _re_detect.compile(r"[\u2610\u2611\u2612\u2713\u2714\u2717\u2718]")
+
+
+def _detect_form_signals(doc) -> tuple:
+    """
+    Returns (has_checkboxes, is_form_like).
+    Scans the first 10 pages only.
+    has_checkboxes: True if any /Btn widget annotation OR checkbox unicode char found.
+    is_form_like:   True if >55% of non-empty lines are short (<40 chars), typical of forms.
+    """
+    pages_to_scan = min(len(doc), 10)
+    checkbox_found = False
+    total_lines = 0
+    short_lines = 0
+
+    for i in range(pages_to_scan):
+        page = doc[i]
+
+        # PDF form widget annotations (/Btn = checkbox / radio button, type index 2)
+        if not checkbox_found:
+            for annot in page.annots():
+                if annot.type[0] == 2:
+                    checkbox_found = True
+                    break
+
+        text = page.get_text()
+
+        # Unicode checkbox characters
+        if not checkbox_found and _CHECKBOX_RE.search(text):
+            checkbox_found = True
+
+        # Short-line ratio (form labels are short)
+        lines = [ln.strip() for ln in text.splitlines() if ln.strip()]
+        total_lines += len(lines)
+        short_lines += sum(1 for ln in lines if len(ln) < 40)
+
+    short_ratio = (short_lines / total_lines) if total_lines > 0 else 0.0
+    return checkbox_found, short_ratio >= 0.55
 
 def find_email_column(df):
     for col in df.columns:
@@ -138,6 +178,14 @@ def analyze_document_structure(file_path):
                 result["has_native_toc"] = True
                 print(f"    Native TOC detected: {len(native_toc)} entries")
             # ─────────────────────────────────────────────────────────────────
+
+            # ── Form / checkbox detection ─────────────────────────────────────
+            has_checkboxes, is_form_like = _detect_form_signals(doc)
+            result["has_checkboxes"] = has_checkboxes
+            result["is_form_like"]   = is_form_like
+            if has_checkboxes or is_form_like:
+                print(f"    Form signals: has_checkboxes={has_checkboxes}, is_form_like={is_form_like}")
+            # ─────────────────────────────────────────────────────────────────
             text_lengths = []
             pages_with_images = 0
             for page_num in range(len(doc)):
@@ -187,6 +235,8 @@ def analyze_document_structure(file_path):
                 "pages_with_images": pages_with_images,
                 "image_page_ratio": round(image_page_ratio, 3),
             }
+            result["extraction_strategy"]["has_checkboxes"] = has_checkboxes
+            result["extraction_strategy"]["is_form_like"]   = is_form_like
             page_one_text = doc[0].get_text() if total_pages > 0 else ""
             if (
                 total_pages == 0

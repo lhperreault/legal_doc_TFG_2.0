@@ -1,0 +1,966 @@
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\sklearn\base.py:463: InconsistentVersionWarning: Trying to unpickle estimator SelectKBest from version 0.23.1 when using version 1.8.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:
+https://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\sklearn\base.py:463: InconsistentVersionWarning: Trying to unpickle estimator LogisticRegressionCV from version 0.23.1 when using version 1.8.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:
+https://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\sklearn\base.py:463: InconsistentVersionWarning: Trying to unpickle estimator Pipeline from version 0.23.1 when using version 1.8.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:
+https://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations
+  warnings.warn(
+[Phase 2] Starting AST pipeline for 'Civil Cover Sheet (along with complaint)_8d1c95a6' (id=c8519341-8c74-461c-81f8-f5084e2b5105)
+============================================================
+
+[Phase 2] === Processing 'Civil Cover Sheet (along with complaint)_8d1c95a6' (id=c8519341-8c74-461c-81f8-f5084e2b5105) ===
+[Phase 2] Step 07C — Case-context re-classification…
+[07C] Calling Gemini Flash for 'Civil Cover Sheet (along with complaint)_8d1c95a6'…
+[07C] WARNING: GOOGLE_API_KEY not set — using fallback classification.
+[07C] Document updated (id=c8519341-8c74-461c-81f8-f5084e2b5105)
+[07C] 'Civil Cover Sheet (along with complaint)_8d1c95a6': primary=False, perspective=unknown, temporal=current, purpose=operative_pleading, confidence=40%
+
+SUCCESS: 07C_case_context_classification.py complete for 'Civil Cover Sheet (along with complaint)_8d1c95a6'
+[Phase 2] Step 0 — Refining section structure…
+24 sections total, 11 candidates for refinement
+  Evaluating '  A. Authority for Civil Cover Sheet.' (6,108 chars)...
+    Splitting into 7 sub-sections...
+    Done — 7 children inserted
+  Evaluating '  B. Parties.' (6,108 chars)...
+    Splitting into 7 sub-sections...
+    Done — 7 children inserted
+  Evaluating '  C. Attorneys.' (6,108 chars)...
+    Splitting into 7 sub-sections...
+    Done — 7 children inserted
+  Evaluating '  D. Basis of Jurisdiction.' (6,108 chars)...
+    Splitting into 7 sub-sections...
+    Done — 7 children inserted
+  Evaluating '  E. Residence (citizenship) of Principal Parties.' (6,108 chars)...
+    Splitting into 7 sub-sections...
+    Done — 7 children inserted
+  Evaluating '  F. Nature of Suit.' (6,108 chars)...
+    Splitting into 7 sub-sections...
+    Done — 7 children inserted
+  Evaluating '  G. Origin.' (6,108 chars)...
+    Splitting into 7 sub-sections...
+    Done — 7 children inserted
+  Evaluating '  H. Cause of Action.' (6,108 chars)...
+    Splitting into 7 sub-sections...
+    Done — 7 children inserted
+  Evaluating '  I. Requested in Complaint.' (6,108 chars)...
+    Splitting into 7 sub-sections...
+    Done — 7 children inserted
+  Evaluating '  J. Demand.' (6,108 chars)...
+    Splitting into 7 sub-sections...
+    Done — 7 children inserted
+  Evaluating '  K. Related Cases.' (6,108 chars)...
+    Splitting into 7 sub-sections...
+    Done — 7 children inserted
+SUCCESS: Section refinement complete for 'Civil Cover Sheet (along with complaint)_8d1c95a6'. 11 sections split, 77 new child sections added, 0 skipped (coherent or GPT failure).
+[Phase 2] Step 1 — Building parent-child tree…
+SUCCESS: Tree built for 'Civil Cover Sheet (along with complaint)_8d1c95a6'. 172 sections processed, 13 root node(s), max depth 3.
+[Phase 2] Step 2 — Assigning semantic labels…
+SUCCESS: Labeled 179 sections for 'Civil Cover Sheet (along with complaint)_8d1c95a6'. 45 pattern-matched (45 title, 0 text), 134 GPT-labeled, 0 flagged for review, 1 errors.
+[Phase 2] Steps 3A/3B — Extracting entities + legal structure (parallel)…
+[03B] Legal structure extraction: Civil Cover Sheet (along with complaint)_8d1c95a6
+      Type: Pleading - Complaint | Case: Epic vs Apple
+[03B] Processing 2 qualifying section(s) (2 claims, 0 factual)…
+  ✓ [causes_of_action] '  H. Cause of Action.': 0 rows
+  [03B] Verification: section 'VI. CAUSE OF ACTION' flagged as factual — demoting 1 claim(s) to standalone. Reason: Despite the title 'VI. CAUSE OF ACTION' and semantic label 'causes_of_action', the section text is a civil cover sheet (JS-CAND 44) which lists administrative details such as plaintiffs, defendants, and their counties of residence. It does not contain any legal claims, causes of action, or factual allegations pertaining to the merits of the case.
+  ✓ [causes_of_action] 'VI. CAUSE OF ACTION': 2 rows
+[03B] SUCCESS — 2 rows inserted for document c8519341-8c74-461c-81f8-f5084e2b5105
+[Phase 2] FAILED: 03A_entity_extraction.py failed (exit 3221225786)
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+[Phase 2] Starting AST pipeline for 'Civil Cover Sheet (along with complaint)_0712be82' (id=991308ff-7ae7-4582-a971-8b1590cc4714)
+============================================================
+
+[Phase 2] === Processing 'Civil Cover Sheet (along with complaint)_0712be82' (id=991308ff-7ae7-4582-a971-8b1590cc4714) ===
+[Phase 2] Step 07C — Case-context re-classification…
+[07C] Calling Gemini Flash for 'Civil Cover Sheet (along with complaint)_0712be82'…
+[07C] WARNING: GOOGLE_API_KEY not set — using fallback classification.
+[07C] Document updated (id=991308ff-7ae7-4582-a971-8b1590cc4714)
+[07C] 'Civil Cover Sheet (along with complaint)_0712be82': primary=False, perspective=unknown, temporal=current, purpose=evidence, confidence=40%
+
+SUCCESS: 07C_case_context_classification.py complete for 'Civil Cover Sheet (along with complaint)_0712be82'
+[Phase 2] Step 0 — Refining section structure…
+24 sections total, 11 candidates for refinement
+  Evaluating '  A. Plaintiff(s) Attorneys.' (6,108 chars)...
+    Splitting into 7 sub-sections...
+    Done — 7 children inserted
+  Evaluating '  B. Defendant(s) Attorneys.' (6,108 chars)...
+    Splitting into 7 sub-sections...
+    Done — 7 children inserted
+  Evaluating '  C. Attorneys.' (6,108 chars)...
+    Splitting into 7 sub-sections...
+    Done — 7 children inserted
+  Evaluating '  D. Jurisdiction.' (6,108 chars)...
+    Splitting into 8 sub-sections...
+    Done — 8 children inserted
+  Evaluating '  E. Residence (citizenship) of Principal Parties.' (6,108 chars)...
+    Splitting into 7 sub-sections...
+    Done — 7 children inserted
+  Evaluating '  F. Nature of Suit.' (6,108 chars)...
+    Splitting into 7 sub-sections...
+    Done — 7 children inserted
+  Evaluating '  G. Origin.' (6,108 chars)...
+    Splitting into 7 sub-sections...
+    Done — 7 children inserted
+  Evaluating '  H. Cause of Action.' (6,108 chars)...
+    Splitting into 7 sub-sections...
+    Done — 7 children inserted
+  Evaluating '  I. Requested in Complaint.' (6,108 chars)...
+    Splitting into 7 sub-sections...
+    Done — 7 children inserted
+  Evaluating '  J. Demand.' (6,108 chars)...
+    Splitting into 7 sub-sections...
+    Done — 7 children inserted
+  Evaluating '  K. Related Cases.' (6,108 chars)...
+    Splitting into 7 sub-sections...
+    Done — 7 children inserted
+SUCCESS: Section refinement complete for 'Civil Cover Sheet (along with complaint)_0712be82'. 11 sections split, 78 new child sections added, 0 skipped (coherent or GPT failure).
+[Phase 2] Step 1 — Building parent-child tree…
+SUCCESS: Tree built for 'Civil Cover Sheet (along with complaint)_0712be82'. 174 sections processed, 13 root node(s), max depth 3.
+[Phase 2] Step 2 — Assigning semantic labels…
+WARNING: document_type='Court - Filing Receipt' not recognized — all sections will be labeled 'unrecognized' and flagged for review.
+SUCCESS: Labeled 179 sections for 'Civil Cover Sheet (along with complaint)_0712be82'. 0 pattern-matched (0 title, 0 text), 0 GPT-labeled, 179 flagged for review, 0 errors.
+[Phase 2] Steps 3A/3B — Extracting entities…
+[03A] Extracting from 'Civil Cover Sheet (along with complaint)_0712be82' (Court - Filing Receipt)
+  [03A] 179 sections to process
+  [  1/179] SKIP  'Title Page' — too short
+  [ 10/179] SKIP  '  C. Attorneys.' — child micro-section
+  [ 11/179] SKIP  '  G. Origin.' — child micro-section
+  [ 12/179] SKIP  '  I. Requested in Complaint.' — child micro-section
+  [ 13/179] SKIP  '  K. Related Cases.' — child micro-section
+  [ 14/179] SKIP  '  F. Nature of Suit.' — child micro-section
+  [ 15/179] SKIP  '  H. Cause of Action.' — child micro-section
+  [ 16/179] SKIP  '  A. Plaintiff(s) Attorneys.' — child micro-section
+  [ 24/179] SKIP  '  B. Defendant(s) Attorneys.' — child micro-section
+  [ 33/179] SKIP  '  E. Residence (citizenship) of Principal Parties.' — child micro-section
+  [ 34/179] SKIP  '  D. Jurisdiction.' — child micro-section
+  [128/179] SKIP  '  J. Demand.' — child micro-section
+  [03A] Processing 167 sections (12 skipped)
+  [  4/179] OK    'IX. DIVISIONAL ASSIGNMENT' → 6 entities
+  [  3/179] OK    'VII. REQUESTED IN COMPLAINT:' → 4 entities
+  [  2/179] OK    'III. CITIZENSHIP OF PRINCIPAL PARTIES' → 7 entities
+  [  5/179] OK    'VI. CAUSE OF ACTION' → 6 entities
+  [ 17/179] EMPTY 'Plaintiffs-Defendants' → nothing found
+  [  6/179] OK    'IV. NATURE OF SUIT' → 5 entities
+  [ 19/179] EMPTY 'Nature of Suit' → nothing found
+  [  8/179] OK    'I. PLAINTIFF'S ATTORNEYS' → 9 entities
+  [ 20/179] EMPTY 'Judicial Assignment' → nothing found
+  [ 22/179] EMPTY 'Plaintiffs-Defendants' → nothing found
+  [ 23/179] EMPTY 'Related Cases' → nothing found
+  [ 18/179] OK    'County of Residence' → 1 entities
+  [ 26/179] EMPTY 'Nature of Suit' → nothing found
+  [ 27/179] EMPTY 'Nature of Suit Selection' → nothing found
+  [ 21/179] OK    'County of Residence' → 2 entities
+  [ 29/179] EMPTY 'Nature of Suit' → nothing found
+  [ 25/179] EMPTY 'Related Cases' → nothing found
+  [  7/179] OK    'V. ORIGIN' → 5 entities
+  [ 30/179] EMPTY 'Venue Assignment Instructions' → nothing found
+  [ 35/179] EMPTY 'Plaintiffs-Defendants Information' → nothing found
+  [ 36/179] EMPTY 'Plaintiffs-Defendants Information' → nothing found
+  [ 37/179] EMPTY 'Nature of Suit' → nothing found
+  [ 31/179] EMPTY 'Venue Assignment' → nothing found
+  [ 32/179] EMPTY 'Venue Assignment Instructions' → nothing found
+  [ 28/179] OK    'INSTRUCTIONS FOR ATTORNEYS COMPLETING CIVIL COVER SHEET FORM' → 4 entities
+  [  9/179] OK    'INSTRUCTIONS FOR ATTORNEYS COMPLETING CIVIL COVER SHEET FORM' → 14 entities
+  [ 39/179] EMPTY 'County of Residence' → nothing found
+  [ 41/179] OK    'Instructions for Completing Civil Cover Sheet' → 4 entities
+  [ 44/179] EMPTY 'Plaintiffs-Defendants' → nothing found
+  [ 38/179] OK    'County of Residence Requirements' → 4 entities
+  [ 43/179] OK    'County of Residence' → 5 entities
+  [ 42/179] OK    'INSTRUCTIONS FOR ATTORNEYS' → 3 entities
+  [ 45/179] OK    'County of Residence Requirement' → 5 entities
+  [ 49/179] EMPTY 'Plaintiffs-Defendants' → nothing found
+  [ 50/179] EMPTY 'Plaintiffs-Defendants' → nothing found
+  [ 40/179] OK    'Basis of Jurisdiction' → 6 entities
+  [ 46/179] OK    'County of Residence' → 2 entities
+  [ 51/179] OK    'Origin' → 6 entities
+  [ 47/179] OK    'County of Residence' → 1 entities
+  [ 53/179] EMPTY 'Venue Assignment' → nothing found
+  [ 52/179] EMPTY 'Related Cases' → nothing found
+  [ 48/179] OK    'Origin of Case' → 9 entities
+  [ 54/179] EMPTY 'Judicial Assignment' → nothing found
+  [ 55/179] EMPTY 'Venue Assignment' → nothing found
+  [ 56/179] EMPTY 'Venue Assignment Information' → nothing found
+  [ 57/179] EMPTY 'Judicial Assignment' → nothing found
+  [ 58/179] EMPTY 'Related Cases' → nothing found
+  [ 59/179] OK    'INSTRUCTIONS FOR ATTORNEYS' → 5 entities
+  [ 60/179] OK    'Instructions for Attorneys' → 4 entities
+  [ 61/179] OK    'INSTRUCTIONS FOR ATTORNEYS' → 5 entities
+  [ 63/179] OK    'County of Residence' → 1 entities
+  [ 62/179] OK    'INSTRUCTIONS FOR ATTORNEYS' → 3 entities
+  [ 66/179] OK    'County of Residence Information' → 4 entities
+  [ 67/179] OK    'County of Residence' → 3 entities
+  [ 65/179] OK    'County of Residence' → 2 entities
+  [ 71/179] EMPTY 'Nature of Suit' → nothing found
+  [ 72/179] EMPTY 'Nature of Suit' → nothing found
+  [ 73/179] EMPTY 'Nature of Suit' → nothing found
+  [ 74/179] EMPTY 'Nature of Suit' → nothing found
+  [ 75/179] EMPTY 'Nature of Suit' → nothing found
+  [ 76/179] EMPTY 'Nature of Suit' → nothing found
+  [ 64/179] OK    'County of Residence' → 2 entities
+  [ 78/179] EMPTY 'Plaintiffs-Defendants Information' → nothing found
+  [ 79/179] EMPTY 'Plaintiffs-Defendants Information' → nothing found
+  [ 80/179] EMPTY 'Plaintiffs-Defendants' → nothing found
+  [ 81/179] EMPTY 'Plaintiffs-Defendants' → nothing found
+  [ 68/179] OK    'County of Residence' → 4 entities
+  [ 77/179] OK    'Origin' → 7 entities
+  [ 70/179] OK    'Basis of Jurisdiction' → 5 entities
+  [ 69/179] OK    'Basis of Jurisdiction' → 9 entities
+  [ 83/179] OK    'Origin of Case' → 10 entities
+  [ 87/179] EMPTY 'VIII. RELATED CASE(S), IF ANY' → nothing found
+  [ 82/179] OK    'Basis of Jurisdiction' → 9 entities
+  [ 86/179] OK    'INSTRUCTIONS FOR ATTORNEYS' → 5 entities
+  [ 88/179] EMPTY 'Judicial Assignment' → nothing found
+  [ 89/179] EMPTY 'Venue Assignment' → nothing found
+  [ 92/179] EMPTY 'Nature of Suit' → nothing found
+  [ 93/179] EMPTY 'Plaintiffs-Defendants' → nothing found
+  [ 94/179] EMPTY 'Nature of Suit' → nothing found
+  [ 95/179] EMPTY 'Plaintiffs-Defendants' → nothing found
+  [ 85/179] OK    'INSTRUCTIONS FOR ATTORNEYS' → 3 entities
+  [ 97/179] EMPTY 'Plaintiffs-Defendants' → nothing found
+  [ 98/179] EMPTY 'Nature of Suit' → nothing found
+  [ 90/179] EMPTY 'Cause of Action' → nothing found
+  [ 84/179] OK    'Origin of Case' → 11 entities
+  [ 91/179] OK    'INSTRUCTIONS FOR ATTORNEYS' → 3 entities
+  [102/179] EMPTY 'Plaintiffs-Defendants' → nothing found
+  [101/179] EMPTY 'County of Residence' → nothing found
+  [104/179] EMPTY 'Federal Question' → nothing found
+  [105/179] EMPTY 'Nature of Suit' → nothing found
+  [106/179] EMPTY 'Nature of Suit' → nothing found
+  [100/179] OK    'County of Residence' → 2 entities
+  [103/179] EMPTY 'County of Residence' → nothing found
+  [109/179] EMPTY 'Nature of Suit' → nothing found
+  [110/179] EMPTY 'Nature of Suit' → nothing found
+  [ 99/179] OK    'County of Residence' → 1 entities
+  [112/179] EMPTY 'Plaintiffs-Defendants' → nothing found
+  [ 96/179] OK    'Basis of Jurisdiction' → 4 entities
+  [107/179] EMPTY 'Venue Assignment' → nothing found
+  [113/179] EMPTY 'Judicial Assignment' → nothing found
+  [108/179] OK    'II. BASIS OF JURISDICTION' → 5 entities
+  [115/179] OK    'INSTRUCTIONS FOR ATTORNEYS' → 5 entities
+  [114/179] OK    'County of Residence' → 1 entities
+  [119/179] EMPTY 'Plaintiffs-Defendants' → nothing found
+  [120/179] EMPTY 'Nature of Suit' → nothing found
+  [117/179] EMPTY 'ional Assignment' → nothing found
+  [111/179] OK    'Origin of Case' → 11 entities
+  [123/179] EMPTY 'Plaintiffs-Defendants' → nothing found
+  [124/179] EMPTY 'Nature of Suit' → nothing found
+  [116/179] OK    'INSTRUCTIONS FOR ATTORNEYS' → 3 entities
+  [118/179] EMPTY 'Venue Assignment' → nothing found
+  [122/179] OK    'INSTRUCTIONS FOR ATTORNEYS COMPLETING CIVIL COVER SHEET FORM' → 4 entities
+  [126/179] OK    '[AI] Attachment to Civil Cover Sheet' → 9 entities
+  [130/179] EMPTY 'Federal Question Jurisdiction' → nothing found
+  [131/179] EMPTY 'Nature of Suit' → nothing found
+  [127/179] OK    'INSTRUCTIONS FOR ATTORNEYS' → 4 entities
+  [129/179] EMPTY 'Jurisdictional Assignment' → nothing found
+  [134/179] EMPTY 'Plaintiffs-Defendants' → nothing found
+  [125/179] OK    'Basis of Jurisdiction' → 5 entities
+  [133/179] OK    'County of Residence' → 1 entities
+  [135/179] OK    'Origin' → 6 entities
+  [121/179] OK    'Basis of Jurisdiction' → 11 entities
+  [136/179] OK    'INSTRUCTIONS FOR ATTORNEYS' → 6 entities
+  [138/179] OK    'INSTRUCTIONS FOR ATTORNEYS' → 3 entities
+  [132/179] OK    'Origin of Case' → 12 entities
+  [139/179] OK    'Origin' → 6 entities
+  [140/179] OK    'County of Residence' → 3 entities
+  [137/179] OK    'Basis of Jurisdiction' → 3 entities
+  [142/179] OK    'Instructions for Attorneys' → 2 entities
+  [141/179] OK    'Origin' → 5 entities
+  [143/179] EMPTY 'Requested in Complaint' → nothing found
+  [148/179] EMPTY 'Related Cases' → nothing found
+  [144/179] OK    'Origin' → 5 entities
+  [147/179] OK    'Origin' → 6 entities
+  [145/179] OK    'Basis of Jurisdiction' → 4 entities
+  [146/179] OK    'Instructions for Completing Civil Cover Sheet' → 4 entities
+  [151/179] OK    'Origin' → 7 entities
+  [152/179] OK    'Origin' → 7 entities
+  [153/179] OK    'INSTRUCTIONS FOR ATTORNEYS' → 3 entities
+  [156/179] OK    'Origin' → 6 entities
+  [155/179] OK    'County of Residence' → 1 entities
+  [150/179] OK    'Basis of Jurisdiction' → 9 entities
+  [149/179] OK    'Basis of Jurisdiction' → 6 entities
+  [157/179] OK    'Origin' → 6 entities
+  [154/179] OK    'Basis of Jurisdiction' → 5 entities
+  [158/179] OK    'Origin' → 7 entities
+  [159/179] OK    'Origin of Case' → 8 entities
+  [161/179] OK    'TOC (Synthetic)' → 3 entities
+  [165/179] EMPTY 'Plaintiffs-Defendants' → nothing found
+  [163/179] OK    'Origin' → 6 entities
+  [162/179] OK    'Origin' → 7 entities
+  [168/179] EMPTY 'Plaintiffs-Defendants' → nothing found
+  [169/179] EMPTY 'Nature of Suit Selection' → nothing found
+  [167/179] OK    'Instructions for Completing Civil Cover Sheet' → 5 entities
+  [170/179] OK    'INSTRUCTIONS FOR ATTORNEYS' → 3 entities
+  [164/179] OK    'Basis of Jurisdiction' → 10 entities
+  [160/179] OK    'Basis of Jurisdiction' → 11 entities
+  [171/179] OK    'Origin' → 5 entities
+  [166/179] OK    'Basis of Jurisdiction' → 12 entities
+  [176/179] EMPTY 'Plaintiffs-Defendants' → nothing found
+  [172/179] OK    'Instructions for Attorneys' → 4 entities
+  [173/179] OK    'Basis of Jurisdiction' → 3 entities
+  [177/179] OK    'Basis of Jurisdiction' → 8 entities
+  [178/179] OK    'Origin' → 7 entities
+  [174/179] OK    'Basis of Jurisdiction' → 10 entities
+  [175/179] OK    'Basis of Jurisdiction' → 9 entities
+  [179/179] OK    'Basis of Jurisdiction' → 7 entities
+
+  [03A] DONE — 509 extractions from 'Civil Cover Sheet (along with complaint)_0712be82'
+         attorney           13
+         court              116
+         date               106
+         law_firm           4
+         party              270
+
+SUCCESS: 03A_entity_extraction.py — 509 entities extracted from 'Civil Cover Sheet (along with complaint)_0712be82'C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\sklearn\base.py:463: InconsistentVersionWarning: Trying to unpickle estimator SelectKBest from version 0.23.1 when using version 1.8.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:
+https://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\sklearn\base.py:463: InconsistentVersionWarning: Trying to unpickle estimator LogisticRegressionCV from version 0.23.1 when using version 1.8.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:
+https://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\sklearn\base.py:463: InconsistentVersionWarning: Trying to unpickle estimator Pipeline from version 0.23.1 when using version 1.8.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:
+https://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\sklearn\base.py:463: InconsistentVersionWarning: Trying to unpickle estimator SelectKBest from version 0.23.1 when using version 1.8.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:
+https://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\sklearn\base.py:463: InconsistentVersionWarning: Trying to unpickle estimator LogisticRegressionCV from version 0.23.1 when using version 1.8.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:
+https://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\sklearn\base.py:463: InconsistentVersionWarning: Trying to unpickle estimator Pipeline from version 0.23.1 when using version 1.8.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:
+https://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+
+[Phase 2] Step 07D — Promoting case metadata from extracted entities…
+[07D] All metadata fields already populated — nothing to promote
+[Phase 2] Step 4A — Building knowledge graph…
+1000 extractions loaded for 'Civil Cover Sheet (along with complaint)_0712be82'
+  Document category: 'other' (type='Court - Filing Receipt')
+  Pass 1 — 80 nodes created
+  Fuzzy dedup — merged 18 duplicate nodes (62 remaining)
+  Pass 2 — 25 edges created
+SUCCESS: KG built for 'Civil Cover Sheet (along with complaint)_0712be82'. 62 nodes [event:31, party:29, procedural_event:2], 25 edges [involved_in:25].
+
+┌───────────────────────────────────────┐
+│  PHASE 2 — Civil Cover Sheet (along with complaint)│
+├───────────────────────────────────────┤
+│  Step                       Duration  │
+├───────────────────────────────────────┤
+│  07C_case_context              2.5s   │
+│  00_section_refine           108.0s   │
+│  01_AST_tree_build            14.4s   │
+│  02_AST_semantic_label         8.6s   │
+│  03A_entity_extraction       183.5s  ◄ slowest│
+│  07D_case_meta_promotion       1.4s   │
+│  04A_kg_inner_build            1.9s   │
+├───────────────────────────────────────┤
+│  TOTAL                       327.6s   │
+└───────────────────────────────────────┘
+[Phase 2] === COMPLETE — 'Civil Cover Sheet (along with complaint)_0712be82' ===
+============================================================
+[Phase 2] COMPLETE — 'Civil Cover Sheet (along with complaint)_0712be82' AST + entities + KG ready in Supabase.
+
+[Phase 2] Processing 1 exhibit(s) in parallel…
+
+[Phase 2] === Processing 'Civil Cover Sheet (along with complaint)_0712be82_exhibit___DMS_4611331v1__' (id=02efd74a-a2e5-4b4f-91e3-086f78676b00) ===
+[Phase 2] Step 07C — Case-context re-classification…
+[07C] Calling Gemini Flash for 'Civil Cover Sheet (along with complaint)_0712be82_exhibit___DMS_4611331v1__'…
+[07C] WARNING: GOOGLE_API_KEY not set — using fallback classification.
+[07C] Document updated (id=02efd74a-a2e5-4b4f-91e3-086f78676b00)
+[07C] 'Civil Cover Sheet (along with complaint)_0712be82_exhibit___DMS_4611331v1__': primary=False, perspective=unknown, temporal=current, purpose=evidence, confidence=50%
+
+SUCCESS: 07C_case_context_classification.py complete for 'Civil Cover Sheet (along with complaint)_0712be82_exhibit___DMS_4611331v1__'
+[Phase 2] Step 0 — Refining section structure…
+1 sections total, 1 candidates for refinement
+  Evaluating '[[DMS:4611331v1]]' (6,638 chars)...
+    Splitting into 6 sub-sections...
+    Done — 6 children inserted
+SUCCESS: Section refinement complete for 'Civil Cover Sheet (along with complaint)_0712be82_exhibit___DMS_4611331v1__'. 1 sections split, 6 new child sections added, 0 skipped (coherent or GPT failure).
+[Phase 2] Step 1 — Building parent-child tree…
+SUCCESS: Tree built for 'Civil Cover Sheet (along with complaint)_0712be82_exhibit___DMS_4611331v1__'. 13 sections processed, 1 root node(s), max depth 2.
+[Phase 2] Step 2 — Assigning semantic labels…
+SUCCESS: Labeled 13 sections for 'Civil Cover Sheet (along with complaint)_0712be82_exhibit___DMS_4611331v1__'. 2 pattern-matched (2 title, 0 text), 11 GPT-labeled, 0 flagged for review, 0 errors.
+[Phase 2] Steps 3A/3B — Extracting entities…
+[03A] Extracting from 'Civil Cover Sheet (along with complaint)_0712be82_exhibit___DMS_4611331v1__' (Administrative - Case Summary)
+  [03A] 13 sections to process
+  [  3/13] SKIP  'Jury Demand and Related Cases' — skip label (table_of_contents)
+  [  8/13] SKIP  'Civil Cover Sheet Instructions' — skip label (table_of_contents)
+  [ 13/13] SKIP  'Civil Cover Sheet Instructions' — skip label (table_of_contents)
+  [03A] Processing 10 sections (3 skipped)
+  [  4/13] EMPTY '[[DMS:4611331v1]]' → nothing found
+  [  1/13] EMPTY 'Nature of Suit' → nothing found
+  [  7/13] EMPTY 'Cause of Action and Demand' → nothing found
+  [  6/13] OK    'Origin of Case' → 5 entities
+  [ 10/13] EMPTY 'Venue Assignment Guidelines' → nothing found
+  [  5/13] OK    'Plaintiff’s Attorneys Information' → 9 entities
+  [  2/13] OK    'Plaintiff’s Attorneys Information' → 10 entities
+  [  9/13] OK    'Filing Requirements and Jurisdiction' → 7 entities
+  [ 11/13] OK    'Nature of Suit and Origin' → 9 entities
+  [ 12/13] OK    'Jurisdiction Basis' → 11 entities
+
+  [03A] DONE — 51 extractions from 'Civil Cover Sheet (along with complaint)_0712be82_exhibit___DMS_4611331v1__'
+         attorney           12
+         court              10
+         date               5
+         law_firm           4
+         party              20
+
+SUCCESS: 03A_entity_extraction.py — 51 entities extracted from 'Civil Cover Sheet (along with complaint)_0712be82_exhibit___DMS_4611331v1__'
+[Phase 2] Step 07D — Promoting case metadata from extracted entities…
+[07D] All metadata fields already populated — nothing to promote
+[Phase 2] Step 4A — Building knowledge graph…
+115 extractions loaded for 'Civil Cover Sheet (along with complaint)_0712be82_exhibit___DMS_4611331v1__'
+  Document category: 'other' (type='Administrative - Case Summary')
+  Pass 1 — 30 nodes created
+  Fuzzy dedup — merged 5 duplicate nodes (25 remaining)
+  Pass 2 — 12 edges created
+SUCCESS: KG built for 'Civil Cover Sheet (along with complaint)_0712be82_exhibit___DMS_4611331v1__'. 25 nodes [event:7, party:17, procedural_event:1], 12 edges [involved_in:12].
+
+┌───────────────────────────────────────┐
+│  PHASE 2 — Civil Cover Sheet (along with complaint)│
+├───────────────────────────────────────┤
+│  Step                       Duration  │
+├───────────────────────────────────────┤
+│  07C_case_context              2.2s   │
+│  00_section_refine            17.3s   │
+│  01_AST_tree_build             2.4s   │
+│  02_AST_semantic_label         6.5s   │
+│  03A_entity_extraction        24.7s  ◄ slowest│
+│  07D_case_meta_promotion       1.7s   │
+│  04A_kg_inner_build            2.4s   │
+├───────────────────────────────────────┤
+│  TOTAL                        63.3s   │
+└───────────────────────────────────────┘
+[Phase 2] === COMPLETE — 'Civil Cover Sheet (along with complaint)_0712be82_exhibit___DMS_4611331v1__' ===
+
+[Phase 2] COMPLETE — all exhibits processed.
+
+[Phase 3] Starting embedding for case a724c9ac-8faa-4459-9cf9-8b6e1dcc0efe...
+[Phase 3] Starting embedding pipeline for case 'a724c9ac-8faa-4459-9cf9-8b6e1dcc0efe'
+============================================================
+[Phase 3] Step 1 — Embedding sections...
+============================================================
+  Phase 3 â€” Embedding Sections
+  Case ID: a724c9ac-8faa-4459-9cf9-8b6e1dcc0efe
+============================================================
+
+[1/4] Fetching sections from Supabase...
+  Found 7 document(s) in case
+  Found 279 total section(s)
+[2/4] Checking existing embeddings...
+  Found 274 existing embedding(s)
+
+  Sections to embed: 0
+  Skipped (up to date): 272
+  Skipped (empty/short): 2
+  Skipped (boilerplate label): 5
+
+  All sections are up to date. Nothing to do.
+============================================================
+[Phase 3] COMPLETE — case 'a724c9ac-8faa-4459-9cf9-8b6e1dcc0efe' is now search-ready.
+[Phase 3] ⏱  01_embed_sections: 2.4s
+[Phase 4] Case summary started in background → C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\backend\data_storage\logs\04_summary_a724c9ac.log
+[Phase 3] COMPLETE — case a724c9ac-8faa-4459-9cf9-8b6e1dcc0efe is search-ready.
+
+[Phase 4] Triggering post-extraction refresh for case a724c9ac-8faa-4459-9cf9-8b6e1dcc0efe...
+[Phase 4] Refresh log -> data_storage/logs/refresh_a724c9ac.log
+[Phase 4] Summary refresh + checklist started in background.
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+[Phase 2] Starting AST pipeline for 'Civil Cover Sheet (along with complaint)_0bd6c5b3' (id=85de043b-06d3-4086-b1b4-f850904e61df)
+============================================================
+
+[Phase 2] === Processing 'Civil Cover Sheet (along with complaint)_0bd6c5b3' (id=85de043b-06d3-4086-b1b4-f850904e61df) ===
+[Phase 2] Step 07C — Case-context re-classification…
+[07C] Calling Gemini Flash for 'Civil Cover Sheet (along with complaint)_0bd6c5b3'…
+[07C] WARNING: GOOGLE_API_KEY not set — using fallback classification.
+[07C] Document updated (id=85de043b-06d3-4086-b1b4-f850904e61df)
+[07C] 'Civil Cover Sheet (along with complaint)_0bd6c5b3': primary=False, perspective=unknown, temporal=current, purpose=operative_pleading, confidence=40%
+
+SUCCESS: 07C_case_context_classification.py complete for 'Civil Cover Sheet (along with complaint)_0bd6c5b3'
+[Phase 2] Step 0 — Refining section structure…
+24 sections total, 11 candidates for refinement
+  Evaluating '  A. Authority for Civil Cover Sheet.' (6,108 chars)...
+    Splitting into 7 sub-sections...
+    Done — 7 children inserted
+  Evaluating '  B. Parties.' (6,108 chars)...
+    Splitting into 7 sub-sections...
+    Done — 7 children inserted
+  Evaluating '  C. Attorneys.' (6,108 chars)...
+    Splitting into 7 sub-sections...
+    Done — 7 children inserted
+  Evaluating '  D. Basis of Jurisdiction.' (6,108 chars)...
+    Splitting into 7 sub-sections...
+    Done — 7 children inserted
+  Evaluating '  E. Residence (citizenship) of Principal Parties.' (6,108 chars)...
+    Splitting into 8 sub-sections...
+    Done — 8 children inserted
+  Evaluating '  F. Nature of Suit.' (6,108 chars)...
+    Splitting into 7 sub-sections...
+    Done — 7 children inserted
+  Evaluating '  G. Origin.' (6,108 chars)...
+    Splitting into 7 sub-sections...
+    Done — 7 children inserted
+  Evaluating '  H. Cause of Action.' (6,108 chars)...
+    Splitting into 7 sub-sections...
+    Done — 7 children inserted
+  Evaluating '  I. Requested in Complaint.' (6,108 chars)...
+    Splitting into 7 sub-sections...
+    Done — 7 children inserted
+  Evaluating '  J. Demand.' (6,108 chars)...
+    Splitting into 7 sub-sections...
+    Done — 7 children inserted
+  Evaluating '  K. Related Cases.' (6,108 chars)...
+    Splitting into 7 sub-sections...
+    Done — 7 children inserted
+SUCCESS: Section refinement complete for 'Civil Cover Sheet (along with complaint)_0bd6c5b3'. 11 sections split, 78 new child sections added, 0 skipped (coherent or GPT failure).
+[Phase 2] Step 1 — Building parent-child tree…
+SUCCESS: Tree built for 'Civil Cover Sheet (along with complaint)_0bd6c5b3'. 172 sections processed, 13 root node(s), max depth 3.
+[Phase 2] Step 2 — Assigning semantic labels…
+SUCCESS: Labeled 179 sections for 'Civil Cover Sheet (along with complaint)_0bd6c5b3'. 44 pattern-matched (44 title, 0 text), 135 GPT-labeled, 0 flagged for review, 1 errors.
+[Phase 2] Steps 3A/3B — Extracting entities + legal structure (parallel)…
+[03B] Legal structure extraction: Civil Cover Sheet (along with complaint)_0bd6c5b3
+      Type: Pleading - Complaint | Case: Epic vs Apple
+[03B] Processing 3 qualifying section(s) (3 claims, 0 factual)…
+  ✓ [causes_of_action] '  H. Cause of Action.': 0 rows
+  ✓ [causes_of_action] 'Cause of Action': 0 rows
+  ✓ [causes_of_action] 'VI. CAUSE OF ACTION': 5 rows
+[03B] SUCCESS — 5 rows inserted for document 85de043b-06d3-4086-b1b4-f850904e61df
+[03A] Extracting from 'Civil Cover Sheet (along with complaint)_0bd6c5b3' (Pleading - Complaint)
+  [03A] 179 sections to process
+  [  7/179] SKIP  'INSTRUCTIONS FOR ATTORNEYS COMPLETING CIVIL COVER SHEET FORM' — skip label (table_of_contents)
+  [  8/179] SKIP  '  J. Demand.' — child micro-section
+  [  9/179] SKIP  '  F. Nature of Suit.' — child micro-section
+  [ 10/179] SKIP  '  K. Related Cases.' — child micro-section
+  [ 11/179] SKIP  '  H. Cause of Action.' — child micro-section
+  [ 12/179] SKIP  '  G. Origin.' — child micro-section
+  [ 13/179] SKIP  'Instructions for Completing Civil Cover Sheet' — skip label (table_of_contents)
+  [ 15/179] SKIP  '  A. Authority for Civil Cover Sheet.' — skip label (table_of_contents)
+  [ 24/179] SKIP  'INSTRUCTIONS FOR ATTORNEYS' — skip label (table_of_contents)
+  [ 26/179] SKIP  'Civil Cover Sheet Instructions' — skip label (table_of_contents)
+  [ 28/179] SKIP  '  B. Parties.' — child micro-section
+  [ 32/179] SKIP  'Instructions for Completing Civil Cover Sheet' — skip label (table_of_contents)
+  [ 38/179] SKIP  '  D. Basis of Jurisdiction.' — child micro-section
+  [ 44/179] SKIP  'Civil Cover Sheet Instructions' — skip label (table_of_contents)
+  [ 47/179] SKIP  'Requested in Complaint' — skip label (prayer_for_relief)
+  [ 48/179] SKIP  '  E. Residence (citizenship) of Principal Parties.' — child micro-section
+  [ 56/179] SKIP  'Instructions for Completing Civil Cover Sheet' — skip label (table_of_contents)
+  [ 58/179] SKIP  'INSTRUCTIONS FOR ATTORNEYS' — skip label (table_of_contents)
+  [ 59/179] SKIP  'INSTRUCTIONS FOR ATTORNEYS' — skip label (table_of_contents)
+  [ 69/179] SKIP  'INSTRUCTIONS FOR ATTORNEYS' — skip label (table_of_contents)
+  [ 70/179] SKIP  'INSTRUCTIONS FOR ATTORNEYS' — skip label (table_of_contents)
+  [ 84/179] SKIP  'INSTRUCTIONS FOR ATTORNEYS' — skip label (table_of_contents)
+  [ 96/179] SKIP  '  I. Requested in Complaint.' — child micro-section
+  [ 98/179] SKIP  'Instructions for Completing Civil Cover Sheet' — skip label (table_of_contents)
+  [100/179] SKIP  'INSTRUCTIONS FOR ATTORNEYS COMPLETING CIVIL COVER SHEET FORM' — skip label (table_of_contents)
+  [116/179] SKIP  'Civil Cover Sheet Instructions' — skip label (table_of_contents)
+  [118/179] SKIP  'Instructions For Attorneys' — skip label (table_of_contents)
+  [120/179] SKIP  'Instructions for Completing Civil Cover Sheet' — skip label (table_of_contents)
+  [124/179] SKIP  'INSTRUCTIONS FOR ATTORNEYS' — skip label (table_of_contents)
+  [144/179] SKIP  'TOC (Synthetic)' — skip label (table_of_contents)
+  [149/179] SKIP  '  C. Attorneys.' — skip label (signature_block)
+  [157/179] SKIP  'Instructions for Attorneys' — skip label (table_of_contents)
+  [159/179] SKIP  'Instructions for Completing Civil Cover Sheet' — skip label (table_of_contents)
+  [168/179] SKIP  'Instructions for Attorneys' — skip label (table_of_contents)
+  [176/179] SKIP  'INSTRUCTIONS FOR ATTORNEYS COMPLETING CIVIL COVER SHEET FORM' — skip label (table_of_contents)
+  [03A] Processing 144 sections (35 skipped)
+  [  5/179] OK    'IX. DIVISIONAL ASSIGNMENT' → 2 entities
+  [  4/179] OK    'V. ORIGIN' → 5 entities
+  [  3/179] OK    'III. CITIZENSHIP OF PRINCIPAL PARTIES' → 5 entities
+  [  1/179] OK    'IV. NATURE OF SUIT' → 3 entities
+  [ 17/179] EMPTY 'Nature of Suit' → nothing found
+  [  2/179] OK    'II. BASIS OF JURISDICTION' → 5 entities
+  [ 19/179] EMPTY 'Nature of Suit' → nothing found
+  [  6/179] OK    'VII. REQUESTED IN COMPLAINT:' → 4 entities
+  [ 18/179] EMPTY 'Venue Assignment' → nothing found
+  [ 22/179] EMPTY 'Nature of Suit' → nothing found
+  [ 21/179] EMPTY 'Plaintiffs-Defendants' → nothing found
+  [ 14/179] OK    'County of Residence' → 4 entities
+  [ 16/179] OK    'County of Residence' → 4 entities
+  [ 20/179] OK    'County of Residence' → 1 entities
+  [ 25/179] EMPTY 'Venue Assignment' → nothing found
+  [ 23/179] OK    'County of Residence' → 5 entities
+  [ 29/179] OK    'Plaintiffs-Defendants' → 4 entities
+  [ 31/179] EMPTY 'Related Cases' → nothing found
+  [ 35/179] EMPTY 'Nature of Suit' → nothing found
+  [ 36/179] EMPTY 'Nature of Suit' → nothing found
+  [ 37/179] EMPTY 'Nature of Suit' → nothing found
+  [ 27/179] EMPTY 'Plaintiffs-Defendants Information' → nothing found
+  [ 33/179] OK    'County of Residence' → 6 entities
+  [ 41/179] OK    'Federal Question Jurisdiction' → 2 entities
+  [ 34/179] EMPTY 'Plaintiffs-Defendants Information' → nothing found
+  [ 30/179] OK    'INSTRUCTIONS FOR ATTORNEYS' → 2 entities
+  [ 45/179] EMPTY 'Nature of Suit' → nothing found
+  [ 40/179] EMPTY 'Plaintiffs-Defendants Information' → nothing found
+  [ 46/179] EMPTY 'Plaintiffs-Defendants Information' → nothing found
+  [ 43/179] OK    'County of Residence' → 6 entities
+  [ 51/179] EMPTY 'Cause of Action' → nothing found
+  [ 39/179] EMPTY 'Plaintiffs-Defendants Information' → nothing found
+  [ 53/179] EMPTY 'Nature of Suit Selection' → nothing found
+  [ 52/179] EMPTY 'Plaintiffs-Defendants' → nothing found
+  [ 55/179] EMPTY 'Nature of Suit' → nothing found
+  [ 54/179] EMPTY 'Venue Assignment Guidelines' → nothing found
+  [ 60/179] EMPTY 'Nature of Suit' → nothing found
+  [ 61/179] EMPTY 'Nature of Suit' → nothing found
+  [ 57/179] EMPTY 'Venue Assignment' → nothing found
+  [ 49/179] OK    'County of Residence' → 4 entities
+  [ 50/179] OK    'County of Residence Requirements' → 4 entities
+  [ 42/179] OK    'Basis of Jurisdiction' → 8 entities
+  [ 63/179] EMPTY 'County of Residence' → nothing found
+  [ 67/179] EMPTY 'Plaintiffs-Defendants' → nothing found
+  [ 62/179] OK    'County of Residence' → 1 entities
+  [ 64/179] EMPTY 'Venue Assignment' → nothing found
+  [ 72/179] EMPTY 'Nature of Suit' → nothing found
+  [ 73/179] EMPTY 'Nature of Suit' → nothing found
+  [ 65/179] EMPTY 'Plaintiffs-Defendants' → nothing found
+  [ 68/179] EMPTY 'Venue Assignment' → nothing found
+  [ 71/179] EMPTY 'Judicial Assignment' → nothing found
+  [ 74/179] EMPTY 'Venue Assignment' → nothing found
+  [ 76/179] OK    'Plaintiffs-Defendants' → 4 entities
+  [ 77/179] OK    'Plaintiffs-Defendants Information' → 4 entities
+  [ 80/179] EMPTY 'Venue Assignment' → nothing found
+  [ 81/179] EMPTY 'Nature of Suit Classification' → nothing found
+  [ 82/179] EMPTY 'Nature of Suit' → nothing found
+  [ 83/179] EMPTY 'Nature of Suit' → nothing found
+  [ 79/179] EMPTY 'Plaintiffs-Defendants Information' → nothing found
+  [ 75/179] OK    'County of Residence Requirements' → 6 entities
+  [ 86/179] EMPTY 'Venue Assignment' → nothing found
+  [ 85/179] OK    'County of Residence' → 5 entities
+  [ 87/179] EMPTY 'Venue Assignment' → nothing found
+  [ 66/179] OK    'Basis of Jurisdiction' → 9 entities
+  [ 90/179] EMPTY 'Plaintiffs-Defendants' → nothing found
+  [ 91/179] EMPTY 'Plaintiffs-Defendants' → nothing found
+  [ 88/179] OK    'County of Residence' → 5 entities
+  [ 93/179] EMPTY 'Plaintiffs-Defendants' → nothing found
+  [ 95/179] EMPTY 'VIII. RELATED CASE(S), IF ANY' → nothing found
+  [ 89/179] OK    'Origin' → 4 entities
+  [ 97/179] EMPTY 'Plaintiffs-Defendants Information' → nothing found
+  [ 92/179] OK    'Origin of Case' → 8 entities
+  [102/179] EMPTY 'itional Assignment' → nothing found
+  [ 78/179] OK    'Basis of Jurisdiction' → 13 entities
+  [104/179] EMPTY 'Nature of Suit' → nothing found
+  [103/179] EMPTY 'Venue Assignment Considerations' → nothing found
+  [ 99/179] OK    'County of Residence' → 2 entities
+  [107/179] EMPTY 'Plaintiffs-Defendants' → nothing found
+  [108/179] EMPTY 'Nature of Suit' → nothing found
+  [109/179] EMPTY 'Nature of Suit' → nothing found
+  [101/179] OK    'I. PLAINTIFFS' → 2 entities
+  [ 94/179] OK    'Basis of Jurisdiction' → 5 entities
+  [111/179] EMPTY 'Plaintiffs-Defendants Information' → nothing found
+  [110/179] EMPTY 'County of Residence' → nothing found
+  [113/179] EMPTY 'Plaintiffs-Defendants Information' → nothing found
+  [106/179] OK    'Basis of Jurisdiction' → 8 entities
+  [105/179] OK    'VI. CAUSE OF ACTION' → 4 entities
+  [112/179] OK    'I. PLAINTIFF'S ATTORNEYS' → 9 entities
+  [117/179] OK    'Origin' → 7 entities
+  [122/179] EMPTY 'Plaintiffs-Defendants Information' → nothing found
+  [119/179] OK    'County of Residence' → 1 entities
+  [114/179] OK    'Basis of Jurisdiction' → 9 entities
+  [121/179] OK    'Origin of Case' → 8 entities
+  [127/179] EMPTY 'Plaintiffs-Defendants' → nothing found
+  [115/179] OK    'Origin of Case' → 12 entities
+  [126/179] EMPTY 'Related Cases Identification' → nothing found
+  [130/179] EMPTY 'Nature of Suit' → nothing found
+  [123/179] OK    'Types of Jurisdiction' → 9 entities
+  [132/179] EMPTY 'Nature of Suit' → nothing found
+  [128/179] OK    'Origin of Case' → 8 entities
+  [131/179] OK    'County of Residence Requirements' → 2 entities
+  [133/179] EMPTY 'Judicial Assignment' → nothing found
+  [125/179] OK    'Basis of Jurisdiction' → 5 entities
+  [129/179] OK    'Origin of Case' → 10 entities
+  [134/179] EMPTY 'Related Cases' → nothing found
+  [135/179] OK    'Basis of Jurisdiction' → 8 entities
+  [138/179] OK    'Origin of Proceedings' → 4 entities
+  [141/179] EMPTY 'Nature of Suit' → nothing found
+  [140/179] EMPTY 'Venue Assignment' → nothing found
+  [142/179] OK    'County of Residence' → 5 entities
+  [136/179] OK    'Jurisdiction Codes' → 6 entities
+  [137/179] OK    'County of Residence' → 5 entities
+  [143/179] OK    'Title Page' → 3 entities
+  [139/179] OK    'Origin' → 8 entities
+  [147/179] OK    'County of Residence' → 1 entities
+  [146/179] OK    'County of Residence' → 4 entities
+  [148/179] OK    'Origin' → 6 entities
+  [153/179] EMPTY 'Venue Assignment' → nothing found
+  [152/179] OK    'Origin' → 9 entities
+  [145/179] OK    'Basis of Jurisdiction' → 9 entities
+  [151/179] OK    'Origin of Case' → 9 entities
+  [150/179] OK    'Basis of Jurisdiction' → 5 entities
+  [154/179] OK    'Origin of Case' → 13 entities
+  [160/179] OK    'Basis of Jurisdiction' → 10 entities
+  [156/179] OK    'Origin of Case' → 8 entities
+  [162/179] OK    'Origin' → 4 entities
+  [155/179] OK    'Basis of Jurisdiction' → 7 entities
+  [158/179] OK    'Origin' → 7 entities
+  [164/179] OK    'Origin' → 6 entities
+  [161/179] OK    'Jurisdiction Basis' → 9 entities
+  [163/179] OK    'Basis of Jurisdiction' → 8 entities
+  [166/179] EMPTY 'Related Cases and Assignment' → nothing found
+  [171/179] EMPTY 'Venue Assignment' → nothing found
+  [169/179] OK    'County of Residence' → 4 entities
+  [170/179] OK    'Origin of Case' → 8 entities
+  [165/179] OK    'Basis of Jurisdiction' → 11 entities
+  [172/179] OK    'Basis of Jurisdiction' → 6 entities
+  [167/179] OK    'Basis of Jurisdiction' → 7 entities
+  [175/179] OK    'Origin' → 5 entities
+  [173/179] OK    'Basis of Jurisdiction' → 7 entities
+  [178/179] OK    'Origin' → 4 entities
+  [174/179] OK    'Basis of Jurisdiction' → 8 entities
+  [179/179] OK    'Origin' → 5 entities
+  [177/179] OK    'Origin of Case' → 9 entities
+
+  [03A] DONE — 462 extractions from 'Civil Cover Sheet (along with complaint)_0bd6c5b3'
+         attorney           7
+         court              117
+         date               85
+         law_firm           2
+         party              251
+
+SUCCESS: 03A_entity_extraction.py — 462 entities extracted from 'Civil Cover Sheet (along with complaint)_0bd6c5b3'C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\sklearn\base.py:463: InconsistentVersionWarning: Trying to unpickle estimator SelectKBest from version 0.23.1 when using version 1.8.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:
+https://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\sklearn\base.py:463: InconsistentVersionWarning: Trying to unpickle estimator LogisticRegressionCV from version 0.23.1 when using version 1.8.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:
+https://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\sklearn\base.py:463: InconsistentVersionWarning: Trying to unpickle estimator Pipeline from version 0.23.1 when using version 1.8.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:
+https://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\sklearn\base.py:463: InconsistentVersionWarning: Trying to unpickle estimator SelectKBest from version 0.23.1 when using version 1.8.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:
+https://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\sklearn\base.py:463: InconsistentVersionWarning: Trying to unpickle estimator LogisticRegressionCV from version 0.23.1 when using version 1.8.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:
+https://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\sklearn\base.py:463: InconsistentVersionWarning: Trying to unpickle estimator Pipeline from version 0.23.1 when using version 1.8.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:
+https://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\.venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.1.0)/charset_normalizer (3.4.5) doesn't match a supported version!
+  warnings.warn(
+
+[Phase 2] Step 07D — Promoting case metadata from extracted entities…
+[07D] All metadata fields already populated — nothing to promote
+[Phase 2] Step 4A — Building knowledge graph…
+462 extractions loaded for 'Civil Cover Sheet (along with complaint)_0bd6c5b3'
+  Document category: 'complaint' (type='Pleading - Complaint')
+  Pass 1 — 44 nodes created
+  Fuzzy dedup — merged 14 duplicate nodes (30 remaining)
+  Pass 2 — 6 edges created
+SUCCESS: KG built for 'Civil Cover Sheet (along with complaint)_0bd6c5b3'. 30 nodes [event:12, party:14, procedural_event:4], 6 edges [involved_in:6].
+
+┌───────────────────────────────────────┐
+│  PHASE 2 — Civil Cover Sheet (along with complaint)│
+├───────────────────────────────────────┤
+│  Step                       Duration  │
+├───────────────────────────────────────┤
+│  07C_case_context              2.6s   │
+│  00_section_refine           131.0s   │
+│  01_AST_tree_build            14.7s   │
+│  02_AST_semantic_label        24.7s   │
+│  03A+03B (parallel)          159.8s  ◄ slowest│
+│  07D_case_meta_promotion       1.7s   │
+│  04A_kg_inner_build            1.9s   │
+├───────────────────────────────────────┤
+│  TOTAL                       349.4s   │
+└───────────────────────────────────────┘
+[Phase 2] === COMPLETE — 'Civil Cover Sheet (along with complaint)_0bd6c5b3' ===
+============================================================
+[Phase 2] COMPLETE — 'Civil Cover Sheet (along with complaint)_0bd6c5b3' AST + entities + KG ready in Supabase.
+
+[Phase 2] Processing 1 exhibit(s) in parallel…
+
+[Phase 2] === Processing 'Civil Cover Sheet (along with complaint)_0bd6c5b3_exhibit___DMS_4611331v1__' (id=40ed7ba2-baa0-4ad7-9892-1b81d479085e) ===
+[Phase 2] Step 07C — Case-context re-classification…
+[07C] Calling Gemini Flash for 'Civil Cover Sheet (along with complaint)_0bd6c5b3_exhibit___DMS_4611331v1__'…
+[07C] WARNING: GOOGLE_API_KEY not set — using fallback classification.
+[07C] Document updated (id=40ed7ba2-baa0-4ad7-9892-1b81d479085e)
+[07C] 'Civil Cover Sheet (along with complaint)_0bd6c5b3_exhibit___DMS_4611331v1__': primary=False, perspective=unknown, temporal=current, purpose=evidence, confidence=50%
+
+SUCCESS: 07C_case_context_classification.py complete for 'Civil Cover Sheet (along with complaint)_0bd6c5b3_exhibit___DMS_4611331v1__'
+[Phase 2] Step 0 — Refining section structure…
+1 sections total, 1 candidates for refinement
+  Evaluating '[[DMS:4611331v1]]' (6,638 chars)...
+    Splitting into 8 sub-sections...
+    Done — 8 children inserted
+SUCCESS: Section refinement complete for 'Civil Cover Sheet (along with complaint)_0bd6c5b3_exhibit___DMS_4611331v1__'. 1 sections split, 8 new child sections added, 0 skipped (coherent or GPT failure).
+[Phase 2] Step 1 — Building parent-child tree…
+SUCCESS: Tree built for 'Civil Cover Sheet (along with complaint)_0bd6c5b3_exhibit___DMS_4611331v1__'. 9 sections processed, 1 root node(s), max depth 2.
+[Phase 2] Step 2 — Assigning semantic labels…
+SUCCESS: Labeled 9 sections for 'Civil Cover Sheet (along with complaint)_0bd6c5b3_exhibit___DMS_4611331v1__'. 1 pattern-matched (1 title, 0 text), 8 GPT-labeled, 0 flagged for review, 1 errors.
+[Phase 2] Steps 3A/3B — Extracting entities…
+[03A] Extracting from 'Civil Cover Sheet (along with complaint)_0bd6c5b3_exhibit___DMS_4611331v1__' (Administrative - Case Summary)
+  [03A] 9 sections to process
+  [  9/9] SKIP  'Instructions for Completing Civil Cover Sheet' — skip label (table_of_contents)
+  [03A] Processing 8 sections (1 skipped)
+  [  1/9] EMPTY '[[DMS:4611331v1]]' → nothing found
+  [  4/9] EMPTY 'Nature of Suit' → nothing found
+  [  2/9] EMPTY 'Plaintiffs-Defendants Information' → nothing found
+  [  5/9] EMPTY 'Additional Instructions' → nothing found
+  [  7/9] OK    'Origin of Case' → 6 entities
+  [  3/9] OK    'County of Residence' → 2 entities
+  [  8/9] OK    'Plaintiff’s Attorneys' → 9 entities
+  [  6/9] OK    'Basis of Jurisdiction' → 4 entities
+
+  [03A] DONE — 21 extractions from 'Civil Cover Sheet (along with complaint)_0bd6c5b3_exhibit___DMS_4611331v1__'
+         attorney           6
+         court              4
+         date               5
+         law_firm           2
+         party              4
+
+SUCCESS: 03A_entity_extraction.py — 21 entities extracted from 'Civil Cover Sheet (along with complaint)_0bd6c5b3_exhibit___DMS_4611331v1__'
+[Phase 2] Step 07D — Promoting case metadata from extracted entities…
+[07D] All metadata fields already populated — nothing to promote
+[Phase 2] Step 4A — Building knowledge graph…
+21 extractions loaded for 'Civil Cover Sheet (along with complaint)_0bd6c5b3_exhibit___DMS_4611331v1__'
+  Document category: 'other' (type='Administrative - Case Summary')
+  Pass 1 — 7 nodes created
+  Fuzzy dedup — merged 1 duplicate nodes (6 remaining)
+  Pass 2 — 0 edges created
+SUCCESS: KG built for 'Civil Cover Sheet (along with complaint)_0bd6c5b3_exhibit___DMS_4611331v1__'. 6 nodes [event:4, party:2], 0 edges [].
+
+┌───────────────────────────────────────┐
+│  PHASE 2 — Civil Cover Sheet (along with complaint)│
+├───────────────────────────────────────┤
+│  Step                       Duration  │
+├───────────────────────────────────────┤
+│  07C_case_context              2.2s   │
+│  00_section_refine            18.6s  ◄ slowest│
+│  01_AST_tree_build             2.1s   │
+│  02_AST_semantic_label         3.5s   │
+│  03A_entity_extraction        16.2s   │
+│  07D_case_meta_promotion       1.4s   │
+│  04A_kg_inner_build            1.5s   │
+├───────────────────────────────────────┤
+│  TOTAL                        57.0s   │
+└───────────────────────────────────────┘
+[Phase 2] === COMPLETE — 'Civil Cover Sheet (along with complaint)_0bd6c5b3_exhibit___DMS_4611331v1__' ===
+
+[Phase 2] COMPLETE — all exhibits processed.
+
+[Phase 3] Starting embedding for case a724c9ac-8faa-4459-9cf9-8b6e1dcc0efe...
+[Phase 3] Starting embedding pipeline for case 'a724c9ac-8faa-4459-9cf9-8b6e1dcc0efe'
+============================================================
+[Phase 3] Step 1 — Embedding sections...
+============================================================
+  Phase 3 â€” Embedding Sections
+  Case ID: a724c9ac-8faa-4459-9cf9-8b6e1dcc0efe
+============================================================
+
+[1/4] Fetching sections from Supabase...
+  Found 7 document(s) in case
+  Found 275 total section(s)
+[2/4] Checking existing embeddings...
+  Found 111 existing embedding(s)
+
+  Sections to embed: 162
+  Skipped (up to date): 84
+  Skipped (empty/short): 1
+  Skipped (boilerplate label): 28
+
+[3/4] Generating embeddings (162 sections)...
+  Batch 1/2 (100 sections)...
+  Batch 2/2 (62 sections)...
+
+[4/4] Upserting 162 embedding(s) to Supabase...
+  Summary written to C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\backend\03_SEARCH\..\zz_temp_chunks\a724c9ac-8faa-4459-9cf9-8b6e1dcc0efe_embedding_summary.json
+
+============================================================
+  RESULTS
+============================================================
+  Total sections:       275
+  Newly embedded:       162
+  Re-embedded (changed):21
+  Skipped (up to date): 84
+  Skipped (empty):      1
+  Skipped (label):      28
+  Truncated:            0
+  Errors:               0
+
+SUCCESS: 162 section(s) embedded for case a724c9ac-8faa-4459-9cf9-8b6e1dcc0efe
+============================================================
+[Phase 3] COMPLETE — case 'a724c9ac-8faa-4459-9cf9-8b6e1dcc0efe' is now search-ready.
+[Phase 3] ⏱  01_embed_sections: 7.3s
+[Phase 4] Case summary started in background → C:\Users\lukep\Documents\Salle\Business\Senior Year\TFG\Projectfiles\backend\data_storage\logs\04_summary_a724c9ac.log
+[Phase 3] COMPLETE — case a724c9ac-8faa-4459-9cf9-8b6e1dcc0efe is search-ready.
+
+[Phase 4] Triggering post-extraction refresh for case a724c9ac-8faa-4459-9cf9-8b6e1dcc0efe...
+[Phase 4] Refresh log -> data_storage/logs/refresh_a724c9ac.log
+[Phase 4] Summary refresh + checklist started in background.

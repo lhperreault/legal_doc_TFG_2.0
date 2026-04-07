@@ -65,6 +65,7 @@ load_dotenv()
 SUPABASE_URL          = os.environ["SUPABASE_URL"]
 SUPABASE_SERVICE_KEY  = os.environ["SUPABASE_SERVICE_ROLE_KEY"]
 STORAGE_BUCKET        = "documents"
+ORIGINALS_SUBFOLDER   = "originals"   # subfolder inside the same bucket
 
 
 # ---------------------------------------------------------------------------
@@ -91,6 +92,41 @@ def _safe_bool(val) -> bool:
     return str(val).strip().lower() in ("true", "1", "yes")
 
 
+def _upload_original_file(supabase: Client, local_path: str, file_name_with_ext: str) -> "str | None":
+    """Upload the original source file to storage. Returns the public URL or None on failure."""
+    if not os.path.isfile(local_path):
+        print(f"[08] WARNING: original file not found at {local_path}, skipping upload.")
+        return None
+    ext = os.path.splitext(file_name_with_ext)[1].lower()
+    content_type_map = {
+        ".pdf":   "application/pdf",
+        ".docx":  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        ".doc":   "application/msword",
+        ".html":  "text/html",
+        ".htm":   "text/html",
+        ".xhtml": "application/xhtml+xml",
+        ".txt":   "text/plain",
+    }
+    content_type  = content_type_map.get(ext, "application/octet-stream")
+    storage_path  = f"{ORIGINALS_SUBFOLDER}/{file_name_with_ext}"
+    with open(local_path, "rb") as f:
+        file_bytes = f.read()
+    try:
+        supabase.storage.from_(STORAGE_BUCKET).remove([storage_path])
+    except Exception:
+        pass
+    try:
+        supabase.storage.from_(STORAGE_BUCKET).upload(
+            storage_path, file_bytes, {"content-type": content_type}
+        )
+        url = supabase.storage.from_(STORAGE_BUCKET).get_public_url(storage_path)
+        print(f"[08] Uploaded original → {url}")
+        return url
+    except Exception as exc:
+        print(f"[08] WARNING: original file upload failed: {exc}")
+        return None
+
+
 def _get_total_pages(extraction_strategy_str: str) -> int | None:
     """Parse total_pages out of the extraction_strategy dict string."""
     try:
@@ -110,6 +146,8 @@ def main():
     parser.add_argument("text_md",   help="Path to the _text_extraction.md file")
     parser.add_argument("--case-id", default=None, help="Supabase case UUID to attach this document to")
     parser.add_argument("--primary", action="store_true", help="Set is_primary_filing=True on this document")
+    parser.add_argument("--original-file", default=None,
+        help="Filename with extension of the original source document (e.g. Complaint.pdf)")
     args = parser.parse_args()
 
     text_md    = args.text_md
@@ -176,6 +214,18 @@ def main():
     supabase: Client = create_client(SUPABASE_URL, SUPABASE_SERVICE_KEY)
 
     # ------------------------------------------------------------------
+    # 2b. Upload original source file to Storage
+    # ------------------------------------------------------------------
+    original_file_url = None
+    if args.original_file:
+        data_storage_dir  = os.path.join(
+            os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+            "data_storage", "documents"
+        )
+        original_local_path = os.path.join(data_storage_dir, args.original_file)
+        original_file_url   = _upload_original_file(supabase, original_local_path, args.original_file)
+
+    # ------------------------------------------------------------------
     # 3. Upload tagged XHTML to Storage (if present)
     # ------------------------------------------------------------------
     tagged_xhtml_url = None
@@ -209,6 +259,8 @@ def main():
         "total_pages":        total_pages,
         "case_id":            case_id,          # None → not linked to a case yet
         "is_primary_filing":  is_primary if is_primary else None,
+        "original_file_url":  original_file_url,
+        "ai_extracted":       False,
     }
     # Remove None values — let DB defaults handle them
     doc_payload = {k: v for k, v in doc_payload.items() if v is not None}

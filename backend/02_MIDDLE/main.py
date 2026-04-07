@@ -12,6 +12,7 @@ import concurrent.futures
 import os
 import subprocess
 import sys
+import time
 
 from dotenv import load_dotenv
 
@@ -27,6 +28,37 @@ load_dotenv(os.path.join(os.path.dirname(__file__), '..', '..', '.env'))
 
 PHASE_DIR   = os.path.dirname(os.path.abspath(__file__))
 SEARCH_DIR  = os.path.join(PHASE_DIR, '..', '03_SEARCH')
+
+# Per-document timing store  {document_id: [(label, seconds), ...]}
+import threading
+_timing_lock: threading.Lock = threading.Lock()
+_doc_timings: dict[str, list[tuple[str, float]]] = {}
+
+
+def _record(document_id: str, label: str, secs: float) -> None:
+    with _timing_lock:
+        _doc_timings.setdefault(document_id, []).append((label, secs))
+
+
+def _print_doc_timing(document_id: str, doc_name: str, total: float) -> None:
+    rows = _doc_timings.get(document_id, [])
+    if not rows:
+        return
+    col   = max(len(lbl) for lbl, _ in rows) + 2
+    width = col + 14
+    sep   = "─" * width
+    slowest = max(rows, key=lambda x: x[1])
+    print(f"\n┌{sep}┐")
+    print(f"│  {'PHASE 2 — ' + doc_name:<{width - 2}}│")
+    print(f"├{sep}┤")
+    print(f"│  {'Step':<{col}}{'Duration':>10}  │")
+    print(f"├{sep}┤")
+    for lbl, secs in rows:
+        marker = "  ◄ slowest" if lbl == slowest[0] else ""
+        print(f"│  {lbl:<{col}}{secs:>8.1f}s{marker:<{max(0, width - col - 11)}}│")
+    print(f"├{sep}┤")
+    print(f"│  {'TOTAL':<{col}}{total:>8.1f}s{'':>{width - col - 11}}│")
+    print(f"└{sep}┘")
 
 
 def _run_safe(script_name: str, *args) -> str:
@@ -142,38 +174,50 @@ def _should_run_03b(document_id: str) -> bool:
     return False
 
 
+def _timed(document_id: str, label: str, fn, *args):
+    """Call fn(*args), record elapsed under label for this document."""
+    t0 = time.perf_counter()
+    result = fn(*args)
+    _record(document_id, label, time.perf_counter() - t0)
+    return result
+
+
 def _process_one_document(document_id: str, file_name: str, case_id: str | None) -> None:
     """
     Run the full Phase 2 pipeline for a single document.
     Steps 03A and 03B run in parallel after AST labeling.
     """
+    doc_start = time.perf_counter()
     print(f"\n[Phase 2] === Processing '{file_name}' (id={document_id}) ===")
 
     # Step 07C: Case-context re-classification
     if case_id:
         print("[Phase 2] Step 07C — Case-context re-classification…")
-        _run_safe("07C_case_context_classification.py", "--document_id", document_id)
+        _timed(document_id, "07C_case_context", _run_safe,
+               "07C_case_context_classification.py", "--document_id", document_id)
 
     # Step 0: Section refinement
     _upsert_step(document_id, case_id, "section_refine", "Refining section structure", "running")
     print("[Phase 2] Step 0 — Refining section structure…")
-    _run_safe("00_section_refine.py", "--document_id", document_id)
+    _timed(document_id, "00_section_refine", _run_safe,
+           "00_section_refine.py", "--document_id", document_id)
     _upsert_step(document_id, case_id, "section_refine", "Refining section structure", "done")
 
     # Step 1: Tree reconstruction
     _upsert_step(document_id, case_id, "ast_tree", "Building document tree", "running")
     print("[Phase 2] Step 1 — Building parent-child tree…")
-    _run_safe("01_AST_tree_build.py", "--document_id", document_id)
+    _timed(document_id, "01_AST_tree_build", _run_safe,
+           "01_AST_tree_build.py", "--document_id", document_id)
     _upsert_step(document_id, case_id, "ast_tree", "Building document tree", "done")
 
     # Step 2: Semantic labeling
     _upsert_step(document_id, case_id, "semantic_labeling", "Semantic labeling", "running")
     print("[Phase 2] Step 2 — Assigning semantic labels…")
-    _run_safe("02_AST_semantic_label.py", "--document_id", document_id)
+    _timed(document_id, "02_AST_semantic_label", _run_safe,
+           "02_AST_semantic_label.py", "--document_id", document_id)
     _upsert_step(document_id, case_id, "semantic_labeling", "Semantic labeling", "done")
 
     # Steps 3A + 3B: Entity extraction and legal structure — run in PARALLEL
-    # Both only require AST labels; neither depends on the other.
     run_3b = _should_run_03b(document_id)
 
     _upsert_step(document_id, case_id, "entity_extraction", "Entity extraction", "running")
@@ -183,19 +227,24 @@ def _process_one_document(document_id: str, file_name: str, case_id: str | None)
     print("[Phase 2] Steps 3A/3B — Extracting entities" +
           (" + legal structure (parallel)…" if run_3b else "…"))
 
+    t3_start = time.perf_counter()
+
     def _run_3a():
         _run_safe("03A_entity_extraction.py", "--document_id", document_id)
 
-    def _run_3b():
+    def _run_3b_fn():
         _run_safe("03B_legal_structure_extraction.py", "--document_id", document_id)
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=2) as ex:
         f3a = ex.submit(_run_3a)
-        f3b = ex.submit(_run_3b) if run_3b else None
-        # Propagate any exceptions
+        f3b = ex.submit(_run_3b_fn) if run_3b else None
         f3a.result()
         if f3b:
             f3b.result()
+
+    t3_elapsed = time.perf_counter() - t3_start
+    label_3 = "03A+03B (parallel)" if run_3b else "03A_entity_extraction"
+    _record(document_id, label_3, t3_elapsed)
 
     _upsert_step(document_id, case_id, "entity_extraction", "Entity extraction", "done")
     if run_3b:
@@ -204,14 +253,18 @@ def _process_one_document(document_id: str, file_name: str, case_id: str | None)
     # Step 07D: Promote high-confidence entities to cases row
     if case_id:
         print("[Phase 2] Step 07D — Promoting case metadata from extracted entities…")
-        _run_safe("07D_case_meta_promotion.py", "--document_id", document_id)
+        _timed(document_id, "07D_case_meta_promotion", _run_safe,
+               "07D_case_meta_promotion.py", "--document_id", document_id)
 
     # Step 4A: Knowledge graph (intra-document)
     _upsert_step(document_id, case_id, "kg_build", "Knowledge graph", "running")
     print("[Phase 2] Step 4A — Building knowledge graph…")
-    _run_safe("04A_kg_inner_build.py", "--document_id", document_id)
+    _timed(document_id, "04A_kg_inner_build", _run_safe,
+           "04A_kg_inner_build.py", "--document_id", document_id)
     _upsert_step(document_id, case_id, "kg_build", "Knowledge graph", "done")
 
+    doc_total = time.perf_counter() - doc_start
+    _print_doc_timing(document_id, file_name[:40], doc_total)
     print(f"[Phase 2] === COMPLETE — '{file_name}' ===")
 
 

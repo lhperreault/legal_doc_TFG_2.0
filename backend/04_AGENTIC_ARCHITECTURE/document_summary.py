@@ -32,6 +32,7 @@ Usage:
 import argparse
 import os
 import sys
+import time
 import uuid
 
 _ARCH_DIR     = os.path.dirname(os.path.abspath(__file__))
@@ -341,7 +342,9 @@ def main():
     document_id = args.document_id or None
     _upsert_step(document_id, args.case_id, "initial_summary", "Case summary", "running")
 
+    t0 = time.perf_counter()
     result = generate_summary(case_id=args.case_id, verbose=True, refresh=args.refresh)
+    summary_elapsed = time.perf_counter() - t0
 
     if result.get("success"):
         _upsert_step(document_id, args.case_id, "initial_summary", "Case summary", "done")
@@ -358,6 +361,7 @@ def main():
         src_count = len(result.get("provenance_links", []))
         if src_count:
             print(f"  Sources    : {src_count} document section(s)")
+        print(f"[Phase 4] ⏱  generate_summary: {summary_elapsed:.1f}s")
     else:
         print(f"\n[Summary] FAILED: {result.get('error', 'Unknown error')}")
         sys.exit(1)

@@ -13,6 +13,7 @@ import argparse
 import os
 import subprocess
 import sys
+import time
 
 from dotenv import load_dotenv
 
@@ -107,12 +108,15 @@ def main():
         embed_args.append("--force")
 
     print("[Phase 3] Step 1 — Embedding sections...")
+    t0 = time.perf_counter()
     _run("01_embed_sections.py", *embed_args)
+    embed_elapsed = time.perf_counter() - t0
 
     _upsert_step(document_id, args.case_id, "embeddings", "Vector embeddings", "done")
 
     print("=" * 60)
     print(f"[Phase 3] COMPLETE — case '{args.case_id}' is now search-ready.")
+    print(f"[Phase 3] ⏱  01_embed_sections: {embed_elapsed:.1f}s")
 
     # Fire Phase 4 summary now that embeddings exist — runs in background so
     # Phase 3 exits immediately. Phase 2's refresh_after_extraction will later

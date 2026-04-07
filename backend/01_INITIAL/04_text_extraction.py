@@ -43,6 +43,11 @@ try:
 except Exception:
     OpenAI = None
 
+try:
+    import google.generativeai as genai
+except Exception:
+    genai = None
+
 
 # ==========================================
 # HELPER & CLEANING FUNCTIONS
@@ -735,6 +740,80 @@ def _pdf_fallback_chain(pdf_path: str, already_tried: str) -> str:
 
 
 # ==========================================
+# AI EXTRACTION (GEMINI VISION) — FORM/CHECKBOX DOCUMENTS
+# ==========================================
+
+def _should_use_ai_extraction(df) -> bool:
+    """Return True if document is <10 pages AND has checkboxes or is form-like."""
+    try:
+        strategy = ast.literal_eval(str(df['extraction_strategy'][0]))
+        total_pages    = int(strategy.get("diagnostics", {}).get("total_pages", 999))
+        has_checkboxes = bool(strategy.get("has_checkboxes", False))
+        is_form_like   = bool(strategy.get("is_form_like",   False))
+        return total_pages < 10 and (has_checkboxes or is_form_like)
+    except Exception:
+        return False
+
+
+def parse_with_gemini_vision(file_path: str) -> str:
+    """
+    Render each PDF page as a PNG image and send to Gemini 2.0 Flash Vision.
+    Returns markdown with all text extracted and checkbox states noted.
+    Falls back to fitz text per-page on individual page failure.
+    """
+    if genai is None:
+        return "# Parser Error\n\ngoogle-generativeai package is not installed."
+    api_key = os.getenv("GEMINI_API_KEY", "").strip()
+    if not api_key:
+        return "# Parser Error\n\nGEMINI_API_KEY environment variable is not set."
+
+    genai.configure(api_key=api_key)
+    model = genai.GenerativeModel("gemini-2.0-flash")
+    prompt = (
+        "Extract all text from this legal form page in reading order. "
+        "For every checkbox or radio button, write [CHECKED] if it is filled/marked, "
+        "or [UNCHECKED] if it is empty, followed by its label. "
+        "Use markdown headings and lists where helpful. Return only the extracted content."
+    )
+    print(f"   [Gemini] Starting Vision extraction: {file_path}")
+    try:
+        doc = fitz.open(file_path)
+        parts = []
+        for i, page in enumerate(doc):
+            pix = page.get_pixmap(matrix=fitz.Matrix(2, 2))
+            img_bytes = pix.tobytes("png")
+            try:
+                resp = model.generate_content(
+                    [prompt, {"inline_data": {"mime_type": "image/png", "data": img_bytes}}]
+                )
+                page_text = resp.text.strip() if resp.text else ""
+            except Exception as page_exc:
+                print(f"   [Gemini] Page {i + 1} failed ({page_exc}), using fitz fallback.")
+                page_text = _clean_md_text(page.get_text())
+            parts.append(f"## Page {i + 1}\n\n{page_text}")
+        doc.close()
+        result = "\n\n".join(parts)
+        print(f"   [Gemini] Done ({len(result)} chars).")
+        return result
+    except Exception as exc:
+        return f"# Parser Error\n\nGemini Vision failed: {exc}"
+
+
+def _write_output(result: str, pdf_path: str) -> None:
+    """Write the extraction result to zz_temp_chunks and print the SUCCESS line."""
+    backend_dir     = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    temp_chunks_dir = os.path.join(backend_dir, 'zz_temp_chunks')
+    os.makedirs(temp_chunks_dir, exist_ok=True)
+    out_path = os.path.join(
+        temp_chunks_dir,
+        os.path.splitext(os.path.basename(pdf_path))[0] + '_text_extraction.md'
+    )
+    with open(out_path, 'w', encoding='utf-8') as f:
+        f.write(result if isinstance(result, str) else str(result))
+    print(f"SUCCESS: 04_text_extraction.py ran successfully. Output written to: {out_path}")
+
+
+# ==========================================
 # MAIN EXECUTION ROUTER
 # ==========================================
 
@@ -749,9 +828,22 @@ def main():
     df = pd.read_csv(structure_csv)
     classification = df['classification'][0] if 'classification' in df.columns else ''
     file_type = df['file_type'][0] if 'file_type' in df.columns else ''
-    
+
     # Route to the correct extraction function
     is_pdf = os.path.splitext(pdf_path)[1].lower() == '.pdf'
+
+    # ── AI extraction gate ────────────────────────────────────────────────────
+    # Short (<10 pages) form/checkbox documents bypass the standard router and
+    # are sent to Gemini 2.0 Flash Vision, which can read checkbox states.
+    if is_pdf and _should_use_ai_extraction(df):
+        print("   [Router] Form/checkbox document detected → Gemini Vision extraction.")
+        result = parse_with_gemini_vision(pdf_path)
+        if _result_is_bad(result):
+            print("   [Gemini] Output too short — falling back to standard PDF chain.")
+            result = _pdf_fallback_chain(pdf_path, already_tried="")
+        _write_output(result, pdf_path)
+        return
+    # ─────────────────────────────────────────────────────────────────────────
     has_native_toc = str(df.get('has_native_toc', [False])[0]).strip().lower() == 'true'
     primary_fn = None   # name of primary parser, used to skip it in fallback
 
@@ -803,17 +895,7 @@ def main():
         print(f"   [Fallback] Primary parser produced poor output — activating PDF fallback chain...")
         result = _pdf_fallback_chain(pdf_path, already_tried=primary_fn or "")
         
-    # Write result to zz_temp_chunks
-    backend_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    temp_chunks_dir = os.path.join(backend_dir, 'zz_temp_chunks')
-    os.makedirs(temp_chunks_dir, exist_ok=True)
-    
-    out_path = os.path.join(temp_chunks_dir, os.path.splitext(os.path.basename(pdf_path))[0] + '_text_extraction.md')
-    
-    with open(out_path, 'w', encoding='utf-8') as f:
-        f.write(result if isinstance(result, str) else str(result))
-        
-    print(f"SUCCESS: 04_text_extraction.py ran successfully. Output written to: {out_path}")
+    _write_output(result, pdf_path)
 
 # ==========================================
 # THIS MUST BE THE ABSOLUTE LAST THING IN THE FILE
