@@ -133,14 +133,24 @@ class Allegation(BaseModel):
     confidence:          float           = 0.8
 
 
+class AffirmativeDefense(BaseModel):
+    defense_number: Optional[int]   = None
+    defense_label:  str
+    defense_text:   Optional[str]   = None
+    defense_source: str             = "extracted"  # extracted | inferred_from_schema
+    elements:       list[str]       = Field(default_factory=list)  # proof elements the defendant would need
+    confidence:     float           = 0.7
+
+
 class Count(BaseModel):
-    count_number:   Optional[int]          = None
-    count_label:    str
-    count_type:     str
-    legal_elements: list[LegalElement]     = Field(default_factory=list)
-    allegations:    list[Allegation]       = Field(default_factory=list)
-    summary:        Optional[str]          = None
-    confidence:     float                  = 0.8
+    count_number:         Optional[int]             = None
+    count_label:          str
+    count_type:           str
+    legal_elements:       list[LegalElement]        = Field(default_factory=list)
+    allegations:          list[Allegation]          = Field(default_factory=list)
+    affirmative_defenses: list[AffirmativeDefense]  = Field(default_factory=list)
+    summary:              Optional[str]             = None
+    confidence:           float                     = 0.8
 
 
 class Claim(BaseModel):
@@ -153,9 +163,19 @@ class Claim(BaseModel):
     confidence:  float               = 0.8
 
 
+class LegalTheory(BaseModel):
+    theory_label:   str
+    theory_type:    Optional[str]       = None  # e.g. "alter_ego", "fraudulent_transfer", "respondeat_superior"
+    summary:        Optional[str]       = None
+    count_numbers:  list[int]           = Field(default_factory=list)  # count_numbers this theory groups
+    count_labels:   list[str]           = Field(default_factory=list)  # fallback when count_numbers unknown
+    confidence:     float               = 0.7
+
+
 class LegalStructureExtraction(BaseModel):
-    claims:                 list[Claim]      = Field(default_factory=list)
-    standalone_allegations: list[Allegation] = Field(default_factory=list)
+    claims:                 list[Claim]        = Field(default_factory=list)
+    standalone_allegations: list[Allegation]   = Field(default_factory=list)
+    legal_theories:         list[LegalTheory]  = Field(default_factory=list)
 
 
 # ── Element schemas for inference ─────────────────────────────────────────────
@@ -239,6 +259,106 @@ _ELEMENT_SCHEMAS: dict[str, list[str]] = {
 }
 
 
+# ── Affirmative defense schemas (paired with claim types above) ───────────────
+
+_DEFENSE_SCHEMAS: dict[str, list[str]] = {
+    "negligence": [
+        "Contributory/comparative negligence",
+        "Assumption of risk",
+        "Statute of limitations",
+        "Lack of proximate cause",
+    ],
+    "breach_of_contract": [
+        "Statute of frauds",
+        "Prior material breach by plaintiff",
+        "Impossibility or impracticability of performance",
+        "Accord and satisfaction",
+        "Waiver or estoppel",
+        "Statute of limitations",
+    ],
+    "fraud": [
+        "No justifiable reliance",
+        "Statement was opinion or puffery, not fact",
+        "Statute of limitations",
+        "Lack of scienter",
+    ],
+    "misrepresentation": [
+        "No reasonable reliance",
+        "Truth of the statement",
+        "Statute of limitations",
+    ],
+    "unjust_enrichment": [
+        "Adequate legal remedy exists (contract governs)",
+        "Benefit was a gift or volunteered",
+        "Laches",
+    ],
+    "intentional_infliction_of_emotional_distress": [
+        "Conduct was not extreme and outrageous",
+        "Privilege or consent",
+        "Statute of limitations",
+    ],
+    "defamation": [
+        "Truth",
+        "Privilege (absolute or qualified)",
+        "Statement was opinion, not fact",
+        "Consent",
+        "Statute of limitations",
+    ],
+    "tortious_interference": [
+        "Justification or privilege",
+        "No knowledge of the relationship",
+        "Competitor privilege",
+    ],
+    "antitrust": [
+        "No antitrust injury",
+        "Procompetitive justification",
+        "State action immunity",
+        "Noerr-Pennington immunity",
+    ],
+    "statutory": [
+        "Plaintiff outside class protected by statute",
+        "No violation occurred",
+        "Statute of limitations",
+        "Preemption",
+    ],
+    "conversion": [
+        "Plaintiff did not own or possess the property",
+        "Consent or abandonment",
+        "Statute of limitations",
+    ],
+    "breach_of_fiduciary_duty": [
+        "No fiduciary relationship existed",
+        "Business judgment rule",
+        "Ratification or consent",
+        "Statute of limitations",
+    ],
+    "civil_rights_violation": [
+        "Qualified immunity",
+        "No state action",
+        "No constitutional deprivation",
+    ],
+}
+
+
+def _fill_missing_defenses(count: Count) -> Count:
+    """If no defenses were extracted, seed from schema so the board has something to show."""
+    if count.affirmative_defenses:
+        return count
+    schema = _DEFENSE_SCHEMAS.get(count.count_type, [])
+    if not schema:
+        return count
+    count.affirmative_defenses = [
+        AffirmativeDefense(
+            defense_number=i + 1,
+            defense_label=text,
+            defense_source="inferred_from_schema",
+            confidence=0.6,
+        )
+        for i, text in enumerate(schema)
+    ]
+    return count
+
+
 def _fill_missing_elements(count: Count) -> Count:
     needs_fill = not count.legal_elements or any(
         e.element_source == "needs_schema_inference" for e in count.legal_elements
@@ -314,6 +434,18 @@ Extract the legal structure from this section following this hierarchy:
 
 5. **Standalone allegations** — For factual background sections not tied to a specific
    count, put assertions in standalone_allegations (no count/claim linkage needed).
+
+6. **Affirmative defenses** — If the section is from an answer/counterclaim/motion and
+   the defendant raises defenses to a count (statute of limitations, assumption of risk,
+   qualified immunity, etc.), populate each Count.affirmative_defenses with the defense
+   label and, if stated, its supporting elements. Leave empty for plaintiff pleadings —
+   defenses will be filled from schemas post-hoc.
+
+7. **Legal theories** — If the section explicitly names a legal theory that groups
+   multiple counts (e.g. "alter ego liability", "respondeat superior", "fraudulent
+   transfer", "joint and several liability", "piercing the corporate veil"), add it
+   to legal_theories with the count_numbers it covers. Do NOT invent theories; only
+   extract what is stated.
 
 Return ONLY a JSON object matching this schema:
 {schema}"""
@@ -558,10 +690,12 @@ def _process_section(
                         result.standalone_allegations.extend(count.allegations)
                 result.claims = []
 
-        # Post-process: fill missing elements from standard schemas
+        # Post-process: fill missing elements and defenses from standard schemas
         for claim in result.claims:
             for i, count in enumerate(claim.counts):
-                claim.counts[i] = _fill_missing_elements(count)
+                filled = _fill_missing_elements(count)
+                filled = _fill_missing_defenses(filled)
+                claim.counts[i] = filled
 
     return result
 
@@ -595,6 +729,9 @@ def _insert_structure(
         )
     )
     total = 0
+    # count_number -> count_id for theory linking within this section
+    count_number_to_id: dict[int, str] = {}
+    count_label_to_id: dict[str, str] = {}
 
     def _insert(table: str, rows: list[dict]) -> list[dict]:
         if not rows:
@@ -644,6 +781,10 @@ def _insert_structure(
                 continue
             count_id = count_rows[0]["id"]
             total += 1
+            if count_model.count_number is not None:
+                count_number_to_id[count_model.count_number] = count_id
+            if count_model.count_label:
+                count_label_to_id[count_model.count_label.strip().lower()] = count_id
 
             # ── Legal elements ───────────────────────────────────────────────────
             el_id_by_number: dict[int, str] = {}
@@ -665,6 +806,24 @@ def _insert_structure(
                     if num is not None:
                         el_id_by_number[num] = ins["id"]
                 total += len(el_rows)
+
+            # ── Affirmative defenses ─────────────────────────────────────────────
+            if count_model.affirmative_defenses:
+                def_rows = [_strip_none({
+                    "count_id":       count_id,
+                    "document_id":    document_id,
+                    "case_id":        case_id,
+                    "defense_number": d.defense_number,
+                    "defense_label":  d.defense_label,
+                    "defense_text":   d.defense_text,
+                    "defense_source": d.defense_source,
+                    "elements":       d.elements or None,
+                    "section_id":     section_id,
+                    "page_range":     page_range,
+                    "confidence":     d.confidence,
+                }) for d in count_model.affirmative_defenses]
+                _insert("affirmative_defenses", def_rows)
+                total += len(def_rows)
 
             # ── Allegations ──────────────────────────────────────────────────────
             if count_model.allegations:
@@ -723,6 +882,38 @@ def _insert_structure(
         _insert("allegations", sa_rows)
         total += len(sa_rows)
 
+    # ── Legal theories ─────────────────────────────────────────────────────────
+    for theory in result.legal_theories:
+        theory_rows = _insert("legal_theories", [_strip_none({
+            "case_id":      case_id,
+            "document_id":  document_id,
+            "theory_label": theory.theory_label,
+            "theory_type":  theory.theory_type,
+            "summary":      theory.summary,
+            "confidence":   theory.confidence,
+            "source":       "extracted",
+        })])
+        if not theory_rows:
+            continue
+        theory_id = theory_rows[0]["id"]
+        total += 1
+
+        # Link to counts via count_number first, fall back to count_label match
+        linked_count_ids: set[str] = set()
+        for num in theory.count_numbers:
+            cid = count_number_to_id.get(num)
+            if cid:
+                linked_count_ids.add(cid)
+        for label in theory.count_labels:
+            cid = count_label_to_id.get(label.strip().lower())
+            if cid:
+                linked_count_ids.add(cid)
+
+        if linked_count_ids:
+            tc_rows = [{"theory_id": theory_id, "count_id": cid} for cid in linked_count_ids]
+            _insert("theory_counts", tc_rows)
+            total += len(tc_rows)
+
     return total
 
 
@@ -766,8 +957,11 @@ def extract_legal_structure(document_id: str, dry_run: bool = False) -> int:
     # Clear prior results (reverse FK order)
     if not dry_run:
         sb.table("evidence_links").delete().eq("document_id", document_id).execute()
+        sb.table("affirmative_defenses").delete().eq("document_id", document_id).execute()
         sb.table("allegations").delete().eq("document_id", document_id).execute()
         sb.table("legal_elements").delete().eq("document_id", document_id).execute()
+        # theory_counts cascade-deletes with legal_theories
+        sb.table("legal_theories").delete().eq("document_id", document_id).execute()
         sb.table("counts").delete().eq("document_id", document_id).execute()
         sb.table("claims").delete().eq("document_id", document_id).execute()
 
