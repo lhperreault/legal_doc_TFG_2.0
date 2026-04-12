@@ -30,10 +30,11 @@ import uuid
 from dotenv import load_dotenv
 load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".env"))
 
-from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
+from fastapi import FastAPI, File, Form, HTTPException, Query, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
+from typing import Optional
 
 app = FastAPI(title="Legal Pipeline API")
 
@@ -225,6 +226,416 @@ async def ingest(
         media_type="text/event-stream",
         headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
     )
+
+
+# ---------------------------------------------------------------------------
+# Intake queue endpoints — multi-channel ingestion
+# ---------------------------------------------------------------------------
+
+DEFAULT_FIRM_ID = "00000000-0000-4000-a000-000000000001"
+
+
+@app.post("/api/intake/upload")
+async def intake_upload(
+    file: UploadFile = File(...),
+    firm_id: str = Form(DEFAULT_FIRM_ID),
+    case_id: str | None = Form(None),
+    corpus_id: str | None = Form(None),
+    priority: str = Form("soon"),
+    processing_mode: str = Form("balanced"),
+):
+    """Upload a document into the intake queue with routing + scheduling."""
+    import hashlib
+
+    if not file.filename:
+        raise HTTPException(status_code=400, detail="No filename provided")
+
+    safe_name   = os.path.basename(file.filename)
+    stem, ext   = os.path.splitext(safe_name)
+    unique_name = f"{stem}_{uuid.uuid4().hex[:8]}{ext}"
+    dest = os.path.join(DOCS_DIR, unique_name)
+    os.makedirs(DOCS_DIR, exist_ok=True)
+
+    contents = await file.read()
+    file_hash = hashlib.sha256(contents).hexdigest()
+
+    with open(dest, "wb") as f:
+        f.write(contents)
+
+    sb = _get_sb()
+    if not sb:
+        raise HTTPException(status_code=500, detail="Database unavailable")
+
+    # Deduplication check
+    dup_resp = (
+        sb.table("intake_queue")
+        .select("id, status")
+        .eq("file_hash", file_hash)
+        .eq("firm_id", firm_id)
+        .execute()
+    )
+    if dup_resp.data:
+        existing = dup_resp.data[0]
+        return {
+            "intake_id": existing["id"],
+            "status": existing["status"],
+            "deduplicated": True,
+            "message": "Duplicate file already in queue",
+        }
+
+    # Determine initial status
+    if case_id:
+        # Case provided — auto-confirm routing, use immediate priority
+        status = "confirmed"
+        actual_priority = "immediate" if priority == "soon" else priority
+    else:
+        status = "pending"
+        actual_priority = priority
+
+    row = {
+        "firm_id": firm_id,
+        "source_channel": "upload",
+        "file_path": dest,
+        "file_name": unique_name,
+        "file_hash": file_hash,
+        "status": status,
+        "process_priority": actual_priority,
+        "processing_mode": processing_mode,
+    }
+    if case_id:
+        row["target_case_id"] = case_id
+    if corpus_id:
+        row["target_corpus_id"] = corpus_id
+
+    resp = sb.table("intake_queue").insert(row).execute()
+    intake_id = resp.data[0]["id"]
+
+    # If auto-confirmed with immediate priority, dispatch now
+    if status == "confirmed" and actual_priority == "immediate":
+        import asyncio
+        sys.path.insert(0, os.path.join(BACKEND_DIR, "05_INTAKE"))
+        from scheduler_worker import dispatch_intake_item
+        asyncio.create_task(dispatch_intake_item(uuid.UUID(intake_id)))
+
+    return {
+        "intake_id": intake_id,
+        "status": status,
+        "priority": actual_priority,
+        "deduplicated": False,
+    }
+
+
+@app.get("/api/intake/queue")
+async def list_intake_queue(
+    firm_id: str = Query(DEFAULT_FIRM_ID),
+    status: str | None = Query(None),
+    limit: int = Query(50),
+    offset: int = Query(0),
+):
+    """List intake queue items for a firm."""
+    sb = _get_sb()
+    if not sb:
+        raise HTTPException(status_code=500, detail="Database unavailable")
+
+    q = (
+        sb.table("intake_queue")
+        .select("*", count="exact")
+        .eq("firm_id", firm_id)
+        .order("created_at", desc=True)
+        .range(offset, offset + limit - 1)
+    )
+    if status:
+        q = q.eq("status", status)
+
+    resp = q.execute()
+    return {
+        "items": resp.data or [],
+        "total": resp.count or 0,
+    }
+
+
+class ConfirmRouting(BaseModel):
+    case_id: str
+    corpus_id: str | None = None
+
+
+@app.post("/api/intake/queue/{intake_id}/confirm")
+async def confirm_intake_routing(intake_id: str, body: ConfirmRouting):
+    """User confirms the routing suggestion for an intake item."""
+    sb = _get_sb()
+    if not sb:
+        raise HTTPException(status_code=500, detail="Database unavailable")
+
+    from datetime import datetime, timezone
+    update = {
+        "status": "confirmed",
+        "target_case_id": body.case_id,
+        "user_decision": {
+            "action": "confirm",
+            "decided_at": datetime.now(timezone.utc).isoformat(),
+        },
+    }
+    if body.corpus_id:
+        update["target_corpus_id"] = body.corpus_id
+
+    sb.table("intake_queue").update(update).eq("id", intake_id).execute()
+    return {"confirmed": True, "intake_id": intake_id}
+
+
+class ReassignRouting(BaseModel):
+    case_id: str
+    corpus_id: str | None = None
+
+
+@app.post("/api/intake/queue/{intake_id}/reassign")
+async def reassign_intake(intake_id: str, body: ReassignRouting):
+    """User overrides the routing suggestion with a different case."""
+    sb = _get_sb()
+    if not sb:
+        raise HTTPException(status_code=500, detail="Database unavailable")
+
+    from datetime import datetime, timezone
+    sb.table("intake_queue").update({
+        "status": "confirmed",
+        "target_case_id": body.case_id,
+        "target_corpus_id": body.corpus_id,
+        "user_decision": {
+            "action": "reassign",
+            "decided_at": datetime.now(timezone.utc).isoformat(),
+        },
+    }).eq("id", intake_id).execute()
+    return {"reassigned": True, "intake_id": intake_id}
+
+
+@app.post("/api/intake/email")
+async def intake_email_webhook(request: Request):
+    """Inbound email webhook (Postmark or SendGrid)."""
+    content_type = request.headers.get("content-type", "")
+
+    if "json" in content_type:
+        payload = await request.json()
+        sys.path.insert(0, os.path.join(BACKEND_DIR, "05_INTAKE", "adapters"))
+        from email import parse_postmark_inbound
+        intakes = parse_postmark_inbound(payload)
+    else:
+        form = await request.form()
+        form_data = dict(form)
+        sys.path.insert(0, os.path.join(BACKEND_DIR, "05_INTAKE", "adapters"))
+        from email import parse_sendgrid_inbound
+        intakes = parse_sendgrid_inbound(form_data)
+
+    sb = _get_sb()
+    if not sb:
+        raise HTTPException(status_code=500, detail="Database unavailable")
+
+    intake_ids = []
+    for intake in intakes:
+        row = {
+            "firm_id": str(intake.firm_id),
+            "source_channel": intake.source_channel,
+            "source_ref": intake.source_ref,
+            "source_metadata": intake.source_metadata,
+            "file_name": intake.file_name,
+            "file_hash": intake.file_hash,
+            "status": "pending",
+            "process_priority": intake.process_priority,
+            "processing_mode": intake.processing_mode,
+        }
+        if intake.explicit_case_hint:
+            row["explicit_case_hint"] = intake.explicit_case_hint
+        resp = sb.table("intake_queue").insert(row).execute()
+        intake_ids.append(resp.data[0]["id"])
+
+    return {"received": len(intake_ids), "intake_ids": intake_ids}
+
+
+# ---------------------------------------------------------------------------
+# GDrive / Dropbox / CMS webhook channel endpoints
+# ---------------------------------------------------------------------------
+
+@app.post("/api/intake/gdrive/webhook")
+async def intake_gdrive_webhook(request: Request):
+    """Google Drive push notification webhook."""
+    headers = dict(request.headers)
+    body = await request.body()
+    sys.path.insert(0, os.path.join(BACKEND_DIR, "05_INTAKE", "adapters"))
+    from gdrive import handle_gdrive_webhook
+    result = handle_gdrive_webhook(headers, body)
+    return result
+
+
+@app.get("/api/intake/dropbox/webhook")
+async def intake_dropbox_verify(challenge: str = ""):
+    """Dropbox webhook verification (GET with challenge)."""
+    from fastapi.responses import PlainTextResponse
+    return PlainTextResponse(challenge, headers={"X-Content-Type-Options": "nosniff"})
+
+
+@app.post("/api/intake/dropbox/webhook")
+async def intake_dropbox_webhook(request: Request):
+    """Dropbox change notification webhook."""
+    payload = await request.json()
+    sys.path.insert(0, os.path.join(BACKEND_DIR, "05_INTAKE", "adapters"))
+    from dropbox import handle_dropbox_webhook
+    return handle_dropbox_webhook(payload)
+
+
+@app.post("/api/intake/webhook/{firm_id}")
+async def intake_cms_webhook(
+    firm_id: str,
+    request: Request,
+    api_key: str | None = None,
+):
+    """Generic CMS webhook receiver. Requires API key in header or query param."""
+    key = api_key or request.headers.get("x-api-key", "")
+    if not key:
+        raise HTTPException(status_code=401, detail="API key required (X-API-Key header or ?api_key=)")
+
+    sys.path.insert(0, os.path.join(BACKEND_DIR, "05_INTAKE", "adapters"))
+    from cms_webhook import verify_api_key, handle_cms_webhook
+
+    if not verify_api_key(firm_id, key):
+        raise HTTPException(status_code=403, detail="Invalid or expired API key")
+
+    content_type = request.headers.get("content-type", "")
+
+    if "multipart" in content_type:
+        form = await request.form()
+        files = []
+        metadata = {}
+        for field_name, field_value in form.items():
+            if hasattr(field_value, "read"):
+                content = await field_value.read()
+                files.append((field_value.filename or field_name, content))
+            else:
+                metadata[field_name] = str(field_value)
+        result = handle_cms_webhook(firm_id, key, files, metadata)
+    elif "json" in content_type:
+        body = await request.json()
+        # JSON mode: expects {files: [{name, content_base64}], metadata: {...}}
+        import base64
+        raw_files = body.get("files", [])
+        files = []
+        for f in raw_files:
+            content = base64.b64decode(f.get("content_base64", ""))
+            files.append((f.get("name", "document.pdf"), content))
+        result = handle_cms_webhook(firm_id, key, files, body.get("metadata", {}))
+    else:
+        raise HTTPException(status_code=415, detail="Expected multipart/form-data or application/json")
+
+    return result
+
+
+# ---------------------------------------------------------------------------
+# Connected channels management
+# ---------------------------------------------------------------------------
+
+@app.get("/api/channels")
+async def list_channels(firm_id: str = Query(DEFAULT_FIRM_ID)):
+    """List all connected channels for a firm."""
+    sb = _get_sb()
+    if not sb:
+        raise HTTPException(status_code=500, detail="Database unavailable")
+    resp = (
+        sb.table("connected_channels")
+        .select("id, firm_id, channel_type, display_name, is_active, default_priority, last_sync_at, created_at")
+        .eq("firm_id", firm_id)
+        .order("created_at", desc=True)
+        .execute()
+    )
+    return {"channels": resp.data or []}
+
+
+class CreateChannel(BaseModel):
+    firm_id: str = DEFAULT_FIRM_ID
+    channel_type: str        # 'gdrive' | 'dropbox' | 'cms_webhook' | 'email'
+    display_name: str
+    config: dict = {}
+    default_priority: str = "overnight"
+    default_case_id: str | None = None
+    default_corpus_id: str | None = None
+
+
+@app.post("/api/channels")
+async def create_channel(body: CreateChannel):
+    """Create a new connected channel."""
+    sb = _get_sb()
+    if not sb:
+        raise HTTPException(status_code=500, detail="Database unavailable")
+
+    row = {
+        "firm_id": body.firm_id,
+        "channel_type": body.channel_type,
+        "display_name": body.display_name,
+        "config": body.config,
+        "default_priority": body.default_priority,
+    }
+    if body.default_case_id:
+        row["default_case_id"] = body.default_case_id
+    if body.default_corpus_id:
+        row["default_corpus_id"] = body.default_corpus_id
+
+    resp = sb.table("connected_channels").insert(row).execute()
+    channel_id = resp.data[0]["id"]
+
+    # If CMS webhook, auto-generate an API key
+    if body.channel_type == "cms_webhook":
+        sys.path.insert(0, os.path.join(BACKEND_DIR, "05_INTAKE", "adapters"))
+        from cms_webhook import generate_api_key
+        api_key = generate_api_key(body.firm_id, channel_id)
+        return {"channel_id": channel_id, "api_key": api_key}
+
+    return {"channel_id": channel_id}
+
+
+@app.delete("/api/channels/{channel_id}")
+async def delete_channel(channel_id: str):
+    """Deactivate a connected channel."""
+    sb = _get_sb()
+    if not sb:
+        raise HTTPException(status_code=500, detail="Database unavailable")
+    sb.table("connected_channels").update({"is_active": False}).eq("id", channel_id).execute()
+    return {"deactivated": True}
+
+
+# ---------------------------------------------------------------------------
+# Notification endpoints
+# ---------------------------------------------------------------------------
+
+@app.get("/api/notifications")
+async def list_notifications(
+    firm_id: str = Query(DEFAULT_FIRM_ID),
+    unread_only: bool = Query(True),
+    limit: int = Query(20),
+):
+    """List notifications for a firm."""
+    sb = _get_sb()
+    if not sb:
+        raise HTTPException(status_code=500, detail="Database unavailable")
+
+    q = (
+        sb.table("notifications")
+        .select("*")
+        .eq("firm_id", firm_id)
+        .order("created_at", desc=True)
+        .limit(limit)
+    )
+    if unread_only:
+        q = q.eq("read", False)
+
+    resp = q.execute()
+    return {"notifications": resp.data or []}
+
+
+@app.patch("/api/notifications/{notification_id}/read")
+async def mark_notification_read(notification_id: str):
+    """Mark a single notification as read."""
+    sb = _get_sb()
+    if not sb:
+        raise HTTPException(status_code=500, detail="Database unavailable")
+
+    sb.table("notifications").update({"read": True}).eq("id", notification_id).execute()
+    return {"marked_read": True}
 
 
 # ---------------------------------------------------------------------------

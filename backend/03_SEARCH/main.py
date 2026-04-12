@@ -94,6 +94,8 @@ def main():
                         help="UUID of the triggering document (for step tracking)")
     parser.add_argument("--force", action="store_true",
                         help="Re-embed all sections even if already up to date")
+    parser.add_argument("--processing-mode", default="balanced", choices=["accuracy", "balanced", "fast"],
+                        help="accuracy = best model; balanced = default; fast = cheapest model")
     args = parser.parse_args()
 
     document_id = args.document_id or None

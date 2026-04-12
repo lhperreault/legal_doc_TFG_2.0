@@ -15,3 +15,9 @@ google-generativeai
 
 uvicorn backend.server:app --reload --port 8000
 uvicorn backend.server:app --port 8000
+
+cd "C:/Users/lukep/Documents/Salle/Business/Senior Year/TFG/Projectfiles/backend"
+python server.py
+
+
+cloudflared tunnel --url http://localhost:8000

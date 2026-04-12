@@ -276,6 +276,8 @@ def main():
                         help="Optional pre-resolved document UUID (skips lookup if provided)")
     parser.add_argument("--no-recurse",  action="store_true",
                         help="Skip child exhibit processing (used when exhibits are fired separately)")
+    parser.add_argument("--mode",         default="interactive", choices=["interactive", "bulk"],
+                        help="interactive = normal flow; bulk = skip human-in-the-loop gates")
     args = parser.parse_args()
 
     file_name = args.file_name

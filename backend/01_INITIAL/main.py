@@ -107,6 +107,12 @@ def main():
     parser.add_argument("filename",          help="Filename in data_storage/documents (or zz_Mockfiles via 01_Intake)")
     parser.add_argument("--case-id",         default=None, help="Supabase case UUID to attach this document to")
     parser.add_argument("--primary",         action="store_true", help="Mark this document as is_primary_filing=True")
+    parser.add_argument("--mode",            default="interactive", choices=["interactive", "bulk"],
+                        help="interactive = normal flow; bulk = skip human-in-the-loop gates")
+    parser.add_argument("--processing-mode", default="balanced", choices=["accuracy", "balanced", "fast"],
+                        help="accuracy = multi-pass; balanced = default; fast = cheap models")
+    parser.add_argument("--corpus-id",       default=None, help="Corpus UUID to assign the document to")
+    parser.add_argument("--firm-id",         default=None, help="Firm UUID (for intake queue integration)")
     args = parser.parse_args()
 
     filename   = args.filename
