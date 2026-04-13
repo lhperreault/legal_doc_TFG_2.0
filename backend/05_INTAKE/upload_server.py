@@ -305,9 +305,12 @@ async def dropbox_webhook(request: dict = {}):
         # Parse path: /Legal Intake/{case_name}/{subfolder}/{file}
         # or: /Legal Intake/{case_name}/{file}
         # or: /Legal Intake/_external/{case_name}/{subfolder}/{file}
-        path_parts = entry.path_display.split("/")
-        # Remove empty first element and "Legal Intake"
-        parts = [p for p in path_parts if p and p != DROPBOX_FOLDER.strip("/").split("/")[-1]]
+        # Strip the watch folder prefix from the path
+        rel_path = entry.path_display
+        folder_prefix = DROPBOX_FOLDER.rstrip("/")
+        if rel_path.lower().startswith(folder_prefix.lower()):
+            rel_path = rel_path[len(folder_prefix):]
+        parts = [p for p in rel_path.split("/") if p]
 
         if len(parts) < 2:
             continue
