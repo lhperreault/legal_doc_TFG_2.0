@@ -235,13 +235,11 @@ async def dropbox_webhook(request: dict = {}):
     import dropbox
     dbx = dropbox.Dropbox(DROPBOX_TOKEN)
 
-    global _dropbox_cursor
-
+    # Always do a full folder list — cursor-based sync doesn't persist across
+    # Railway deploys/restarts, so we track "already uploaded" via Supabase Storage
+    # (duplicate uploads are caught by the storage layer).
     try:
-        if _dropbox_cursor:
-            result = dbx.files_list_folder_continue(_dropbox_cursor)
-        else:
-            result = dbx.files_list_folder(DROPBOX_FOLDER, recursive=True)
+        result = dbx.files_list_folder(DROPBOX_FOLDER, recursive=True)
     except Exception as e:
         return {"status": "error", "message": str(e)[:200]}
 
@@ -249,7 +247,6 @@ async def dropbox_webhook(request: dict = {}):
     while result.has_more:
         result = dbx.files_list_folder_continue(result.cursor)
         entries.extend(result.entries)
-    _dropbox_cursor = result.cursor
 
     # Load case mapping from Supabase
     cases = supabase.table("cases").select("id, case_name").eq("status", "active").execute()
