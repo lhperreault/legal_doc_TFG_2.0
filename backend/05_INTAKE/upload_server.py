@@ -294,11 +294,16 @@ async def dropbox_webhook(request: dict = {}):
         # Determine subfolder
         subfolder = parts[1] if len(parts) > 2 else None
 
+        # Files in root of case folder, _DROP FILES HERE, or _inbox → unclassified
+        drop_folders = ("_drop files here", "_drop", "_inbox", "_new")
+
         if is_external:
             if subfolder and subfolder in ("case-law", "legislation", "legal-commentary"):
                 bucket, folder = "external-law", subfolder
             else:
                 bucket, folder = "external-law", "case-law"
+        elif subfolder and subfolder.lower() in drop_folders:
+            bucket, folder = "intake-queue", "unclassified"
         elif subfolder and subfolder in _SUBFOLDER_ROUTING:
             bucket, folder = _SUBFOLDER_ROUTING[subfolder]
         else:

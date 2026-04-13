@@ -410,7 +410,11 @@ def watch_folder(watch_dir, poll_interval=5):
 
                 # Check for subfolder
                 subfolder = parts[1] if len(parts) > 2 else None
-                if subfolder and subfolder in SUBFOLDER_ROUTING:
+                drop_folders = ("_drop files here", "_drop", "_inbox", "_new")
+
+                if subfolder and subfolder.lower() in drop_folders:
+                    bucket, folder = "intake-queue", "unclassified"
+                elif subfolder and subfolder in SUBFOLDER_ROUTING:
                     bucket, folder = SUBFOLDER_ROUTING[subfolder]
                 else:
                     # No subfolder or unknown → unclassified
@@ -452,6 +456,10 @@ def setup_case_folder(watch_dir, case_id):
     case_name = resp.data["case_name"]
     case_dir = Path(watch_dir) / case_name
 
+    # Main drop folder — this is where users dump files
+    (case_dir / "_DROP FILES HERE").mkdir(parents=True, exist_ok=True)
+
+    # Organized subfolders for users who know the doc type
     folders = list(SUBFOLDER_ROUTING.keys())
     for folder in folders:
         (case_dir / folder).mkdir(parents=True, exist_ok=True)
