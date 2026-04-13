@@ -1,0 +1,8 @@
+supabase
+fastapi
+uvicorn
+python-multipart
+python-dotenv
+pydantic
+google-generativeai
+psycopg2-binary
