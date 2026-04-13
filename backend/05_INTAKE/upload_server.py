@@ -222,6 +222,45 @@ async def dropbox_verify(challenge: str = ""):
     return PlainTextResponse(content=challenge)
 
 
+@app.get("/dropbox/debug")
+async def dropbox_debug():
+    """Debug: list all files Dropbox can see in the watch folder."""
+    if not DROPBOX_TOKEN:
+        return {"error": "no token"}
+
+    import dropbox
+    dbx = dropbox.Dropbox(DROPBOX_TOKEN)
+
+    try:
+        result = dbx.files_list_folder(DROPBOX_FOLDER, recursive=True)
+    except Exception as e:
+        return {"error": str(e)[:300]}
+
+    entries = list(result.entries)
+    while result.has_more:
+        result = dbx.files_list_folder_continue(result.cursor)
+        entries.extend(result.entries)
+
+    files = []
+    for e in entries:
+        files.append({
+            "name": getattr(e, "name", "?"),
+            "path": getattr(e, "path_display", "?"),
+            "type": type(e).__name__,
+        })
+
+    # Also show parsing
+    cases = supabase.table("cases").select("id, case_name").eq("status", "active").execute()
+    case_map = {c["case_name"].lower().strip(): c["id"] for c in (cases.data or [])}
+
+    return {
+        "watch_folder": DROPBOX_FOLDER,
+        "total_entries": len(entries),
+        "case_map": case_map,
+        "files": files,
+    }
+
+
 @app.post("/dropbox/webhook")
 async def dropbox_webhook(request: dict = {}):
     """Dropbox sends this when files change in the watched folder.
