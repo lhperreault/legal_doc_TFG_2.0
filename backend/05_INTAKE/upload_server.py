@@ -188,6 +188,153 @@ async def upload_batch(
     }
 
 
+# ── Dropbox webhook integration ─────────────────────────────────────────────
+# Dropbox sends a GET to verify, then POSTs when files change.
+# We download new files and upload them to Supabase Storage.
+
+DROPBOX_FOLDER = os.getenv("DROPBOX_WATCH_FOLDER", "/Legal Intake")
+DROPBOX_TOKEN = os.getenv("DROPBOX_ACCESS_TOKEN", "")
+
+# Subfolder name → (bucket, folder)
+_SUBFOLDER_ROUTING = {
+    "pleadings": ("case-files", "pleadings"),
+    "contracts": ("case-files", "contracts"),
+    "discovery": ("case-files", "discovery"),
+    "evidence": ("case-files", "evidence"),
+    "correspondence": ("case-files", "correspondence"),
+    "court-orders": ("case-files", "court-orders"),
+    "administrative": ("case-files", "administrative"),
+    "case-law": ("external-law", "case-law"),
+    "legislation": ("external-law", "legislation"),
+    "legal-commentary": ("external-law", "legal-commentary"),
+}
+
+_INGESTABLE_EXT = {".pdf", ".docx", ".doc", ".txt", ".html", ".htm", ".xhtml"}
+
+# Store cursor for incremental sync
+_dropbox_cursor = None
+
+
+@app.get("/dropbox/webhook")
+async def dropbox_verify(challenge: str = ""):
+    """Dropbox webhook verification — echo back the challenge."""
+    from fastapi.responses import PlainTextResponse
+    return PlainTextResponse(content=challenge)
+
+
+@app.post("/dropbox/webhook")
+async def dropbox_webhook(request: dict = {}):
+    """Dropbox sends this when files change in the watched folder.
+
+    We download new files and upload them to Supabase Storage.
+    The storage trigger handles the rest (pipeline_jobs → worker).
+    """
+    if not DROPBOX_TOKEN:
+        return {"status": "error", "message": "DROPBOX_ACCESS_TOKEN not configured"}
+
+    import dropbox
+    dbx = dropbox.Dropbox(DROPBOX_TOKEN)
+
+    global _dropbox_cursor
+
+    try:
+        if _dropbox_cursor:
+            result = dbx.files_list_folder_continue(_dropbox_cursor)
+        else:
+            result = dbx.files_list_folder(DROPBOX_FOLDER, recursive=True)
+    except Exception as e:
+        return {"status": "error", "message": str(e)[:200]}
+
+    entries = list(result.entries)
+    while result.has_more:
+        result = dbx.files_list_folder_continue(result.cursor)
+        entries.extend(result.entries)
+    _dropbox_cursor = result.cursor
+
+    # Load case mapping from Supabase
+    cases = supabase.table("cases").select("id, case_name").eq("status", "active").execute()
+    case_map = {}
+    for c in (cases.data or []):
+        case_map[c["case_name"].lower().strip()] = c["id"]
+
+    uploaded = []
+
+    for entry in entries:
+        if not hasattr(entry, "name"):
+            continue
+        ext = os.path.splitext(entry.name)[1].lower()
+        if ext not in _INGESTABLE_EXT:
+            continue
+
+        # Parse path: /Legal Intake/{case_name}/{subfolder}/{file}
+        # or: /Legal Intake/{case_name}/{file}
+        # or: /Legal Intake/_external/{case_name}/{subfolder}/{file}
+        path_parts = entry.path_display.split("/")
+        # Remove empty first element and "Legal Intake"
+        parts = [p for p in path_parts if p and p != DROPBOX_FOLDER.strip("/").split("/")[-1]]
+
+        if len(parts) < 2:
+            continue
+
+        is_external = parts[0] == "_external"
+        if is_external:
+            parts = parts[1:]  # remove _external prefix
+
+        case_name = parts[0]
+        case_id = case_map.get(case_name.lower().strip())
+        if not case_id:
+            # Try fuzzy match
+            for name, cid in case_map.items():
+                if case_name.lower() in name or name in case_name.lower():
+                    case_id = cid
+                    break
+        if not case_id:
+            continue
+
+        # Determine subfolder
+        subfolder = parts[1] if len(parts) > 2 else None
+
+        if is_external:
+            if subfolder and subfolder in ("case-law", "legislation", "legal-commentary"):
+                bucket, folder = "external-law", subfolder
+            else:
+                bucket, folder = "external-law", "case-law"
+        elif subfolder and subfolder in _SUBFOLDER_ROUTING:
+            bucket, folder = _SUBFOLDER_ROUTING[subfolder]
+        else:
+            bucket, folder = "intake-queue", "unclassified"
+
+        # Download from Dropbox
+        try:
+            _, response = dbx.files_download(entry.path_lower)
+            file_data = response.content
+        except Exception as e:
+            continue
+
+        # Upload to Supabase Storage
+        storage_path = f"{case_id}/{folder}/{entry.name}"
+        mime = {
+            ".pdf": "application/pdf", ".html": "text/html", ".txt": "text/plain",
+            ".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        }.get(ext, "application/pdf")
+
+        try:
+            supabase.storage.from_(bucket).upload(
+                storage_path, file_data, {"content-type": mime}
+            )
+            uploaded.append({"file": entry.name, "bucket": bucket, "folder": folder})
+        except Exception as e:
+            if "Duplicate" not in str(e):
+                continue
+
+    return {
+        "status": "ok",
+        "processed": len(entries),
+        "uploaded": len(uploaded),
+        "files": uploaded,
+    }
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--port", type=int, default=8787)
@@ -195,8 +342,10 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     print(f"\nUpload server running at http://{args.host}:{args.port}")
-    print(f"POST /upload — upload a file (multipart/form-data: file, case_id, bucket, folder)")
+    print(f"POST /upload — upload a file")
     print(f"POST /upload/batch — upload multiple files")
-    print(f"GET /health — health check\n")
+    print(f"GET  /dropbox/webhook — Dropbox verification")
+    print(f"POST /dropbox/webhook — Dropbox file sync")
+    print(f"GET  /health — health check\n")
 
     uvicorn.run(app, host=args.host, port=args.port, log_level="info")

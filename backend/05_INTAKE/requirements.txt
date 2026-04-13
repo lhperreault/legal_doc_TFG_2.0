@@ -6,3 +6,4 @@ python-dotenv
 pydantic
 google-generativeai
 psycopg2-binary
+dropbox
