@@ -5,5 +5,10 @@ python-multipart
 python-dotenv
 pydantic
 google-generativeai
-psycopg2-binary
+openai
+pymupdf
+lxml
+pandas
+numpy
 dropbox
+charset-normalizer

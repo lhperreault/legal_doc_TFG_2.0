@@ -389,6 +389,109 @@ import logging
 log = logging.getLogger("pipeline_worker_bg")
 
 
+PIPELINE_DIR = Path(__file__).resolve().parent.parent
+PHASE2_DIR = PIPELINE_DIR / "02_MIDDLE"
+PHASE3_MAIN = PIPELINE_DIR / "03_SEARCH" / "main.py"
+
+
+def _run_script(script_path, *args, timeout=600):
+    """Run a pipeline script as subprocess."""
+    import subprocess
+    env = os.environ.copy()
+    env["PYTHONIOENCODING"] = "utf-8"
+    result = subprocess.run(
+        [sys.executable, str(script_path)] + list(args),
+        capture_output=True, text=True, encoding="utf-8", errors="replace",
+        cwd=str(PIPELINE_DIR.parent), env=env, timeout=timeout,
+    )
+    if result.returncode != 0:
+        raise RuntimeError(f"{script_path.name} failed: {result.stderr[-500:]}")
+    return result.stdout
+
+
+def _run_bulk_pipeline(job):
+    """Run the full pipeline for a Dropbox/bulk-uploaded document.
+
+    Downloads from storage, runs Phase 1 → 2 → 3 (Gemini does extraction).
+    """
+    job_id = job["id"]
+    bucket = job["bucket"]
+    file_path = job["file_path"]
+    case_id = str(job["case_id"]) if job.get("case_id") else None
+    file_name = job["file_name"]
+
+    log.info(f"[{job_id[:8]}] Running full pipeline for {file_name}")
+
+    # Download file from Supabase Storage
+    import tempfile
+    data = supabase.storage.from_(bucket).download(file_path)
+    tmp_dir = tempfile.mkdtemp(prefix="pipeline_")
+    local_path = os.path.join(tmp_dir, file_name)
+    with open(local_path, "wb") as f:
+        f.write(data)
+    log.info(f"[{job_id[:8]}] Downloaded {bucket}/{file_path}")
+
+    # Phase 1: Initial processing
+    supabase.table("pipeline_jobs").update({
+        "status": "processing", "phase_completed": 0
+    }).eq("id", job_id).execute()
+
+    phase1_main = PIPELINE_DIR / "01_INITIAL" / "main.py"
+    phase1_args = ["--file", local_path, "--mode", "bulk", "--processing-mode", "balanced"]
+    if case_id:
+        phase1_args += ["--case-id", case_id]
+
+    try:
+        stdout = _run_script(phase1_main, *phase1_args, timeout=600)
+    except Exception as e:
+        raise RuntimeError(f"Phase 1 failed: {e}")
+
+    # Find document_id
+    doc_id = None
+    for line in stdout.strip().split("\n"):
+        line = line.strip()
+        if line and len(line) == 36 and line.count("-") == 4:
+            doc_id = line
+    if not doc_id and case_id:
+        docs = supabase.table("documents").select("id").eq(
+            "case_id", case_id
+        ).eq("file_name", file_name.rsplit(".", 1)[0]).order(
+            "created_at", desc=True
+        ).limit(1).execute()
+        if docs.data:
+            doc_id = docs.data[0]["id"]
+
+    supabase.table("pipeline_jobs").update({
+        "phase_completed": 1, "document_id": doc_id
+    }).eq("id", job_id).execute()
+    log.info(f"[{job_id[:8]}] Phase 1 complete. doc_id={doc_id}")
+
+    if not doc_id:
+        raise RuntimeError("Could not find document_id after Phase 1")
+
+    # Phase 2: Full (Gemini does extraction in bulk mode)
+    phase2_main = PIPELINE_DIR / "02_MIDDLE" / "main.py"
+    file_stem = file_name.rsplit(".", 1)[0]
+    phase2_args = ["--file_name", file_stem, "--document_id", doc_id, "--mode", "bulk"]
+
+    try:
+        _run_script(phase2_main, *phase2_args, timeout=900)
+    except Exception as e:
+        raise RuntimeError(f"Phase 2 failed: {e}")
+
+    supabase.table("pipeline_jobs").update({
+        "phase_completed": 25, "extraction_status": "extraction_complete",
+        "extraction_method": "gemini"
+    }).eq("id", job_id).execute()
+    log.info(f"[{job_id[:8]}] Phase 2 complete (Gemini extraction)")
+
+    # Phase 3 is triggered inside Phase 2's main.py already
+    supabase.table("pipeline_jobs").update({
+        "phase_completed": 3, "status": "completed"
+    }).eq("id", job_id).execute()
+    log.info(f"[{job_id[:8]}] Pipeline complete for {file_name}")
+
+
 def _pipeline_worker_loop(poll_interval=15):
     """Background thread that polls pipeline_jobs and processes them."""
     log.info(f"Background pipeline worker started (poll every {poll_interval}s)")
@@ -398,35 +501,55 @@ def _pipeline_worker_loop(poll_interval=15):
             # Check for jobs ready to resume (Claude finished extraction)
             resume_jobs = supabase.table("pipeline_jobs").select("*").eq(
                 "extraction_status", "extraction_complete"
-            ).execute()
+            ).eq("status", "awaiting_extraction").execute()
 
             for job in (resume_jobs.data or []):
                 doc_id = job.get("document_id")
-                case_id = job.get("case_id")
+                case_id = str(job["case_id"]) if job.get("case_id") else None
                 if not doc_id:
                     continue
 
                 log.info(f"Resuming post-extraction for doc {doc_id}")
                 try:
                     supabase.table("pipeline_jobs").update({
-                        "status": "processing",
-                        "extraction_status": "kg_complete",
-                        "phase_completed": 27,
+                        "status": "processing"
                     }).eq("id", job["id"]).execute()
 
-                    # Phase 2c + 3 would run here if the full pipeline scripts are available.
-                    # On Railway (minimal image), just mark as complete — the heavy processing
-                    # runs locally or we skip to embedding.
+                    # 07D: metadata promotion
+                    if case_id:
+                        try:
+                            _run_script(PHASE2_DIR / "07D_case_meta_promotion.py",
+                                        "--document_id", doc_id)
+                        except Exception:
+                            pass
+
+                    # 04A: KG build
+                    try:
+                        _run_script(PHASE2_DIR / "04A_kg_inner_build.py",
+                                    "--document_id", doc_id)
+                    except Exception:
+                        pass
+
                     supabase.table("pipeline_jobs").update({
-                        "status": "completed",
-                        "phase_completed": 3,
+                        "extraction_status": "kg_complete", "phase_completed": 27
                     }).eq("id", job["id"]).execute()
-                    log.info(f"Job {job['id']} completed")
+
+                    # Phase 3: embeddings
+                    if case_id:
+                        try:
+                            _run_script(PHASE3_MAIN, "--case_id", case_id,
+                                        "--document_id", doc_id)
+                        except Exception:
+                            pass
+
+                    supabase.table("pipeline_jobs").update({
+                        "status": "completed", "phase_completed": 3
+                    }).eq("id", job["id"]).execute()
+                    log.info(f"Job {job['id']} resumed and completed")
                 except Exception as e:
                     log.error(f"Resume failed for {job['id']}: {e}")
                     supabase.table("pipeline_jobs").update({
-                        "status": "failed",
-                        "error_message": str(e)[:500],
+                        "status": "failed", "error_message": str(e)[:500],
                     }).eq("id", job["id"]).execute()
 
             # Check for new pending jobs
@@ -440,30 +563,33 @@ def _pipeline_worker_loop(poll_interval=15):
                 pipeline = job["pipeline"]
                 log.info(f"Claimed job {job_id}: {job['file_name']} [{pipeline}]")
 
-                if pipeline == "classify-then-route":
-                    # For now, just mark as needing manual classification
-                    supabase.table("pipeline_jobs").update({
-                        "status": "awaiting_extraction",
-                        "extraction_status": "awaiting_extraction",
-                        "phase_completed": 2,
-                    }).eq("id", job_id).execute()
-                    log.info(f"Job {job_id} waiting for Claude classification")
+                try:
+                    if pipeline == "full":
+                        _run_bulk_pipeline(job)
 
-                elif pipeline == "full":
-                    # Mark as awaiting Claude extraction (Phase 1+2a would run locally)
-                    supabase.table("pipeline_jobs").update({
-                        "status": "awaiting_extraction",
-                        "extraction_status": "awaiting_extraction",
-                        "phase_completed": 2,
-                    }).eq("id", job_id).execute()
-                    log.info(f"Job {job_id} waiting for Claude extraction")
+                    elif pipeline == "classify-then-route":
+                        # Classify then re-upload to correct bucket
+                        # For now, run as full pipeline on unclassified docs
+                        _run_bulk_pipeline(job)
 
-                elif pipeline == "embed-only":
+                    elif pipeline == "embed-only":
+                        # Lightweight: just embed
+                        case_id = str(job["case_id"]) if job.get("case_id") else None
+                        if case_id:
+                            try:
+                                _run_script(PHASE3_MAIN, "--case_id", case_id)
+                            except Exception:
+                                pass
+                        supabase.table("pipeline_jobs").update({
+                            "status": "completed", "phase_completed": 3
+                        }).eq("id", job_id).execute()
+                        log.info(f"Job {job_id} (embed-only) completed")
+
+                except Exception as e:
+                    log.error(f"Job {job_id} failed: {e}")
                     supabase.table("pipeline_jobs").update({
-                        "status": "completed",
-                        "phase_completed": 3,
+                        "status": "failed", "error_message": str(e)[:500],
                     }).eq("id", job_id).execute()
-                    log.info(f"Job {job_id} (embed-only) completed")
 
         except Exception as e:
             log.error(f"Worker loop error: {e}")
