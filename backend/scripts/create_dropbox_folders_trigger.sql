@@ -26,7 +26,10 @@ begin
   perform net.http_post(
     url := edge_url,
     headers := jsonb_build_object('Content-Type', 'application/json'),
-    body := jsonb_build_object('case_name', new.case_name)
+    body := jsonb_build_object(
+      'case_id', new.id::text,
+      'case_name', new.case_name
+    )
   );
   return new;
 end;

@@ -52,6 +52,7 @@ Storage bucket:
 """
 
 import ast
+import json
 import os
 import sys
 import math
@@ -187,6 +188,21 @@ def main():
     else:
         print(f"[08] WARNING: classification CSV not found ({class_csv}), skipping.")
 
+    # Fine-grained folder routing (from 05b_fine_routing.py)
+    folder_parent  = None
+    folder_subslug = None
+    fine_json_path = os.path.join(temp_dir, stem + "_fine_routing.json")
+    if os.path.isfile(fine_json_path):
+        try:
+            with open(fine_json_path, encoding="utf-8") as f:
+                fine = json.load(f)
+            folder_parent  = fine.get("folder_parent")
+            folder_subslug = fine.get("folder_subslug")
+        except Exception as e:
+            print(f"[08] WARNING: could not parse fine_routing JSON: {e}")
+    else:
+        print(f"[08] WARNING: fine_routing JSON not found ({fine_json_path}), leaving folder cols null.")
+
     # TOC sections
     toc_csv  = os.path.join(temp_dir, doc_stem + "_07_toc_sections.csv")
     sections_df = None
@@ -261,6 +277,8 @@ def main():
         "is_primary_filing":  is_primary if is_primary else None,
         "original_file_url":  original_file_url,
         "ai_extracted":       False,
+        "folder_parent":      folder_parent,
+        "folder_subslug":     folder_subslug,
     }
     # Remove None values — let DB defaults handle them
     doc_payload = {k: v for k, v in doc_payload.items() if v is not None}

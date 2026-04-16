@@ -160,6 +160,14 @@ def main():
     # 5. Classification (always runs, regardless of TOC type)
     _run("05_doc_classification.py", text_md)
 
+    # 5b. Fine-grained folder routing (matter-aware subfolder pick)
+    #     Piggybacks on 05's output + case.folder_structure. Writes
+    #     {stem}_fine_routing.json for 08_Send_Supabase to pick up.
+    fine_args = [text_md]
+    if case_id:
+        fine_args += ["--case-id", case_id]
+    _run("05b_fine_routing.py", *fine_args)
+
     # Build optional extra args for 08_Send_Supabase.py
     send_extra = []
     if case_id:

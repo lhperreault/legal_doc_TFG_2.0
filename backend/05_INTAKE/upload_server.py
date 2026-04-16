@@ -450,11 +450,19 @@ async def dropbox_webhook(request: dict = {}):
         if not case_id:
             continue
 
-        # Determine subfolder
-        subfolder = parts[1] if len(parts) > 2 else None
+        # Determine subfolder + optional nested subslug (user override)
+        # Dropbox path shapes we handle (parts = [case_name, ..., file]):
+        #   1. {case_name}/_DROP FILES HERE/{file}             → intake-queue/unclassified (fine routing runs)
+        #   2. {case_name}/{parent}/{file}                     → case-files/{parent}     (fine routing picks subslug)
+        #   3. {case_name}/{parent}/{subslug}/{file}           → case-files/{parent}/{subslug} (user override; fine routing skipped)
+        #   4. {case_name}/{anything else}/{file}              → intake-queue/unclassified
+        subfolder = parts[1] if len(parts) >= 3 else None
+        # Nested subslug exists only when path is {case_name}/{parent}/{subslug}/{file} (len 4)
+        nested_subslug = parts[2] if len(parts) >= 4 else None
 
-        # Files in root of case folder, _DROP FILES HERE, or _inbox → unclassified
         drop_folders = ("_drop files here", "_drop", "_inbox", "_new")
+
+        nested_path = None  # extra path segment under bucket/folder, e.g. "motion-to-dismiss"
 
         if is_external:
             if subfolder and subfolder in ("case-law", "legislation", "legal-commentary"):
@@ -465,6 +473,13 @@ async def dropbox_webhook(request: dict = {}):
             bucket, folder = "intake-queue", "unclassified"
         elif subfolder and subfolder in _SUBFOLDER_ROUTING:
             bucket, folder = _SUBFOLDER_ROUTING[subfolder]
+            # If a nested subslug was also given, preserve it (user override wins).
+            # Defensive-slugify in case the Dropbox folder name has extra whitespace.
+            if nested_subslug:
+                from backend.utils.slug import slugify as _slugify
+                slug = _slugify(nested_subslug)
+                if slug:
+                    nested_path = slug
         else:
             bucket, folder = "intake-queue", "unclassified"
 
@@ -475,8 +490,11 @@ async def dropbox_webhook(request: dict = {}):
         except Exception as e:
             continue
 
-        # Upload to Supabase Storage
-        storage_path = f"{case_id}/{folder}/{entry.name}"
+        # Upload to Supabase Storage — include nested subslug when present
+        if nested_path:
+            storage_path = f"{case_id}/{folder}/{nested_path}/{entry.name}"
+        else:
+            storage_path = f"{case_id}/{folder}/{entry.name}"
         mime = {
             ".pdf": "application/pdf", ".html": "text/html", ".txt": "text/plain",
             ".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",

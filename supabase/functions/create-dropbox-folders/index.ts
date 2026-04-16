@@ -3,27 +3,33 @@
 // Creates the Dropbox folder tree for a new case:
 //   /Legal Intake/{case_name}/_DROP FILES HERE/
 //   /Legal Intake/{case_name}/{pleadings|contracts|discovery|...}/
+//   /Legal Intake/{case_name}/{parent}/{subslug}/   ← nested per cases.folder_structure
 //   /Legal Intake/_external/{case_name}/{case-law|legislation|legal-commentary}/
 //
-// Invocation (from Claude Desktop via Supabase MCP):
-//   supabase.functions.invoke("create-dropbox-folders", {
-//     body: { case_name: "Epic vs Apple" }
-//   })
+// Invocation (from Postgres trigger after INSERT on cases):
+//   { "case_id": "uuid", "case_name": "Epic vs Apple" }
 //
-// Secrets required (set once with `supabase secrets set ...`):
-//   DROPBOX_APP_KEY
-//   DROPBOX_APP_SECRET
-//   DROPBOX_REFRESH_TOKEN
-//   DROPBOX_WATCH_FOLDER   (optional, defaults to "/Legal Intake")
+// Or from Claude Desktop / callers for arbitrary name-based creation:
+//   { "case_name": "Epic vs Apple" }
+//
+// Secrets required:
+//   SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY  (to read cases.folder_structure)
+//   DROPBOX_APP_KEY, DROPBOX_APP_SECRET, DROPBOX_REFRESH_TOKEN
+//   DROPBOX_WATCH_FOLDER  (optional, defaults to "/Legal Intake")
 
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { createClient } from "jsr:@supabase/supabase-js@2";
+import { slugify } from "../_shared/slug.ts";
 
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 const DROPBOX_APP_KEY = Deno.env.get("DROPBOX_APP_KEY") ?? "";
 const DROPBOX_APP_SECRET = Deno.env.get("DROPBOX_APP_SECRET") ?? "";
 const DROPBOX_REFRESH_TOKEN = Deno.env.get("DROPBOX_REFRESH_TOKEN") ?? "";
 const WATCH_FOLDER = (Deno.env.get("DROPBOX_WATCH_FOLDER") ?? "/Legal Intake").replace(/\/$/, "");
 
-const CASE_SUBFOLDERS = [
+// Default 7 parent subfolders (plus _DROP FILES HERE) — always created
+const DEFAULT_CASE_SUBFOLDERS = [
   "_DROP FILES HERE",
   "pleadings",
   "contracts",
@@ -34,6 +40,17 @@ const CASE_SUBFOLDERS = [
   "administrative",
 ];
 const EXT_SUBFOLDERS = ["case-law", "legislation", "legal-commentary"];
+
+// Only these parents are allowed to contain nested subfolders
+const ALLOWED_PARENTS = new Set([
+  "pleadings",
+  "contracts",
+  "discovery",
+  "evidence",
+  "correspondence",
+  "court-orders",
+  "administrative",
+]);
 
 async function getDropboxAccessToken(): Promise<string> {
   const basic = btoa(`${DROPBOX_APP_KEY}:${DROPBOX_APP_SECRET}`);
@@ -49,11 +66,9 @@ async function getDropboxAccessToken(): Promise<string> {
     }),
   });
   if (!resp.ok) {
-    const text = await resp.text();
-    throw new Error(`Dropbox token exchange failed (${resp.status}): ${text.slice(0, 300)}`);
+    throw new Error(`Dropbox token exchange failed (${resp.status}): ${(await resp.text()).slice(0, 300)}`);
   }
-  const json = await resp.json();
-  return json.access_token as string;
+  return (await resp.json()).access_token as string;
 }
 
 async function createDropboxFolder(accessToken: string, path: string) {
@@ -67,11 +82,40 @@ async function createDropboxFolder(accessToken: string, path: string) {
   });
   if (resp.ok) return { status: "created" };
   const errText = await resp.text();
-  // 409 conflict = already exists, which is fine
   if (resp.status === 409 || errText.includes("conflict") || errText.includes("already")) {
     return { status: "already_existed" };
   }
   return { status: "error", error: errText.slice(0, 300) };
+}
+
+/**
+ * Build the full list of folder paths to create for a case.
+ *
+ * @param caseName — human case name, used in the Dropbox path
+ * @param folderStructure — JSON from cases.folder_structure, shape:
+ *   { "<parent>": ["<subslug1>", "<subslug2>"], ... }
+ *   Only parents in ALLOWED_PARENTS are honored; unknown parents are skipped.
+ *   All subslugs are re-slugified defensively.
+ */
+function buildPaths(caseName: string, folderStructure: Record<string, string[]> | null): string[] {
+  const caseBase = `${WATCH_FOLDER}/${caseName}`;
+  const extBase = `${WATCH_FOLDER}/_external/${caseName}`;
+
+  const paths: string[] = DEFAULT_CASE_SUBFOLDERS.map((s) => `${caseBase}/${s}`);
+  paths.push(...EXT_SUBFOLDERS.map((s) => `${extBase}/${s}`));
+
+  if (folderStructure && typeof folderStructure === "object") {
+    for (const [parent, subs] of Object.entries(folderStructure)) {
+      if (!ALLOWED_PARENTS.has(parent)) continue;
+      if (!Array.isArray(subs)) continue;
+      for (const sub of subs) {
+        const slug = slugify(String(sub));
+        if (slug) paths.push(`${caseBase}/${parent}/${slug}`);
+      }
+    }
+  }
+
+  return paths;
 }
 
 Deno.serve(async (req) => {
@@ -92,6 +136,7 @@ Deno.serve(async (req) => {
 
     const body = await req.json().catch(() => ({}));
     const caseName: string = (body.case_name ?? "").toString().trim();
+    const caseId: string = (body.case_id ?? "").toString().trim();
 
     if (!caseName) {
       return new Response(
@@ -106,15 +151,21 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Look up folder_structure from the cases table if we have credentials
+    let folderStructure: Record<string, string[]> | null = null;
+    if (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
+      const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+      const query = supabase.from("cases").select("folder_structure");
+      const { data, error } = caseId
+        ? await query.eq("id", caseId).maybeSingle()
+        : await query.eq("case_name", caseName).order("created_at", { ascending: false }).limit(1).maybeSingle();
+      if (!error && data && data.folder_structure) {
+        folderStructure = data.folder_structure as Record<string, string[]>;
+      }
+    }
+
     const accessToken = await getDropboxAccessToken();
-
-    const caseBase = `${WATCH_FOLDER}/${caseName}`;
-    const extBase = `${WATCH_FOLDER}/_external/${caseName}`;
-
-    const paths: string[] = [
-      ...CASE_SUBFOLDERS.map((s) => `${caseBase}/${s}`),
-      ...EXT_SUBFOLDERS.map((s) => `${extBase}/${s}`),
-    ];
+    const paths = buildPaths(caseName, folderStructure);
 
     const created: string[] = [];
     const alreadyExisted: string[] = [];
@@ -131,8 +182,9 @@ Deno.serve(async (req) => {
       JSON.stringify({
         status: errors.length === 0 ? "ok" : "partial",
         case_name: caseName,
-        dropbox_case_folder: caseBase,
-        dropbox_external_folder: extBase,
+        case_id: caseId || null,
+        used_folder_structure: folderStructure !== null,
+        total_paths: paths.length,
         created,
         already_existed: alreadyExisted,
         errors,

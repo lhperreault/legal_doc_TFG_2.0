@@ -1,0 +1,201 @@
+# Matter catalog — maps matter types (slug) to suggested case-specific subfolders.
+#
+# Each subfolder is NESTED under one of the 7 default parents:
+#   pleadings, contracts, discovery, evidence, correspondence, court-orders, administrative
+#
+# All "slug" values MUST be lowercase, hyphen-separated, ASCII only — they are the
+# actual folder names on Dropbox / Supabase Storage.
+#
+# The label_en and label_es values are user-facing display names shown in
+# Claude Desktop chat. They get stored in cases.folder_labels so that Claude
+# can show pretty names while the system routes on slugs.
+
+matters:
+  contract_dispute:
+    label_en: "Contract dispute"
+    label_es: "Disputa contractual"
+    folders:
+      contracts:
+        - slug: amendments
+          label_en: "Amendments"
+          label_es: "Enmiendas"
+        - slug: exhibits-to-contract
+          label_en: "Exhibits to contract"
+          label_es: "Anexos del contrato"
+        - slug: performance-records
+          label_en: "Performance records"
+          label_es: "Registros de cumplimiento"
+      evidence:
+        - slug: damages-calculations
+          label_en: "Damages calculations"
+          label_es: "Cálculo de daños"
+
+  patent_infringement:
+    label_en: "Patent infringement"
+    label_es: "Infracción de patente"
+    folders:
+      pleadings:
+        - slug: claim-charts
+          label_en: "Claim charts"
+          label_es: "Tablas de reivindicaciones"
+      discovery:
+        - slug: prior-art
+          label_en: "Prior art"
+          label_es: "Arte previo"
+        - slug: inventor-depositions
+          label_en: "Inventor depositions"
+          label_es: "Declaraciones de inventor"
+        - slug: technical-expert-reports
+          label_en: "Technical expert reports"
+          label_es: "Informes periciales técnicos"
+      evidence:
+        - slug: product-samples
+          label_en: "Product samples / technical specs"
+          label_es: "Muestras y especificaciones técnicas"
+
+  merger_and_acquisition:
+    label_en: "M&A / Corporate transaction"
+    label_es: "Fusión y adquisición / transacción corporativa"
+    folders:
+      contracts:
+        - slug: term-sheets
+          label_en: "Term sheets"
+          label_es: "Hojas de términos"
+        - slug: purchase-agreement
+          label_en: "Purchase agreement"
+          label_es: "Contrato de compraventa"
+      discovery:
+        - slug: due-diligence
+          label_en: "Due diligence"
+          label_es: "Diligencia debida"
+      administrative:
+        - slug: regulatory-filings
+          label_en: "Regulatory filings"
+          label_es: "Presentaciones regulatorias"
+
+  employment_dispute:
+    label_en: "Employment dispute"
+    label_es: "Disputa laboral"
+    folders:
+      evidence:
+        - slug: personnel-files
+          label_en: "Personnel files"
+          label_es: "Expedientes de personal"
+      correspondence:
+        - slug: communications-with-employee
+          label_en: "Communications with employee"
+          label_es: "Comunicaciones con el empleado"
+      discovery:
+        - slug: hr-policies
+          label_en: "HR policies"
+          label_es: "Políticas de recursos humanos"
+
+  criminal_defense:
+    label_en: "Criminal defense"
+    label_es: "Defensa penal"
+    folders:
+      pleadings:
+        - slug: motions-to-suppress
+          label_en: "Motions to suppress"
+          label_es: "Solicitudes de supresión"
+      evidence:
+        - slug: witness-statements
+          label_en: "Witness statements"
+          label_es: "Declaraciones de testigos"
+        - slug: forensic-reports
+          label_en: "Forensic reports"
+          label_es: "Informes forenses"
+
+  real_estate:
+    label_en: "Real estate / property"
+    label_es: "Bienes raíces / propiedad"
+    folders:
+      contracts:
+        - slug: purchase-sale-agreement
+          label_en: "Purchase & sale agreement"
+          label_es: "Contrato de compraventa"
+        - slug: lease-agreements
+          label_en: "Lease agreements"
+          label_es: "Contratos de arrendamiento"
+      evidence:
+        - slug: title-documents
+          label_en: "Title documents"
+          label_es: "Documentos de titularidad"
+        - slug: surveys-inspections
+          label_en: "Surveys & inspections"
+          label_es: "Levantamientos e inspecciones"
+
+  personal_injury:
+    label_en: "Personal injury"
+    label_es: "Lesiones personales"
+    folders:
+      evidence:
+        - slug: medical-records
+          label_en: "Medical records"
+          label_es: "Expedientes médicos"
+        - slug: scene-photos
+          label_en: "Scene photos"
+          label_es: "Fotografías de la escena"
+      discovery:
+        - slug: medical-expert-reports
+          label_en: "Medical expert reports"
+          label_es: "Informes periciales médicos"
+        - slug: insurance-correspondence
+          label_en: "Insurance correspondence"
+          label_es: "Correspondencia con aseguradora"
+
+  family_law:
+    label_en: "Family law / divorce"
+    label_es: "Derecho de familia / divorcio"
+    folders:
+      pleadings:
+        - slug: custody-filings
+          label_en: "Custody filings"
+          label_es: "Presentaciones de custodia"
+      evidence:
+        - slug: financial-disclosures
+          label_en: "Financial disclosures"
+          label_es: "Declaraciones financieras"
+        - slug: parenting-plans
+          label_en: "Parenting plans"
+          label_es: "Planes de crianza"
+
+  antitrust:
+    label_en: "Antitrust / competition"
+    label_es: "Antimonopolio / competencia"
+    folders:
+      discovery:
+        - slug: market-analysis
+          label_en: "Market analysis"
+          label_es: "Análisis de mercado"
+        - slug: economic-expert-reports
+          label_en: "Economic expert reports"
+          label_es: "Informes periciales económicos"
+      evidence:
+        - slug: pricing-records
+          label_en: "Pricing records"
+          label_es: "Registros de precios"
+        - slug: internal-communications
+          label_en: "Internal communications"
+          label_es: "Comunicaciones internas"
+
+  ip_trademark:
+    label_en: "IP / trademark"
+    label_es: "Propiedad intelectual / marcas"
+    folders:
+      pleadings:
+        - slug: cease-and-desist
+          label_en: "Cease-and-desist letters"
+          label_es: "Cartas de cese y desistimiento"
+      evidence:
+        - slug: trademark-registrations
+          label_en: "Trademark registrations"
+          label_es: "Registros de marca"
+        - slug: usage-evidence
+          label_en: "Usage evidence"
+          label_es: "Evidencia de uso"
+
+  general:
+    label_en: "General / other"
+    label_es: "General / otro"
+    folders: {}  # No extra subfolders by default; user can add custom via chat
