@@ -266,6 +266,77 @@ _INGESTABLE_EXT = {".pdf", ".docx", ".doc", ".txt", ".html", ".htm", ".xhtml"}
 _dropbox_cursor = None
 
 
+@app.post("/case/create-folders")
+async def create_case_folders(request: dict):
+    """Create the Dropbox folder structure for a new case.
+
+    Called by Claude Desktop (firm project) right after inserting the
+    cases row in Supabase. Creates:
+
+        /Legal Intake/{case_name}/_DROP FILES HERE/
+        /Legal Intake/{case_name}/{pleadings|contracts|discovery|...}/
+        /Legal Intake/_external/{case_name}/{case-law|legislation|legal-commentary}/
+
+    Request body: { "case_name": "Epic vs Apple" }
+
+    The case_name MUST match the cases.case_name in Supabase exactly —
+    the webhook routes files by that name.
+    """
+    case_name = (request.get("case_name") or "").strip()
+    if not case_name:
+        raise HTTPException(400, "case_name is required")
+    if "/" in case_name or "\\" in case_name:
+        raise HTTPException(400, "case_name cannot contain slashes")
+
+    if not (DROPBOX_REFRESH_TOKEN or DROPBOX_TOKEN):
+        raise HTTPException(500, "Dropbox credentials not configured")
+
+    import dropbox
+    from dropbox.exceptions import ApiError
+    dbx = _get_dropbox_client()
+
+    base = f"{DROPBOX_FOLDER.rstrip('/')}/{case_name}"
+    ext_base = f"{DROPBOX_FOLDER.rstrip('/')}/_external/{case_name}"
+
+    case_subfolders = [
+        "_DROP FILES HERE",
+        "pleadings", "contracts", "discovery", "evidence",
+        "correspondence", "court-orders", "administrative",
+    ]
+    ext_subfolders = ["case-law", "legislation", "legal-commentary"]
+
+    paths = [f"{base}/{sub}" for sub in case_subfolders] + \
+            [f"{ext_base}/{sub}" for sub in ext_subfolders]
+
+    created = []
+    already_existed = []
+    errors = []
+
+    for path in paths:
+        try:
+            dbx.files_create_folder_v2(path)
+            created.append(path)
+        except ApiError as e:
+            # path/conflict/folder means it already exists — that's fine
+            err_str = str(e)
+            if "conflict" in err_str.lower() or "already" in err_str.lower():
+                already_existed.append(path)
+            else:
+                errors.append({"path": path, "error": err_str[:200]})
+        except Exception as e:
+            errors.append({"path": path, "error": str(e)[:200]})
+
+    return {
+        "status": "ok" if not errors else "partial",
+        "case_name": case_name,
+        "dropbox_case_folder": base,
+        "dropbox_external_folder": ext_base,
+        "created": created,
+        "already_existed": already_existed,
+        "errors": errors,
+    }
+
+
 @app.get("/dropbox/webhook")
 async def dropbox_verify(challenge: str = ""):
     """Dropbox webhook verification — echo back the challenge."""
