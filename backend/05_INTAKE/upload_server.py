@@ -199,19 +199,37 @@ DROPBOX_APP_SECRET = os.getenv("DROPBOX_APP_SECRET", "")
 DROPBOX_REFRESH_TOKEN = os.getenv("DROPBOX_REFRESH_TOKEN", "")
 
 
-def _get_dropbox_client():
-    """Create a Dropbox client.
+def _exchange_refresh_token():
+    """Manually exchange the refresh token for a fresh access token.
 
-    Prefers refresh-token auth (auto-renews forever). Falls back to raw
-    access token (expires after ~4 hours) if refresh creds aren't set.
+    The Dropbox SDK's built-in refresh has been unreliable on Railway
+    (we see 'invalid_access_token' even after the SDK logs 'Refreshing').
+    Doing it ourselves via a direct HTTP call is known-good.
+    """
+    import requests
+    resp = requests.post(
+        "https://api.dropbox.com/oauth2/token",
+        data={
+            "grant_type": "refresh_token",
+            "refresh_token": DROPBOX_REFRESH_TOKEN,
+        },
+        auth=(DROPBOX_APP_KEY, DROPBOX_APP_SECRET),
+        timeout=15,
+    )
+    resp.raise_for_status()
+    return resp.json()["access_token"]
+
+
+def _get_dropbox_client():
+    """Create a Dropbox client with a fresh access token.
+
+    Prefers manual refresh-token exchange (auto-renews forever). Falls
+    back to raw access token env var if refresh creds aren't set.
     """
     import dropbox
     if DROPBOX_REFRESH_TOKEN and DROPBOX_APP_KEY and DROPBOX_APP_SECRET:
-        return dropbox.Dropbox(
-            oauth2_refresh_token=DROPBOX_REFRESH_TOKEN,
-            app_key=DROPBOX_APP_KEY,
-            app_secret=DROPBOX_APP_SECRET,
-        )
+        access_token = _exchange_refresh_token()
+        return dropbox.Dropbox(access_token)
     return dropbox.Dropbox(DROPBOX_TOKEN)
 
 # Subfolder name → (bucket, folder)
