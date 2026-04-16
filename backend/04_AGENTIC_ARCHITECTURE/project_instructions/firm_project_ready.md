@@ -65,14 +65,20 @@ Upload a `.folder_init` file (text/plain, content "initialized") to each:
 - `intake-queue/{case_id}/unclassified/.folder_init`
 - `intake-queue/{case_id}/bulk/.folder_init`
 
-### Step 4: Create Dropbox folders via the upload server
+### Step 4: Create Dropbox folders via the Supabase edge function
 
-POST to the upload server to create the Dropbox folder tree. This
-creates `/Legal Intake/{case_name}/` with `_DROP FILES HERE` and
+Invoke the `create-dropbox-folders` edge function via the Supabase MCP.
+This creates `/Legal Intake/{case_name}/` with `_DROP FILES HERE` and
 all subfolders, plus `/Legal Intake/_external/{case_name}/...`.
 
+Use the MCP's edge function invocation tool with:
+- **Function name:** `create-dropbox-folders`
+- **Body:** `{"case_name": "{case_name}"}`
+
+If the MCP doesn't expose an invoke tool, call it via HTTP POST:
 ```
-POST https://legal-api.lppressurewash.com/case/create-folders
+POST https://wjxglyjitpqnldblxbew.supabase.co/functions/v1/create-dropbox-folders
+Authorization: Bearer {SUPABASE_ANON_KEY}
 Content-Type: application/json
 
 {"case_name": "{case_name}"}
