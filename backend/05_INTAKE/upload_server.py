@@ -207,16 +207,30 @@ def _exchange_refresh_token():
     Doing it ourselves via a direct HTTP call is known-good.
     """
     import requests
+    # Strip any accidental whitespace/newlines from env vars
+    refresh_token = (DROPBOX_REFRESH_TOKEN or "").strip()
+    app_key = (DROPBOX_APP_KEY or "").strip()
+    app_secret = (DROPBOX_APP_SECRET or "").strip()
+
+    log.info(
+        f"Dropbox refresh: key_len={len(app_key)} secret_len={len(app_secret)} "
+        f"rt_len={len(refresh_token)} rt_prefix={refresh_token[:8]}"
+    )
+
     resp = requests.post(
         "https://api.dropbox.com/oauth2/token",
         data={
             "grant_type": "refresh_token",
-            "refresh_token": DROPBOX_REFRESH_TOKEN,
+            "refresh_token": refresh_token,
         },
-        auth=(DROPBOX_APP_KEY, DROPBOX_APP_SECRET),
+        auth=(app_key, app_secret),
         timeout=15,
     )
-    resp.raise_for_status()
+    if resp.status_code != 200:
+        log.error(f"Dropbox token exchange failed: {resp.status_code} {resp.text[:400]}")
+        raise RuntimeError(
+            f"Dropbox token exchange failed ({resp.status_code}): {resp.text[:200]}"
+        )
     return resp.json()["access_token"]
 
 
