@@ -194,6 +194,25 @@ async def upload_batch(
 
 DROPBOX_FOLDER = os.getenv("DROPBOX_WATCH_FOLDER", "/Legal Intake")
 DROPBOX_TOKEN = os.getenv("DROPBOX_ACCESS_TOKEN", "")
+DROPBOX_APP_KEY = os.getenv("DROPBOX_APP_KEY", "")
+DROPBOX_APP_SECRET = os.getenv("DROPBOX_APP_SECRET", "")
+DROPBOX_REFRESH_TOKEN = os.getenv("DROPBOX_REFRESH_TOKEN", "")
+
+
+def _get_dropbox_client():
+    """Create a Dropbox client.
+
+    Prefers refresh-token auth (auto-renews forever). Falls back to raw
+    access token (expires after ~4 hours) if refresh creds aren't set.
+    """
+    import dropbox
+    if DROPBOX_REFRESH_TOKEN and DROPBOX_APP_KEY and DROPBOX_APP_SECRET:
+        return dropbox.Dropbox(
+            oauth2_refresh_token=DROPBOX_REFRESH_TOKEN,
+            app_key=DROPBOX_APP_KEY,
+            app_secret=DROPBOX_APP_SECRET,
+        )
+    return dropbox.Dropbox(DROPBOX_TOKEN)
 
 # Subfolder name → (bucket, folder)
 _SUBFOLDER_ROUTING = {
@@ -225,11 +244,10 @@ async def dropbox_verify(challenge: str = ""):
 @app.get("/dropbox/debug")
 async def dropbox_debug():
     """Debug: list all files Dropbox can see in the watch folder."""
-    if not DROPBOX_TOKEN:
+    if not (DROPBOX_REFRESH_TOKEN or DROPBOX_TOKEN):
         return {"error": "no token"}
 
-    import dropbox
-    dbx = dropbox.Dropbox(DROPBOX_TOKEN)
+    dbx = _get_dropbox_client()
 
     try:
         result = dbx.files_list_folder(DROPBOX_FOLDER, recursive=True)
@@ -268,11 +286,10 @@ async def dropbox_webhook(request: dict = {}):
     We download new files and upload them to Supabase Storage.
     The storage trigger handles the rest (pipeline_jobs → worker).
     """
-    if not DROPBOX_TOKEN:
-        return {"status": "error", "message": "DROPBOX_ACCESS_TOKEN not configured"}
+    if not (DROPBOX_REFRESH_TOKEN or DROPBOX_TOKEN):
+        return {"status": "error", "message": "Dropbox credentials not configured"}
 
-    import dropbox
-    dbx = dropbox.Dropbox(DROPBOX_TOKEN)
+    dbx = _get_dropbox_client()
 
     # Always do a full folder list — cursor-based sync doesn't persist across
     # Railway deploys/restarts, so we track "already uploaded" via Supabase Storage
