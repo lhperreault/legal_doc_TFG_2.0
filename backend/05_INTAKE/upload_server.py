@@ -537,13 +537,19 @@ def _run_script(script_path, *args, timeout=600):
     import subprocess
     env = os.environ.copy()
     env["PYTHONIOENCODING"] = "utf-8"
+    cmd = [sys.executable, str(script_path)] + list(args)
+    log.info(f"Running: {' '.join(cmd)}")
     result = subprocess.run(
-        [sys.executable, str(script_path)] + list(args),
+        cmd,
         capture_output=True, text=True, encoding="utf-8", errors="replace",
         cwd=str(PIPELINE_DIR.parent), env=env, timeout=timeout,
     )
+    if result.stdout:
+        log.info(f"STDOUT ({script_path.name}): {result.stdout[-800:]}")
     if result.returncode != 0:
-        raise RuntimeError(f"{script_path.name} failed: {result.stderr[-500:]}")
+        error_detail = result.stderr[-800:] if result.stderr else "(no stderr)"
+        log.error(f"FAILED ({script_path.name}): exit={result.returncode} stderr={error_detail}")
+        raise RuntimeError(f"{script_path.name} failed: {error_detail}")
     return result.stdout
 
 
