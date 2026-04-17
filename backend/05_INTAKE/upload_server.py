@@ -566,22 +566,25 @@ def _run_bulk_pipeline(job):
 
     log.info(f"[{job_id[:8]}] Running full pipeline for {file_name}")
 
-    # Download file from Supabase Storage
-    import tempfile
+    # Download file from Supabase Storage → place directly in
+    # backend/data_storage/documents/ where 01_Intake.py expects it.
+    docs_dir = PIPELINE_DIR / "data_storage" / "documents"
+    docs_dir.mkdir(parents=True, exist_ok=True)
     data = supabase.storage.from_(bucket).download(file_path)
-    tmp_dir = tempfile.mkdtemp(prefix="pipeline_")
-    local_path = os.path.join(tmp_dir, file_name)
+    local_path = docs_dir / file_name
     with open(local_path, "wb") as f:
         f.write(data)
-    log.info(f"[{job_id[:8]}] Downloaded {bucket}/{file_path}")
+    log.info(f"[{job_id[:8]}] Downloaded {bucket}/{file_path} → {local_path}")
 
     # Phase 1: Initial processing
+    # main.py expects just the filename, not a full path — 01_Intake.py
+    # looks for it in data_storage/documents/.
     supabase.table("pipeline_jobs").update({
         "status": "processing", "phase_completed": 0
     }).eq("id", job_id).execute()
 
     phase1_main = PIPELINE_DIR / "01_INITIAL" / "main.py"
-    phase1_args = [local_path, "--mode", "bulk", "--processing-mode", "balanced"]
+    phase1_args = [file_name, "--mode", "bulk", "--processing-mode", "balanced"]
     if case_id:
         phase1_args += ["--case-id", case_id]
 
