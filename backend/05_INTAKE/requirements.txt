@@ -12,3 +12,6 @@ pandas
 numpy
 dropbox
 charset-normalizer
+pdfplumber
+Pillow
+beautifulsoup4
