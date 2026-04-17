@@ -26,11 +26,16 @@ def _run(script_name: str, *args):
     """Run a script in this phase's directory; exit on failure. Records timing."""
     t0 = time.perf_counter()
     result = subprocess.run(
-        [sys.executable, os.path.join(PHASE_DIR, script_name)] + list(args)
+        [sys.executable, os.path.join(PHASE_DIR, script_name)] + list(args),
+        capture_output=True, text=True, encoding="utf-8", errors="replace",
     )
     elapsed = time.perf_counter() - t0
     _timings.append((script_name, elapsed))
+    if result.stdout:
+        print(result.stdout, end="")
     if result.returncode != 0:
+        if result.stderr:
+            print(f"[{script_name}] STDERR: {result.stderr[-1000:]}", flush=True)
         sys.exit(result.returncode)
 
 
