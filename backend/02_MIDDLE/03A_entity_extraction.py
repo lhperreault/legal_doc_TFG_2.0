@@ -222,7 +222,10 @@ _GEMINI_MODEL = "gemini-2.5-flash"
 def _init_gemini():
     key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
     if not key:
-        print("ERROR: GEMINI_API_KEY (or GOOGLE_API_KEY) not set in .env")
+        # Debug: show what env vars are available (redacted)
+        gemini_vars = {k: v[:8] + "..." for k, v in os.environ.items()
+                       if "GEMINI" in k or "GOOGLE" in k}
+        print(f"ERROR: GEMINI_API_KEY (or GOOGLE_API_KEY) not set. Found: {gemini_vars}")
         sys.exit(1)
     try:
         from google import genai as _genai
