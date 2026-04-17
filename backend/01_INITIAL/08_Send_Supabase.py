@@ -217,6 +217,8 @@ def main():
     if os.path.isfile(md_path):
         with open(md_path, encoding="utf-8") as f:
             full_text_md = f.read()
+        # Strip null bytes — Postgres text columns reject \u0000
+        full_text_md = full_text_md.replace('\x00', '')
     else:
         print(f"[08] WARNING: final document MD not found ({md_path}).")
 

@@ -90,6 +90,9 @@ def main():
         with open(text_path_ex, 'r', encoding='utf-8') as f:
             exhibit_text = f.read()
 
+        # Strip null bytes — Postgres text columns reject \u0000
+        exhibit_text = exhibit_text.replace('\x00', '')
+
         if not exhibit_text.strip():
             print(f"  WARNING: Empty text for exhibit {label}, skipping")
             errors += 1
@@ -172,8 +175,8 @@ def main():
         print(f"  Uploaded exhibit {label}: '{title[:50]}...' as '{doc_type}' (id={exhibit_doc_id})")
 
     if errors:
-        print(f"ERROR: Uploaded {uploaded} exhibit(s) with {errors} error(s) for '{doc_stem}'.")
-        sys.exit(1)
+        print(f"WARNING: Uploaded {uploaded} exhibit(s) with {errors} error(s) for '{doc_stem}'.")
+        # Don't exit(1) — partial exhibit failures shouldn't kill the pipeline
 
     # Trim parent document: delete sections that fall inside exhibit page ranges.
     # The first exhibit's start_page is the cutoff — everything from that page
