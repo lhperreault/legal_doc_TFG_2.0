@@ -575,7 +575,7 @@ def _run_bulk_pipeline(job):
     }).eq("id", job_id).execute()
 
     phase1_main = PIPELINE_DIR / "01_INITIAL" / "main.py"
-    phase1_args = ["--file", local_path, "--mode", "bulk", "--processing-mode", "balanced"]
+    phase1_args = [local_path, "--mode", "bulk", "--processing-mode", "balanced"]
     if case_id:
         phase1_args += ["--case-id", case_id]
 
