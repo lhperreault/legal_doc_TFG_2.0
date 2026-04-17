@@ -184,7 +184,8 @@ def main():
         _run("08_Send_Supabase.py", text_md, *send_extra)
         _run_exhibit_split(text_md, temp_dir, stem)
         _print_timing_summary(time.perf_counter() - _phase_start)
-        _fire_next_phases(stem)
+        if args.mode != "bulk":
+            _fire_next_phases(stem)
         return
 
     # 6. TOC detection
@@ -218,7 +219,11 @@ def main():
     _run_exhibit_split(text_md, temp_dir, stem)
 
     _print_timing_summary(time.perf_counter() - _phase_start)
-    _fire_next_phases(stem)
+
+    # In bulk mode (Railway worker), upload_server.py handles Phase 2/3
+    # directly — don't fire them here or they'll run twice.
+    if args.mode != "bulk":
+        _fire_next_phases(stem)
 
 
 if __name__ == "__main__":

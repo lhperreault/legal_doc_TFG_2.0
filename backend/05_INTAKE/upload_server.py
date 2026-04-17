@@ -593,12 +593,18 @@ def _run_bulk_pipeline(job):
     except Exception as e:
         raise RuntimeError(f"Phase 1 failed: {e}")
 
-    # Find document_id
+    # Find document_id — 08_Send_Supabase prints "[08] Document upserted (id=<uuid>)"
+    import re
     doc_id = None
-    for line in stdout.strip().split("\n"):
-        line = line.strip()
-        if line and len(line) == 36 and line.count("-") == 4:
-            doc_id = line
+    uuid_match = re.search(r"id=([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})", stdout)
+    if uuid_match:
+        doc_id = uuid_match.group(1)
+    if not doc_id:
+        # Fallback: bare UUID on its own line
+        for line in stdout.strip().split("\n"):
+            line = line.strip()
+            if line and len(line) == 36 and line.count("-") == 4:
+                doc_id = line
     if not doc_id and case_id:
         docs = supabase.table("documents").select("id").eq(
             "case_id", case_id

@@ -8,18 +8,24 @@ import shutil
 # Function: pull_data_from_mockfiles
 # =========================
 def pull_data_from_mockfiles(filename):
-    # Find zz_Mockfiles at the project root
     project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
-    mockfiles_dir = os.path.join(project_root, 'zz_Mockfiles')
-    source_path = os.path.join(mockfiles_dir, filename)
-    if not os.path.isfile(source_path):
-        print(f"File '{filename}' not found in zz_Mockfiles.")
-        return False, filename
-    # Destination is backend/data_storage/documents
     backend_dir = os.path.join(project_root, 'backend')
     dest_dir = os.path.join(backend_dir, 'data_storage', 'documents')
     os.makedirs(dest_dir, exist_ok=True)
     dest_path = os.path.join(dest_dir, filename)
+
+    # If the file is already in data_storage/documents (e.g. placed by
+    # upload_server), skip the copy — nothing to do.
+    if os.path.isfile(dest_path):
+        print(f"File '{filename}' already in data_storage/documents — skipping copy.")
+        return True, filename
+
+    # Otherwise try to pull from zz_Mockfiles (local dev flow)
+    mockfiles_dir = os.path.join(project_root, 'zz_Mockfiles')
+    source_path = os.path.join(mockfiles_dir, filename)
+    if not os.path.isfile(source_path):
+        print(f"File '{filename}' not found in zz_Mockfiles or data_storage/documents.")
+        return False, filename
     try:
         shutil.copy2(source_path, dest_path)
         print(f"Successfully pulled '{filename}' to {dest_path}.")
